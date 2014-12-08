@@ -5926,6 +5926,9 @@ class ElementResolver extends SimpleAstVisitor<Object> {
     return staticType;
   }
 
+  // DDC Note: added to make it visible in subclass.
+  getStaticType(e) => _getStaticType(e);
+
   /**
    * Return `true` if the given expression is a prefix for a deferred import.
    *
@@ -15746,6 +15749,7 @@ class LibraryResolver {
    */
   TypeProvider _typeProvider;
 
+
   /**
    * A table mapping library sources to the information being maintained for those libraries.
    */
@@ -16430,7 +16434,10 @@ class LibraryResolver {
       for (Source source in library.compilationUnitSources) {
         CompilationUnit ast = library.getAST(source);
         ast.accept(new VariableResolverVisitor.con1(library, source, _typeProvider));
-        ResolverVisitor visitor = new ResolverVisitor.con1(library, source, _typeProvider);
+        var visitorFactory =  analysisContext.resolverVisitorFactory;
+        ResolverVisitor visitor = visitorFactory != null
+            ? visitorFactory(library, source, _typeProvider)
+            : new ResolverVisitor.con1(library, source, _typeProvider);
         ast.accept(visitor);
       }
     } finally {
@@ -18291,6 +18298,9 @@ class ResolverErrorCode extends Enum<ResolverErrorCode> implements ErrorCode {
   String get uniqueName => "${runtimeType.toString()}.${name}";
 }
 
+typedef ResolverVisitor ResolverVisitorFactory(Library library, Source source,
+    TypeProvider typeProvider);
+
 /**
  * Instances of the class `ResolverVisitor` are used to resolve the nodes within a single
  * compilation unit.
@@ -18358,10 +18368,14 @@ class ResolverVisitor extends ScopedVisitor {
    * @param source the source representing the compilation unit being visited
    * @param typeProvider the object used to access the types from the core library
    */
-  ResolverVisitor.con1(Library library, Source source, TypeProvider typeProvider) : super.con1(library, source, typeProvider) {
+  ResolverVisitor.con1(Library library, Source source, TypeProvider
+      typeProvider, {StaticTypeAnalyzer typeAnalyzer, typeAnalyzerFactory})
+      : super.con1(library, source, typeProvider) {
     this._inheritanceManager = library.inheritanceManager;
     this._elementResolver = new ElementResolver(this);
-    this._typeAnalyzer = new StaticTypeAnalyzer(this);
+    this._typeAnalyzer = typeAnalyzer != null ? typeAnalyzer
+        : (typeAnalyzerFactory != null ? typeAnalyzerFactory(this)
+            : new StaticTypeAnalyzer(this));
   }
 
   /**
@@ -19489,7 +19503,8 @@ class ResolverVisitor extends ScopedVisitor {
   /**
    * Promotes type information using given condition.
    */
-  void _promoteTypes(Expression condition) {
+  // DDC Note: made public so we can override it.
+  void promoteTypes(Expression condition) {
     if (condition is BinaryExpression) {
       BinaryExpression binary = condition;
       if (binary.operator.type == sc.TokenType.AMPERSAND_AMPERSAND) {
@@ -19508,6 +19523,10 @@ class ResolverVisitor extends ScopedVisitor {
       _promoteTypes(condition.expression);
     }
   }
+
+  // TODO(sigmund): delete, just for convenience to avoid renaming all uses of
+  // this function in this file.
+  void _promoteTypes(Expression condition) => promoteTypes(condition);
 
   /**
    * Propagate any type information that results from knowing that the given condition will have
@@ -20659,6 +20678,8 @@ class StaticTypeAnalyzer extends SimpleAstVisitor<Object> {
    * those tags.
    */
   static HashMap<String, String> _HTML_ELEMENT_TO_CLASS_MAP = _createHtmlTagToClassMap();
+
+  get dynamicType  => _dynamicType;
 
   /**
    * Initialize a newly created type analyzer.
@@ -22017,6 +22038,8 @@ class StaticTypeAnalyzer extends SimpleAstVisitor<Object> {
     return type;
   }
 
+  DartType getStaticType(e) => _getStaticType(e);
+
   /**
    * Return the type represented by the given type name.
    *
@@ -22161,13 +22184,19 @@ class StaticTypeAnalyzer extends SimpleAstVisitor<Object> {
    * @param expression the node whose type is to be recorded
    * @param type the static type of the node
    */
-  void _recordStaticType(Expression expression, DartType type) {
+  // DDC Note: made public so we can override it.
+  void recordStaticType(Expression expression, DartType type) {
     if (type == null) {
       expression.staticType = _dynamicType;
     } else {
       expression.staticType = type;
     }
   }
+
+  // TODO(sigmund): delete, just for convenience to avoid renaming all uses of
+  // this function in this file.
+  void _recordStaticType(Expression expression, DartType type)  =>
+      recordStaticType(expression, type);
 
   /**
    * Attempts to make a better guess for the static type of the given binary expression.

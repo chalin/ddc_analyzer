@@ -1666,6 +1666,8 @@ class AnalysisContextImpl implements InternalAnalysisContext {
     return new TypeProviderImpl(coreElement);
   }
 
+  ResolverVisitorFactory resolverVisitorFactory;
+
   @override
   bool isClientLibrary(Source librarySource) {
     SourceEntry sourceEntry = _getReadableSourceEntry(librarySource);
@@ -12389,6 +12391,8 @@ abstract class InternalAnalysisContext implements AnalysisContext {
    * @throws AnalysisException if dart:core cannot be resolved
    */
   TypeProvider get typeProvider;
+
+  ResolverVisitorFactory resolverVisitorFactory;
 
   /**
    * Given a table mapping the source for the libraries represented by the corresponding elements to
