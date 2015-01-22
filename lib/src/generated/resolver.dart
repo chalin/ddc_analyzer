@@ -18325,10 +18325,16 @@ class ResolverVisitor extends ScopedVisitor {
    */
   ElementResolver _elementResolver;
 
+  /// DDC: hacky way to make it visible in subclasses.
+  ElementResolver get elementResolver => _elementResolver;
+
   /**
    * The object used to compute the type associated with the current node.
    */
   StaticTypeAnalyzer _typeAnalyzer;
+
+  /// DDC: hacky way to make it visible in subclasses.
+  StaticTypeAnalyzer get typeAnalyzer => _typeAnalyzer;
 
   /**
    * The class element representing the class containing the current node, or `null` if the
