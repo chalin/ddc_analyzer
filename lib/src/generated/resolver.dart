@@ -16200,7 +16200,13 @@ class LibraryResolver {
     try {
       for (Library library in _librariesInCycles) {
         for (Source source in library.compilationUnitSources) {
-          TypeResolverVisitor visitor = new TypeResolverVisitor.con1(library, source, _typeProvider);
+          var typeResolverVisitorFactory = analysisContext.typeResolverVisitorFactory;
+          TypeResolverVisitor visitor;
+          if (typeResolverVisitorFactory == null)  {
+            visitor = new TypeResolverVisitor.con1(library, source, _typeProvider);
+          } else {
+            visitor = typeResolverVisitorFactory(library, source, _typeProvider);
+          }
           library.getAST(source).accept(visitor);
         }
       }
@@ -18300,6 +18306,9 @@ class ResolverErrorCode extends Enum<ResolverErrorCode> implements ErrorCode {
 
 typedef ResolverVisitor ResolverVisitorFactory(Library library, Source source,
     TypeProvider typeProvider);
+
+typedef TypeResolverVisitor TypeResolverVisitorFactory(
+    Library library, Source source, TypeProvider typeProvider);
 
 /**
  * Instances of the class `ResolverVisitor` are used to resolve the nodes within a single
@@ -23248,14 +23257,24 @@ class TypeResolverVisitor extends ScopedVisitor {
     return null;
   }
 
+
   @override
   Object visitClassDeclaration(ClassDeclaration node) {
+    _hasReferenceToSuper = false;
+    super.visitClassDeclaration(node);
+    ClassElement classElement = _getClassElement(node.name);
+    if (classElement != null)  {
+      classElement.hasReferenceToSuper = _hasReferenceToSuper;
+    }
+  }
+
+  @override
+  void visitClassDeclarationInScope(ClassDeclaration node) {
+    super.visitClassDeclarationInScope(node);
     ExtendsClause extendsClause = node.extendsClause;
     WithClause withClause = node.withClause;
     ImplementsClause implementsClause = node.implementsClause;
-    _hasReferenceToSuper = false;
-    super.visitClassDeclaration(node);
-    ClassElementImpl classElement = _getClassElement(node.name);
+    ClassElement classElement = _getClassElement(node.name);
     InterfaceType superclassType = null;
     if (extendsClause != null) {
       ErrorCode errorCode = (withClause == null ? CompileTimeErrorCode.EXTENDS_NON_CLASS : CompileTimeErrorCode.MIXIN_WITH_NON_CLASS_SUPERCLASS);
@@ -23272,7 +23291,6 @@ class TypeResolverVisitor extends ScopedVisitor {
         }
       }
       classElement.supertype = superclassType;
-      classElement.hasReferenceToSuper = _hasReferenceToSuper;
     }
     _resolve(classElement, withClause, implementsClause);
     return null;

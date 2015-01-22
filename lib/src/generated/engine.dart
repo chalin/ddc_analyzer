@@ -1667,6 +1667,7 @@ class AnalysisContextImpl implements InternalAnalysisContext {
   }
 
   ResolverVisitorFactory resolverVisitorFactory;
+  TypeResolverVisitorFactory typeResolverVisitorFactory;
 
   @override
   bool isClientLibrary(Source librarySource) {
@@ -12393,6 +12394,7 @@ abstract class InternalAnalysisContext implements AnalysisContext {
   TypeProvider get typeProvider;
 
   ResolverVisitorFactory resolverVisitorFactory;
+  TypeResolverVisitorFactory typeResolverVisitorFactory;
 
   /**
    * Given a table mapping the source for the libraries represented by the corresponding elements to
