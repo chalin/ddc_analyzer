@@ -20,8 +20,8 @@ import '../options.dart';
 
 import 'dart:collection';
 
-import 'package:analyzer/src/generated/java_core.dart' show JavaSystem;
-import 'package:analyzer/src/error_formatter.dart';
+import 'package:ddc_analyzer/src/generated/java_core.dart' show JavaSystem;
+import 'package:ddc_analyzer/src/error_formatter.dart';
 
 /**
  * The maximum number of sources for which AST structures should be kept in the cache.

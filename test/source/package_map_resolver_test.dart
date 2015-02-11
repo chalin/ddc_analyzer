@@ -6,10 +6,10 @@ library test.source.package_map_resolver;
 
 import 'dart:collection';
 
-import 'package:analyzer/file_system/file_system.dart';
-import 'package:analyzer/file_system/memory_file_system.dart';
-import 'package:analyzer/source/package_map_resolver.dart';
-import 'package:analyzer/src/generated/source.dart';
+import 'package:ddc_analyzer/file_system/file_system.dart';
+import 'package:ddc_analyzer/file_system/memory_file_system.dart';
+import 'package:ddc_analyzer/source/package_map_resolver.dart';
+import 'package:ddc_analyzer/src/generated/source.dart';
 import 'package:unittest/unittest.dart';
 
 
@@ -163,11 +163,11 @@ class _PackageMapUriResolverTest {
 
   void test_resolve_package_notInMap() {
     UriResolver resolver = new PackageMapUriResolver(provider, EMPTY_MAP);
-    Uri uri = Uri.parse('package:analyzer/analyzer.dart');
+    Uri uri = Uri.parse('package:ddc_analyzer/analyzer.dart');
     Source result = resolver.resolveAbsolute(uri);
     expect(result, isNotNull);
     expect(result.exists(), isFalse);
-    expect(result.fullName, 'package:analyzer/analyzer.dart');
+    expect(result.fullName, 'package:ddc_analyzer/analyzer.dart');
   }
 
   void test_restoreAbsolute() {

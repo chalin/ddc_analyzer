@@ -7,8 +7,8 @@ library runtime.coverage.model;
 
 import 'dart:collection' show SplayTreeMap;
 
-import 'package:analyzer/src/generated/source.dart' show Source, SourceRange;
-import 'package:analyzer/src/generated/ast.dart' show AstNode;
+import 'package:ddc_analyzer/src/generated/source.dart' show Source, SourceRange;
+import 'package:ddc_analyzer/src/generated/ast.dart' show AstNode;
 
 import 'utils.dart';
 

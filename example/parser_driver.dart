@@ -6,10 +6,10 @@
 
 import 'dart:io';
 
-import 'package:analyzer/src/generated/ast.dart';
-import 'package:analyzer/src/generated/error.dart';
-import 'package:analyzer/src/generated/parser.dart';
-import 'package:analyzer/src/generated/scanner.dart';
+import 'package:ddc_analyzer/src/generated/ast.dart';
+import 'package:ddc_analyzer/src/generated/error.dart';
+import 'package:ddc_analyzer/src/generated/parser.dart';
+import 'package:ddc_analyzer/src/generated/scanner.dart';
 
 
 main(List<String> args) {

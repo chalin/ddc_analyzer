@@ -6,7 +6,7 @@ library utils;
 
 import 'dart:io';
 
-import 'package:analyzer/analyzer.dart';
+import 'package:ddc_analyzer/analyzer.dart';
 import 'package:path/path.dart' as pathos;
 
 /// Returns the string representation of the [AnalyzerErrorGroup] thrown when

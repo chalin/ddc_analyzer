@@ -8,15 +8,15 @@
 library engine.test_support;
 
 import 'dart:collection';
-import 'package:analyzer/src/generated/java_core.dart';
-import 'package:analyzer/src/generated/java_junit.dart';
-import 'package:analyzer/src/generated/java_engine.dart';
-import 'package:analyzer/src/generated/source.dart';
-import 'package:analyzer/src/generated/error.dart';
-import 'package:analyzer/src/generated/scanner.dart';
-import 'package:analyzer/src/generated/ast.dart' show AstNode, NodeLocator;
-import 'package:analyzer/src/generated/element.dart' show InterfaceType, MethodElement, PropertyAccessorElement;
-import 'package:analyzer/src/generated/engine.dart';
+import 'package:ddc_analyzer/src/generated/java_core.dart';
+import 'package:ddc_analyzer/src/generated/java_junit.dart';
+import 'package:ddc_analyzer/src/generated/java_engine.dart';
+import 'package:ddc_analyzer/src/generated/source.dart';
+import 'package:ddc_analyzer/src/generated/error.dart';
+import 'package:ddc_analyzer/src/generated/scanner.dart';
+import 'package:ddc_analyzer/src/generated/ast.dart' show AstNode, NodeLocator;
+import 'package:ddc_analyzer/src/generated/element.dart' show InterfaceType, MethodElement, PropertyAccessorElement;
+import 'package:ddc_analyzer/src/generated/engine.dart';
 import 'package:unittest/unittest.dart' as _ut;
 
 /**

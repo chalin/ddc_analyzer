@@ -6,12 +6,12 @@ library test_utils;
 
 import 'package:unittest/unittest.dart';
 
-import 'package:analyzer/src/generated/engine.dart';
-import 'package:analyzer/src/generated/source.dart';
-import 'package:analyzer/src/generated/error.dart';
-import 'package:analyzer/src/generated/scanner.dart';
-import 'package:analyzer/src/generated/ast.dart';
-import 'package:analyzer/src/generated/parser.dart';
+import 'package:ddc_analyzer/src/generated/engine.dart';
+import 'package:ddc_analyzer/src/generated/source.dart';
+import 'package:ddc_analyzer/src/generated/error.dart';
+import 'package:ddc_analyzer/src/generated/scanner.dart';
+import 'package:ddc_analyzer/src/generated/ast.dart';
+import 'package:ddc_analyzer/src/generated/parser.dart';
 
 
 /// Instances of the class [_GatheringErrorListener] implement an error listener

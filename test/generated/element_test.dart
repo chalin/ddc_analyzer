@@ -7,16 +7,16 @@
 
 library engine.element_test;
 
-import 'package:analyzer/src/generated/java_core.dart';
-import 'package:analyzer/src/generated/java_junit.dart';
-import 'package:analyzer/src/generated/source_io.dart';
-import 'package:analyzer/src/generated/ast.dart';
-import 'package:analyzer/src/generated/element.dart';
-import 'package:analyzer/src/generated/engine.dart' show AnalysisContext, AnalysisContextImpl;
+import 'package:ddc_analyzer/src/generated/java_core.dart';
+import 'package:ddc_analyzer/src/generated/java_junit.dart';
+import 'package:ddc_analyzer/src/generated/source_io.dart';
+import 'package:ddc_analyzer/src/generated/ast.dart';
+import 'package:ddc_analyzer/src/generated/element.dart';
+import 'package:ddc_analyzer/src/generated/engine.dart' show AnalysisContext, AnalysisContextImpl;
 import 'package:unittest/unittest.dart' as _ut;
 import 'test_support.dart';
-import 'package:analyzer/src/generated/testing/ast_factory.dart';
-import 'package:analyzer/src/generated/testing/element_factory.dart';
+import 'package:ddc_analyzer/src/generated/testing/ast_factory.dart';
+import 'package:ddc_analyzer/src/generated/testing/element_factory.dart';
 import 'resolver_test.dart' show TestTypeProvider, AnalysisContextHelper;
 
 class AngularPropertyKindTest extends EngineTestCase {
