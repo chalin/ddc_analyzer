@@ -109,6 +109,15 @@ abstract class ResourceProvider {
    * Return the [Resource] that corresponds to the given [path].
    */
   Resource getResource(String path);
+
+  /**
+   * Return the folder in which the plugin with the given [pluginId] can store
+   * state that will persist across sessions. The folder returned for a given id
+   * will not be returned for a different id, ensuring that plugins do not need
+   * to be concerned with file name collisions with other plugins, assuming that
+   * the plugin ids are unique. The plugin ids must be valid folder names.
+   */
+  Folder getStateLocation(String pluginId);
 }
 
 
@@ -130,8 +139,8 @@ class ResourceUriResolver extends UriResolver {
     if (!_isFileUri(uri)) {
       return null;
     }
-    Resource resource = _provider.getResource(_provider.pathContext.fromUri(uri)
-        );
+    Resource resource =
+        _provider.getResource(_provider.pathContext.fromUri(uri));
     if (resource is File) {
       return resource.createSource(uri);
     }

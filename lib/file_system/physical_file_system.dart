@@ -19,10 +19,24 @@ import 'file_system.dart';
  * A `dart:io` based implementation of [ResourceProvider].
  */
 class PhysicalResourceProvider implements ResourceProvider {
-  static final PhysicalResourceProvider INSTANCE =
-      new PhysicalResourceProvider._();
 
-  PhysicalResourceProvider._();
+  static final NORMALIZE_EOL_ALWAYS =
+      (String string) => string.replaceAll(new RegExp('\r\n?'), '\n');
+
+  static final PhysicalResourceProvider INSTANCE =
+      new PhysicalResourceProvider(null);
+
+  /**
+   * The name of the directory containing plugin specific subfolders used to
+   * store data across sessions.
+   */
+  static final String SERVER_DIR = ".dartServer";
+
+  PhysicalResourceProvider(String fileReadMode(String s)) {
+    if (fileReadMode != null) {
+      FileBasedSource.fileReadMode = fileReadMode;
+    }
+  }
 
   @override
   Context get pathContext => io.Platform.isWindows ? windows : posix;
@@ -36,6 +50,23 @@ class PhysicalResourceProvider implements ResourceProvider {
       io.File file = new io.File(path);
       return new _PhysicalFile(file);
     }
+  }
+
+  @override
+  Folder getStateLocation(String pluginId) {
+    String home;
+    if (io.Platform.isWindows) {
+      home = io.Platform.environment['LOCALAPPDATA'];
+    } else {
+      home = io.Platform.environment['HOME'];
+    }
+    if (home != null && io.FileSystemEntity.isDirectorySync(home)) {
+      io.Directory directory =
+          new io.Directory(join(home, SERVER_DIR, pluginId));
+      directory.createSync(recursive: true);
+      return new _PhysicalFolder(directory);
+    }
+    return null;
   }
 }
 

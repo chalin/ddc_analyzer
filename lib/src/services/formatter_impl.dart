@@ -51,7 +51,7 @@ class FormatterException implements Exception {
     //TODO(pquitslund): consider a verbosity flag to add/suppress details
     var errorCode = errors[0].errorCode;
     var phase = errorCode is ParserErrorCode ? 'parsing' : 'scanning';
-    return 'An error occured while ${phase} (${errorCode.name}).';
+    return 'An error occured while $phase (${errorCode.name}).';
   }
 
   String toString() => '$message';
@@ -59,10 +59,9 @@ class FormatterException implements Exception {
 
 /// Specifies the kind of code snippet to format.
 class CodeKind {
+  final int ordinal;
 
-  final int _index;
-
-  const CodeKind._(this._index);
+  const CodeKind._(this.ordinal);
 
   /// A compilation unit snippet.
   static const COMPILATION_UNIT = const CodeKind._(0);
@@ -206,7 +205,7 @@ class TokenStreamComparator {
     if (!isEOF(token2) &&
         !(isCLOSE_CURLY_BRACKET(token2) && isEOF(token2.next))) {
       throw new FormatterException(
-          'Expected "EOF" but got "${token2}".');
+          'Expected "EOF" but got "$token2".');
     }
   }
 
@@ -216,7 +215,7 @@ class TokenStreamComparator {
     while (comment1 != null) {
       if (comment2 == null) {
         throw new FormatterException(
-            'Expected comment, "${comment1}", at ${describeLocation(token1)}, '
+            'Expected comment, "$comment1", at ${describeLocation(token1)}, '
             'but got none.');
       }
       if (!equivalentComments(comment1, comment2)) {
@@ -227,7 +226,7 @@ class TokenStreamComparator {
     }
     if (comment2 != null) {
       throw new FormatterException(
-          'Unexpected comment, "${comment2}", at ${describeLocation(token2)}.');
+          'Unexpected comment, "$comment2", at ${describeLocation(token2)}.');
     }
   }
 
@@ -236,7 +235,7 @@ class TokenStreamComparator {
 
   throwNotEqualException(t1, t2) {
     throw new FormatterException(
-        'Expected "${t1}" but got "${t2}", at ${describeLocation(t1)}.');
+        'Expected "$t1" but got "$t2", at ${describeLocation(t1)}.');
   }
 
   String describeLocation(Token token) => lineInfo == null ? '<unknown>' :
@@ -508,6 +507,7 @@ class SourceVisitor implements AstVisitor {
   }
 
   visitBlockFunctionBody(BlockFunctionBody node) {
+    token(node.keyword, followedBy: nonBreakingSpace);
     visit(node.block);
   }
 
@@ -783,6 +783,7 @@ class SourceVisitor implements AstVisitor {
 
   visitExpressionFunctionBody(ExpressionFunctionBody node) {
     int weight = lastSpaceWeight++;
+    token(node.keyword, followedBy: nonBreakingSpace);
     token(node.functionDefinition);
     levelSpace(weight);
     visit(node.expression);
@@ -828,7 +829,7 @@ class SourceVisitor implements AstVisitor {
     space();
     token(node.inKeyword);
     space();
-    visit(node.iterator);
+    visit(node.iterable);
     token(node.rightParenthesis);
     space();
     visit(node.body);
@@ -1294,7 +1295,6 @@ class SourceVisitor implements AstVisitor {
   visitSymbolLiteral(SymbolLiteral node) {
     token(node.poundSign);
     var components = node.components;
-    var size = components.length;
     for (var component in components) {
       // The '.' separator
       if (component.previous.lexeme == '.') {
