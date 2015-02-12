@@ -7,150 +7,119 @@
 
 library engine.element_test;
 
-import 'package:ddc_analyzer/src/generated/java_core.dart';
-import 'package:ddc_analyzer/src/generated/java_junit.dart';
-import 'package:ddc_analyzer/src/generated/source_io.dart';
 import 'package:ddc_analyzer/src/generated/ast.dart';
 import 'package:ddc_analyzer/src/generated/element.dart';
-import 'package:ddc_analyzer/src/generated/engine.dart' show AnalysisContext, AnalysisContextImpl;
-import 'package:unittest/unittest.dart' as _ut;
-import 'test_support.dart';
+import 'package:ddc_analyzer/src/generated/engine.dart' show AnalysisContext,
+    AnalysisContextImpl;
+import 'package:ddc_analyzer/src/generated/java_core.dart';
+import 'package:ddc_analyzer/src/generated/source_io.dart';
 import 'package:ddc_analyzer/src/generated/testing/ast_factory.dart';
 import 'package:ddc_analyzer/src/generated/testing/element_factory.dart';
+import 'package:ddc_analyzer/src/generated/testing/test_type_provider.dart';
+import 'package:unittest/unittest.dart';
+
+import '../reflective_tests.dart';
 import 'resolver_test.dart' show TestTypeProvider, AnalysisContextHelper;
+import 'test_support.dart';
 
-class AngularPropertyKindTest extends EngineTestCase {
-  void test_ATTR() {
-    AngularPropertyKind kind = AngularPropertyKind.ATTR;
-    JUnitTestCase.assertFalse(kind.callsGetter());
-    JUnitTestCase.assertTrue(kind.callsSetter());
-  }
 
-  void test_CALLBACK() {
-    AngularPropertyKind kind = AngularPropertyKind.CALLBACK;
-    JUnitTestCase.assertFalse(kind.callsGetter());
-    JUnitTestCase.assertTrue(kind.callsSetter());
-  }
-
-  void test_ONE_WAY() {
-    AngularPropertyKind kind = AngularPropertyKind.ONE_WAY;
-    JUnitTestCase.assertFalse(kind.callsGetter());
-    JUnitTestCase.assertTrue(kind.callsSetter());
-  }
-
-  void test_ONE_WAY_ONE_TIME() {
-    AngularPropertyKind kind = AngularPropertyKind.ONE_WAY_ONE_TIME;
-    JUnitTestCase.assertFalse(kind.callsGetter());
-    JUnitTestCase.assertTrue(kind.callsSetter());
-  }
-
-  void test_TWO_WAY() {
-    AngularPropertyKind kind = AngularPropertyKind.TWO_WAY;
-    JUnitTestCase.assertTrue(kind.callsGetter());
-    JUnitTestCase.assertTrue(kind.callsSetter());
-  }
-
-  static dartSuite() {
-    _ut.group('AngularPropertyKindTest', () {
-      _ut.test('test_ATTR', () {
-        final __test = new AngularPropertyKindTest();
-        runJUnitTest(__test, __test.test_ATTR);
-      });
-      _ut.test('test_CALLBACK', () {
-        final __test = new AngularPropertyKindTest();
-        runJUnitTest(__test, __test.test_CALLBACK);
-      });
-      _ut.test('test_ONE_WAY', () {
-        final __test = new AngularPropertyKindTest();
-        runJUnitTest(__test, __test.test_ONE_WAY);
-      });
-      _ut.test('test_ONE_WAY_ONE_TIME', () {
-        final __test = new AngularPropertyKindTest();
-        runJUnitTest(__test, __test.test_ONE_WAY_ONE_TIME);
-      });
-      _ut.test('test_TWO_WAY', () {
-        final __test = new AngularPropertyKindTest();
-        runJUnitTest(__test, __test.test_TWO_WAY);
-      });
-    });
-  }
+main() {
+  groupSep = ' | ';
+  runReflectiveTests(ElementKindTest);
+  runReflectiveTests(FunctionTypeImplTest);
+  runReflectiveTests(InterfaceTypeImplTest);
+  runReflectiveTests(TypeParameterTypeImplTest);
+  runReflectiveTests(UnionTypeImplTest);
+  runReflectiveTests(VoidTypeImplTest);
+  runReflectiveTests(ClassElementImplTest);
+  runReflectiveTests(CompilationUnitElementImplTest);
+  runReflectiveTests(ElementLocationImplTest);
+  runReflectiveTests(ElementImplTest);
+  runReflectiveTests(HtmlElementImplTest);
+  runReflectiveTests(LibraryElementImplTest);
+  runReflectiveTests(MultiplyDefinedElementImplTest);
 }
 
+@reflectiveTest
 class ClassElementImplTest extends EngineTestCase {
   void test_getAllSupertypes_interface() {
-    ClassElement classA = ElementFactory.classElement2("A", []);
-    ClassElement classB = ElementFactory.classElement("B", classA.type, []);
-    ClassElementImpl elementC = ElementFactory.classElement2("C", []);
+    ClassElement classA = ElementFactory.classElement2("A");
+    ClassElement classB = ElementFactory.classElement("B", classA.type);
+    ClassElementImpl elementC = ElementFactory.classElement2("C");
     InterfaceType typeObject = classA.supertype;
     InterfaceType typeA = classA.type;
     InterfaceType typeB = classB.type;
     InterfaceType typeC = elementC.type;
-    elementC.interfaces = <InterfaceType> [typeB];
+    elementC.interfaces = <InterfaceType>[typeB];
     List<InterfaceType> supers = elementC.allSupertypes;
     List<InterfaceType> types = new List<InterfaceType>();
     types.addAll(supers);
-    JUnitTestCase.assertTrue(types.contains(typeA));
-    JUnitTestCase.assertTrue(types.contains(typeB));
-    JUnitTestCase.assertTrue(types.contains(typeObject));
-    JUnitTestCase.assertFalse(types.contains(typeC));
+    expect(types.contains(typeA), isTrue);
+    expect(types.contains(typeB), isTrue);
+    expect(types.contains(typeObject), isTrue);
+    expect(types.contains(typeC), isFalse);
   }
 
   void test_getAllSupertypes_mixins() {
-    ClassElement classA = ElementFactory.classElement2("A", []);
-    ClassElement classB = ElementFactory.classElement("B", classA.type, []);
-    ClassElementImpl classC = ElementFactory.classElement2("C", []);
+    ClassElement classA = ElementFactory.classElement2("A");
+    ClassElement classB = ElementFactory.classElement("B", classA.type);
+    ClassElementImpl classC = ElementFactory.classElement2("C");
     InterfaceType typeObject = classA.supertype;
     InterfaceType typeA = classA.type;
     InterfaceType typeB = classB.type;
     InterfaceType typeC = classC.type;
-    classC.mixins = <InterfaceType> [typeB];
+    classC.mixins = <InterfaceType>[typeB];
     List<InterfaceType> supers = classC.allSupertypes;
     List<InterfaceType> types = new List<InterfaceType>();
     types.addAll(supers);
-    JUnitTestCase.assertFalse(types.contains(typeA));
-    JUnitTestCase.assertTrue(types.contains(typeB));
-    JUnitTestCase.assertTrue(types.contains(typeObject));
-    JUnitTestCase.assertFalse(types.contains(typeC));
+    expect(types.contains(typeA), isFalse);
+    expect(types.contains(typeB), isTrue);
+    expect(types.contains(typeObject), isTrue);
+    expect(types.contains(typeC), isFalse);
   }
 
   void test_getAllSupertypes_recursive() {
-    ClassElementImpl classA = ElementFactory.classElement2("A", []);
-    ClassElementImpl classB = ElementFactory.classElement("B", classA.type, []);
+    ClassElementImpl classA = ElementFactory.classElement2("A");
+    ClassElementImpl classB = ElementFactory.classElement("B", classA.type);
     classA.supertype = classB.type;
     List<InterfaceType> supers = classB.allSupertypes;
-    EngineTestCase.assertLength(1, supers);
+    expect(supers, hasLength(1));
   }
 
   void test_getField() {
-    ClassElementImpl classA = ElementFactory.classElement2("A", []);
+    ClassElementImpl classA = ElementFactory.classElement2("A");
     String fieldName = "f";
-    FieldElementImpl field = ElementFactory.fieldElement(fieldName, false, false, false, null);
-    classA.fields = <FieldElement> [field];
-    JUnitTestCase.assertSame(field, classA.getField(fieldName));
+    FieldElementImpl field =
+        ElementFactory.fieldElement(fieldName, false, false, false, null);
+    classA.fields = <FieldElement>[field];
+    expect(classA.getField(fieldName), same(field));
+    expect(field.isEnumConstant, false);
     // no such field
-    JUnitTestCase.assertSame(null, classA.getField("noSuchField"));
+    expect(classA.getField("noSuchField"), same(null));
   }
 
   void test_getMethod_declared() {
-    ClassElementImpl classA = ElementFactory.classElement2("A", []);
+    ClassElementImpl classA = ElementFactory.classElement2("A");
     String methodName = "m";
-    MethodElement method = ElementFactory.methodElement(methodName, null, []);
-    classA.methods = <MethodElement> [method];
-    JUnitTestCase.assertSame(method, classA.getMethod(methodName));
+    MethodElement method = ElementFactory.methodElement(methodName, null);
+    classA.methods = <MethodElement>[method];
+    expect(classA.getMethod(methodName), same(method));
   }
 
   void test_getMethod_undeclared() {
-    ClassElementImpl classA = ElementFactory.classElement2("A", []);
+    ClassElementImpl classA = ElementFactory.classElement2("A");
     String methodName = "m";
-    MethodElement method = ElementFactory.methodElement(methodName, null, []);
-    classA.methods = <MethodElement> [method];
-    JUnitTestCase.assertNull(classA.getMethod("${methodName}x"));
+    MethodElement method = ElementFactory.methodElement(methodName, null);
+    classA.methods = <MethodElement>[method];
+    expect(classA.getMethod("${methodName}x"), isNull);
   }
 
   void test_getNode() {
     AnalysisContextHelper contextHelper = new AnalysisContextHelper();
     AnalysisContext context = contextHelper.context;
-    Source source = contextHelper.addSource("/test.dart", EngineTestCase.createSource(["class A {}", "class B {}"]));
+    Source source = contextHelper.addSource("/test.dart", r'''
+class A {}
+class B {}''');
     // prepare CompilationUnitElement
     LibraryElement libraryElement = context.computeLibraryElement(source);
     CompilationUnitElement unitElement = libraryElement.definingCompilationUnit;
@@ -158,124 +127,151 @@ class ClassElementImplTest extends EngineTestCase {
     {
       ClassElement elementA = unitElement.getType("A");
       ClassDeclaration nodeA = elementA.node;
-      JUnitTestCase.assertNotNull(nodeA);
-      JUnitTestCase.assertEquals("A", nodeA.name.name);
-      JUnitTestCase.assertSame(elementA, nodeA.element);
+      expect(nodeA, isNotNull);
+      expect(nodeA.name.name, "A");
+      expect(nodeA.element, same(elementA));
     }
     // B
     {
       ClassElement elementB = unitElement.getType("B");
       ClassDeclaration nodeB = elementB.node;
-      JUnitTestCase.assertNotNull(nodeB);
-      JUnitTestCase.assertEquals("B", nodeB.name.name);
-      JUnitTestCase.assertSame(elementB, nodeB.element);
+      expect(nodeB, isNotNull);
+      expect(nodeB.name.name, "B");
+      expect(nodeB.element, same(elementB));
     }
   }
 
   void test_hasNonFinalField_false_const() {
-    ClassElementImpl classA = ElementFactory.classElement2("A", []);
-    classA.fields = <FieldElement> [ElementFactory.fieldElement("f", false, false, true, classA.type)];
-    JUnitTestCase.assertFalse(classA.hasNonFinalField);
+    ClassElementImpl classA = ElementFactory.classElement2("A");
+    classA.fields = <FieldElement>[
+        ElementFactory.fieldElement("f", false, false, true, classA.type)];
+    expect(classA.hasNonFinalField, isFalse);
   }
 
   void test_hasNonFinalField_false_final() {
-    ClassElementImpl classA = ElementFactory.classElement2("A", []);
-    classA.fields = <FieldElement> [ElementFactory.fieldElement("f", false, true, false, classA.type)];
-    JUnitTestCase.assertFalse(classA.hasNonFinalField);
+    ClassElementImpl classA = ElementFactory.classElement2("A");
+    classA.fields = <FieldElement>[
+        ElementFactory.fieldElement("f", false, true, false, classA.type)];
+    expect(classA.hasNonFinalField, isFalse);
   }
 
   void test_hasNonFinalField_false_recursive() {
-    ClassElementImpl classA = ElementFactory.classElement2("A", []);
-    ClassElementImpl classB = ElementFactory.classElement("B", classA.type, []);
+    ClassElementImpl classA = ElementFactory.classElement2("A");
+    ClassElementImpl classB = ElementFactory.classElement("B", classA.type);
     classA.supertype = classB.type;
-    JUnitTestCase.assertFalse(classA.hasNonFinalField);
+    expect(classA.hasNonFinalField, isFalse);
   }
 
   void test_hasNonFinalField_true_immediate() {
-    ClassElementImpl classA = ElementFactory.classElement2("A", []);
-    classA.fields = <FieldElement> [ElementFactory.fieldElement("f", false, false, false, classA.type)];
-    JUnitTestCase.assertTrue(classA.hasNonFinalField);
+    ClassElementImpl classA = ElementFactory.classElement2("A");
+    classA.fields = <FieldElement>[
+        ElementFactory.fieldElement("f", false, false, false, classA.type)];
+    expect(classA.hasNonFinalField, isTrue);
   }
 
   void test_hasNonFinalField_true_inherited() {
-    ClassElementImpl classA = ElementFactory.classElement2("A", []);
-    ClassElementImpl classB = ElementFactory.classElement("B", classA.type, []);
-    classA.fields = <FieldElement> [ElementFactory.fieldElement("f", false, false, false, classA.type)];
-    JUnitTestCase.assertTrue(classB.hasNonFinalField);
+    ClassElementImpl classA = ElementFactory.classElement2("A");
+    ClassElementImpl classB = ElementFactory.classElement("B", classA.type);
+    classA.fields = <FieldElement>[
+        ElementFactory.fieldElement("f", false, false, false, classA.type)];
+    expect(classB.hasNonFinalField, isTrue);
   }
 
   void test_hasStaticMember_false_empty() {
-    ClassElementImpl classA = ElementFactory.classElement2("A", []);
+    ClassElementImpl classA = ElementFactory.classElement2("A");
     // no members
-    JUnitTestCase.assertFalse(classA.hasStaticMember);
+    expect(classA.hasStaticMember, isFalse);
   }
 
   void test_hasStaticMember_false_instanceMethod() {
-    ClassElementImpl classA = ElementFactory.classElement2("A", []);
-    MethodElement method = ElementFactory.methodElement("foo", null, []);
-    classA.methods = <MethodElement> [method];
-    JUnitTestCase.assertFalse(classA.hasStaticMember);
+    ClassElementImpl classA = ElementFactory.classElement2("A");
+    MethodElement method = ElementFactory.methodElement("foo", null);
+    classA.methods = <MethodElement>[method];
+    expect(classA.hasStaticMember, isFalse);
   }
 
   void test_hasStaticMember_instanceGetter() {
-    ClassElementImpl classA = ElementFactory.classElement2("A", []);
-    PropertyAccessorElement getter = ElementFactory.getterElement("foo", false, null);
-    classA.accessors = <PropertyAccessorElement> [getter];
-    JUnitTestCase.assertFalse(classA.hasStaticMember);
+    ClassElementImpl classA = ElementFactory.classElement2("A");
+    PropertyAccessorElement getter =
+        ElementFactory.getterElement("foo", false, null);
+    classA.accessors = <PropertyAccessorElement>[getter];
+    expect(classA.hasStaticMember, isFalse);
   }
 
   void test_hasStaticMember_true_getter() {
-    ClassElementImpl classA = ElementFactory.classElement2("A", []);
-    PropertyAccessorElementImpl getter = ElementFactory.getterElement("foo", false, null);
-    classA.accessors = <PropertyAccessorElement> [getter];
+    ClassElementImpl classA = ElementFactory.classElement2("A");
+    PropertyAccessorElementImpl getter =
+        ElementFactory.getterElement("foo", false, null);
+    classA.accessors = <PropertyAccessorElement>[getter];
     // "foo" is static
     getter.static = true;
-    JUnitTestCase.assertTrue(classA.hasStaticMember);
+    expect(classA.hasStaticMember, isTrue);
   }
 
   void test_hasStaticMember_true_method() {
-    ClassElementImpl classA = ElementFactory.classElement2("A", []);
-    MethodElementImpl method = ElementFactory.methodElement("foo", null, []);
-    classA.methods = <MethodElement> [method];
+    ClassElementImpl classA = ElementFactory.classElement2("A");
+    MethodElementImpl method = ElementFactory.methodElement("foo", null);
+    classA.methods = <MethodElement>[method];
     // "foo" is static
     method.static = true;
-    JUnitTestCase.assertTrue(classA.hasStaticMember);
+    expect(classA.hasStaticMember, isTrue);
   }
 
   void test_hasStaticMember_true_setter() {
-    ClassElementImpl classA = ElementFactory.classElement2("A", []);
-    PropertyAccessorElementImpl setter = ElementFactory.setterElement("foo", false, null);
-    classA.accessors = <PropertyAccessorElement> [setter];
+    ClassElementImpl classA = ElementFactory.classElement2("A");
+    PropertyAccessorElementImpl setter =
+        ElementFactory.setterElement("foo", false, null);
+    classA.accessors = <PropertyAccessorElement>[setter];
     // "foo" is static
     setter.static = true;
-    JUnitTestCase.assertTrue(classA.hasStaticMember);
+    expect(classA.hasStaticMember, isTrue);
+  }
+
+  void test_isEnum() {
+    String firstConst = "A";
+    String secondConst = "B";
+    ClassElementImpl enumE = ElementFactory.enumElement(
+        new TestTypeProvider(),
+        "E",
+        [firstConst, secondConst]);
+
+    // E is an enum
+    expect(enumE.isEnum, true);
+
+    // A and B are static members
+    expect(enumE.getField(firstConst).isEnumConstant, true);
+    expect(enumE.getField(secondConst).isEnumConstant, true);
   }
 
   void test_lookUpConcreteMethod_declared() {
     // class A {
     //   m() {}
     // }
-    LibraryElementImpl library = ElementFactory.library(createAnalysisContext(), "lib");
-    ClassElementImpl classA = ElementFactory.classElement2("A", []);
+    LibraryElementImpl library =
+        ElementFactory.library(createAnalysisContext(), "lib");
+    ClassElementImpl classA = ElementFactory.classElement2("A");
     String methodName = "m";
-    MethodElement method = ElementFactory.methodElement(methodName, null, []);
-    classA.methods = <MethodElement> [method];
-    (library.definingCompilationUnit as CompilationUnitElementImpl).types = <ClassElement> [classA];
-    JUnitTestCase.assertSame(method, classA.lookUpConcreteMethod(methodName, library));
+    MethodElement method = ElementFactory.methodElement(methodName, null);
+    classA.methods = <MethodElement>[method];
+    (library.definingCompilationUnit as CompilationUnitElementImpl).types =
+        <ClassElement>[classA];
+    expect(classA.lookUpConcreteMethod(methodName, library), same(method));
   }
 
   void test_lookUpConcreteMethod_declaredAbstract() {
     // class A {
     //   m();
     // }
-    LibraryElementImpl library = ElementFactory.library(createAnalysisContext(), "lib");
-    ClassElementImpl classA = ElementFactory.classElement2("A", []);
+    LibraryElementImpl library =
+        ElementFactory.library(createAnalysisContext(), "lib");
+    ClassElementImpl classA = ElementFactory.classElement2("A");
     String methodName = "m";
-    MethodElementImpl method = ElementFactory.methodElement(methodName, null, []);
+    MethodElementImpl method = ElementFactory.methodElement(methodName, null);
     method.abstract = true;
-    classA.methods = <MethodElement> [method];
-    (library.definingCompilationUnit as CompilationUnitElementImpl).types = <ClassElement> [classA];
-    JUnitTestCase.assertNull(classA.lookUpConcreteMethod(methodName, library));
+    classA.methods = <MethodElement>[method];
+    (library.definingCompilationUnit as CompilationUnitElementImpl).types =
+        <ClassElement>[classA];
+    expect(classA.lookUpConcreteMethod(methodName, library), isNull);
   }
 
   void test_lookUpConcreteMethod_declaredAbstractAndInherited() {
@@ -285,17 +281,22 @@ class ClassElementImplTest extends EngineTestCase {
     // class B extends A {
     //   m();
     // }
-    LibraryElementImpl library = ElementFactory.library(createAnalysisContext(), "lib");
-    ClassElementImpl classA = ElementFactory.classElement2("A", []);
+    LibraryElementImpl library =
+        ElementFactory.library(createAnalysisContext(), "lib");
+    ClassElementImpl classA = ElementFactory.classElement2("A");
     String methodName = "m";
-    MethodElement inheritedMethod = ElementFactory.methodElement(methodName, null, []);
-    classA.methods = <MethodElement> [inheritedMethod];
-    ClassElementImpl classB = ElementFactory.classElement("B", classA.type, []);
-    MethodElementImpl method = ElementFactory.methodElement(methodName, null, []);
+    MethodElement inheritedMethod =
+        ElementFactory.methodElement(methodName, null);
+    classA.methods = <MethodElement>[inheritedMethod];
+    ClassElementImpl classB = ElementFactory.classElement("B", classA.type);
+    MethodElementImpl method = ElementFactory.methodElement(methodName, null);
     method.abstract = true;
-    classB.methods = <MethodElement> [method];
-    (library.definingCompilationUnit as CompilationUnitElementImpl).types = <ClassElement> [classA, classB];
-    JUnitTestCase.assertSame(inheritedMethod, classB.lookUpConcreteMethod(methodName, library));
+    classB.methods = <MethodElement>[method];
+    (library.definingCompilationUnit as CompilationUnitElementImpl).types =
+        <ClassElement>[classA, classB];
+    expect(
+        classB.lookUpConcreteMethod(methodName, library),
+        same(inheritedMethod));
   }
 
   void test_lookUpConcreteMethod_declaredAndInherited() {
@@ -305,16 +306,19 @@ class ClassElementImplTest extends EngineTestCase {
     // class B extends A {
     //   m() {}
     // }
-    LibraryElementImpl library = ElementFactory.library(createAnalysisContext(), "lib");
-    ClassElementImpl classA = ElementFactory.classElement2("A", []);
+    LibraryElementImpl library =
+        ElementFactory.library(createAnalysisContext(), "lib");
+    ClassElementImpl classA = ElementFactory.classElement2("A");
     String methodName = "m";
-    MethodElement inheritedMethod = ElementFactory.methodElement(methodName, null, []);
-    classA.methods = <MethodElement> [inheritedMethod];
-    ClassElementImpl classB = ElementFactory.classElement("B", classA.type, []);
-    MethodElement method = ElementFactory.methodElement(methodName, null, []);
-    classB.methods = <MethodElement> [method];
-    (library.definingCompilationUnit as CompilationUnitElementImpl).types = <ClassElement> [classA, classB];
-    JUnitTestCase.assertSame(method, classB.lookUpConcreteMethod(methodName, library));
+    MethodElement inheritedMethod =
+        ElementFactory.methodElement(methodName, null);
+    classA.methods = <MethodElement>[inheritedMethod];
+    ClassElementImpl classB = ElementFactory.classElement("B", classA.type);
+    MethodElement method = ElementFactory.methodElement(methodName, null);
+    classB.methods = <MethodElement>[method];
+    (library.definingCompilationUnit as CompilationUnitElementImpl).types =
+        <ClassElement>[classA, classB];
+    expect(classB.lookUpConcreteMethod(methodName, library), same(method));
   }
 
   void test_lookUpConcreteMethod_declaredAndInheritedAbstract() {
@@ -324,18 +328,21 @@ class ClassElementImplTest extends EngineTestCase {
     // class B extends A {
     //   m() {}
     // }
-    LibraryElementImpl library = ElementFactory.library(createAnalysisContext(), "lib");
-    ClassElementImpl classA = ElementFactory.classElement2("A", []);
+    LibraryElementImpl library =
+        ElementFactory.library(createAnalysisContext(), "lib");
+    ClassElementImpl classA = ElementFactory.classElement2("A");
     classA.abstract = true;
     String methodName = "m";
-    MethodElementImpl inheritedMethod = ElementFactory.methodElement(methodName, null, []);
+    MethodElementImpl inheritedMethod =
+        ElementFactory.methodElement(methodName, null);
     inheritedMethod.abstract = true;
-    classA.methods = <MethodElement> [inheritedMethod];
-    ClassElementImpl classB = ElementFactory.classElement("B", classA.type, []);
-    MethodElement method = ElementFactory.methodElement(methodName, null, []);
-    classB.methods = <MethodElement> [method];
-    (library.definingCompilationUnit as CompilationUnitElementImpl).types = <ClassElement> [classA, classB];
-    JUnitTestCase.assertSame(method, classB.lookUpConcreteMethod(methodName, library));
+    classA.methods = <MethodElement>[inheritedMethod];
+    ClassElementImpl classB = ElementFactory.classElement("B", classA.type);
+    MethodElement method = ElementFactory.methodElement(methodName, null);
+    classB.methods = <MethodElement>[method];
+    (library.definingCompilationUnit as CompilationUnitElementImpl).types =
+        <ClassElement>[classA, classB];
+    expect(classB.lookUpConcreteMethod(methodName, library), same(method));
   }
 
   void test_lookUpConcreteMethod_inherited() {
@@ -344,36 +351,46 @@ class ClassElementImplTest extends EngineTestCase {
     // }
     // class B extends A {
     // }
-    LibraryElementImpl library = ElementFactory.library(createAnalysisContext(), "lib");
-    ClassElementImpl classA = ElementFactory.classElement2("A", []);
+    LibraryElementImpl library =
+        ElementFactory.library(createAnalysisContext(), "lib");
+    ClassElementImpl classA = ElementFactory.classElement2("A");
     String methodName = "m";
-    MethodElement inheritedMethod = ElementFactory.methodElement(methodName, null, []);
-    classA.methods = <MethodElement> [inheritedMethod];
-    ClassElementImpl classB = ElementFactory.classElement("B", classA.type, []);
-    (library.definingCompilationUnit as CompilationUnitElementImpl).types = <ClassElement> [classA, classB];
-    JUnitTestCase.assertSame(inheritedMethod, classB.lookUpConcreteMethod(methodName, library));
+    MethodElement inheritedMethod =
+        ElementFactory.methodElement(methodName, null);
+    classA.methods = <MethodElement>[inheritedMethod];
+    ClassElementImpl classB = ElementFactory.classElement("B", classA.type);
+    (library.definingCompilationUnit as CompilationUnitElementImpl).types =
+        <ClassElement>[classA, classB];
+    expect(
+        classB.lookUpConcreteMethod(methodName, library),
+        same(inheritedMethod));
   }
 
   void test_lookUpConcreteMethod_undeclared() {
     // class A {
     // }
-    LibraryElementImpl library = ElementFactory.library(createAnalysisContext(), "lib");
-    ClassElementImpl classA = ElementFactory.classElement2("A", []);
-    (library.definingCompilationUnit as CompilationUnitElementImpl).types = <ClassElement> [classA];
-    JUnitTestCase.assertNull(classA.lookUpConcreteMethod("m", library));
+    LibraryElementImpl library =
+        ElementFactory.library(createAnalysisContext(), "lib");
+    ClassElementImpl classA = ElementFactory.classElement2("A");
+    (library.definingCompilationUnit as CompilationUnitElementImpl).types =
+        <ClassElement>[classA];
+    expect(classA.lookUpConcreteMethod("m", library), isNull);
   }
 
   void test_lookUpGetter_declared() {
     // class A {
     //   get g {}
     // }
-    LibraryElementImpl library = ElementFactory.library(createAnalysisContext(), "lib");
-    ClassElementImpl classA = ElementFactory.classElement2("A", []);
+    LibraryElementImpl library =
+        ElementFactory.library(createAnalysisContext(), "lib");
+    ClassElementImpl classA = ElementFactory.classElement2("A");
     String getterName = "g";
-    PropertyAccessorElement getter = ElementFactory.getterElement(getterName, false, null);
-    classA.accessors = <PropertyAccessorElement> [getter];
-    (library.definingCompilationUnit as CompilationUnitElementImpl).types = <ClassElement> [classA];
-    JUnitTestCase.assertSame(getter, classA.lookUpGetter(getterName, library));
+    PropertyAccessorElement getter =
+        ElementFactory.getterElement(getterName, false, null);
+    classA.accessors = <PropertyAccessorElement>[getter];
+    (library.definingCompilationUnit as CompilationUnitElementImpl).types =
+        <ClassElement>[classA];
+    expect(classA.lookUpGetter(getterName, library), same(getter));
   }
 
   void test_lookUpGetter_inherited() {
@@ -382,23 +399,28 @@ class ClassElementImplTest extends EngineTestCase {
     // }
     // class B extends A {
     // }
-    LibraryElementImpl library = ElementFactory.library(createAnalysisContext(), "lib");
-    ClassElementImpl classA = ElementFactory.classElement2("A", []);
+    LibraryElementImpl library =
+        ElementFactory.library(createAnalysisContext(), "lib");
+    ClassElementImpl classA = ElementFactory.classElement2("A");
     String getterName = "g";
-    PropertyAccessorElement getter = ElementFactory.getterElement(getterName, false, null);
-    classA.accessors = <PropertyAccessorElement> [getter];
-    ClassElementImpl classB = ElementFactory.classElement("B", classA.type, []);
-    (library.definingCompilationUnit as CompilationUnitElementImpl).types = <ClassElement> [classA, classB];
-    JUnitTestCase.assertSame(getter, classB.lookUpGetter(getterName, library));
+    PropertyAccessorElement getter =
+        ElementFactory.getterElement(getterName, false, null);
+    classA.accessors = <PropertyAccessorElement>[getter];
+    ClassElementImpl classB = ElementFactory.classElement("B", classA.type);
+    (library.definingCompilationUnit as CompilationUnitElementImpl).types =
+        <ClassElement>[classA, classB];
+    expect(classB.lookUpGetter(getterName, library), same(getter));
   }
 
   void test_lookUpGetter_undeclared() {
     // class A {
     // }
-    LibraryElementImpl library = ElementFactory.library(createAnalysisContext(), "lib");
-    ClassElementImpl classA = ElementFactory.classElement2("A", []);
-    (library.definingCompilationUnit as CompilationUnitElementImpl).types = <ClassElement> [classA];
-    JUnitTestCase.assertNull(classA.lookUpGetter("g", library));
+    LibraryElementImpl library =
+        ElementFactory.library(createAnalysisContext(), "lib");
+    ClassElementImpl classA = ElementFactory.classElement2("A");
+    (library.definingCompilationUnit as CompilationUnitElementImpl).types =
+        <ClassElement>[classA];
+    expect(classA.lookUpGetter("g", library), isNull);
   }
 
   void test_lookUpGetter_undeclared_recursive() {
@@ -406,25 +428,30 @@ class ClassElementImplTest extends EngineTestCase {
     // }
     // class B extends A {
     // }
-    LibraryElementImpl library = ElementFactory.library(createAnalysisContext(), "lib");
-    ClassElementImpl classA = ElementFactory.classElement2("A", []);
-    ClassElementImpl classB = ElementFactory.classElement("B", classA.type, []);
+    LibraryElementImpl library =
+        ElementFactory.library(createAnalysisContext(), "lib");
+    ClassElementImpl classA = ElementFactory.classElement2("A");
+    ClassElementImpl classB = ElementFactory.classElement("B", classA.type);
     classA.supertype = classB.type;
-    (library.definingCompilationUnit as CompilationUnitElementImpl).types = <ClassElement> [classA, classB];
-    JUnitTestCase.assertNull(classA.lookUpGetter("g", library));
+    (library.definingCompilationUnit as CompilationUnitElementImpl).types =
+        <ClassElement>[classA, classB];
+    expect(classA.lookUpGetter("g", library), isNull);
   }
 
   void test_lookUpInheritedConcreteGetter_declared() {
     // class A {
     //   get g {}
     // }
-    LibraryElementImpl library = ElementFactory.library(createAnalysisContext(), "lib");
-    ClassElementImpl classA = ElementFactory.classElement2("A", []);
+    LibraryElementImpl library =
+        ElementFactory.library(createAnalysisContext(), "lib");
+    ClassElementImpl classA = ElementFactory.classElement2("A");
     String getterName = "g";
-    PropertyAccessorElement getter = ElementFactory.getterElement(getterName, false, null);
-    classA.accessors = <PropertyAccessorElement> [getter];
-    (library.definingCompilationUnit as CompilationUnitElementImpl).types = <ClassElement> [classA];
-    JUnitTestCase.assertNull(classA.lookUpInheritedConcreteGetter(getterName, library));
+    PropertyAccessorElement getter =
+        ElementFactory.getterElement(getterName, false, null);
+    classA.accessors = <PropertyAccessorElement>[getter];
+    (library.definingCompilationUnit as CompilationUnitElementImpl).types =
+        <ClassElement>[classA];
+    expect(classA.lookUpInheritedConcreteGetter(getterName, library), isNull);
   }
 
   void test_lookUpInheritedConcreteGetter_inherited() {
@@ -433,23 +460,30 @@ class ClassElementImplTest extends EngineTestCase {
     // }
     // class B extends A {
     // }
-    LibraryElementImpl library = ElementFactory.library(createAnalysisContext(), "lib");
-    ClassElementImpl classA = ElementFactory.classElement2("A", []);
+    LibraryElementImpl library =
+        ElementFactory.library(createAnalysisContext(), "lib");
+    ClassElementImpl classA = ElementFactory.classElement2("A");
     String getterName = "g";
-    PropertyAccessorElement inheritedGetter = ElementFactory.getterElement(getterName, false, null);
-    classA.accessors = <PropertyAccessorElement> [inheritedGetter];
-    ClassElementImpl classB = ElementFactory.classElement("B", classA.type, []);
-    (library.definingCompilationUnit as CompilationUnitElementImpl).types = <ClassElement> [classA, classB];
-    JUnitTestCase.assertSame(inheritedGetter, classB.lookUpInheritedConcreteGetter(getterName, library));
+    PropertyAccessorElement inheritedGetter =
+        ElementFactory.getterElement(getterName, false, null);
+    classA.accessors = <PropertyAccessorElement>[inheritedGetter];
+    ClassElementImpl classB = ElementFactory.classElement("B", classA.type);
+    (library.definingCompilationUnit as CompilationUnitElementImpl).types =
+        <ClassElement>[classA, classB];
+    expect(
+        classB.lookUpInheritedConcreteGetter(getterName, library),
+        same(inheritedGetter));
   }
 
   void test_lookUpInheritedConcreteGetter_undeclared() {
     // class A {
     // }
-    LibraryElementImpl library = ElementFactory.library(createAnalysisContext(), "lib");
-    ClassElementImpl classA = ElementFactory.classElement2("A", []);
-    (library.definingCompilationUnit as CompilationUnitElementImpl).types = <ClassElement> [classA];
-    JUnitTestCase.assertNull(classA.lookUpInheritedConcreteGetter("g", library));
+    LibraryElementImpl library =
+        ElementFactory.library(createAnalysisContext(), "lib");
+    ClassElementImpl classA = ElementFactory.classElement2("A");
+    (library.definingCompilationUnit as CompilationUnitElementImpl).types =
+        <ClassElement>[classA];
+    expect(classA.lookUpInheritedConcreteGetter("g", library), isNull);
   }
 
   void test_lookUpInheritedConcreteGetter_undeclared_recursive() {
@@ -457,25 +491,29 @@ class ClassElementImplTest extends EngineTestCase {
     // }
     // class B extends A {
     // }
-    LibraryElementImpl library = ElementFactory.library(createAnalysisContext(), "lib");
-    ClassElementImpl classA = ElementFactory.classElement2("A", []);
-    ClassElementImpl classB = ElementFactory.classElement("B", classA.type, []);
+    LibraryElementImpl library =
+        ElementFactory.library(createAnalysisContext(), "lib");
+    ClassElementImpl classA = ElementFactory.classElement2("A");
+    ClassElementImpl classB = ElementFactory.classElement("B", classA.type);
     classA.supertype = classB.type;
-    (library.definingCompilationUnit as CompilationUnitElementImpl).types = <ClassElement> [classA, classB];
-    JUnitTestCase.assertNull(classA.lookUpInheritedConcreteGetter("g", library));
+    (library.definingCompilationUnit as CompilationUnitElementImpl).types =
+        <ClassElement>[classA, classB];
+    expect(classA.lookUpInheritedConcreteGetter("g", library), isNull);
   }
 
   void test_lookUpInheritedConcreteMethod_declared() {
     // class A {
     //   m() {}
     // }
-    LibraryElementImpl library = ElementFactory.library(createAnalysisContext(), "lib");
-    ClassElementImpl classA = ElementFactory.classElement2("A", []);
+    LibraryElementImpl library =
+        ElementFactory.library(createAnalysisContext(), "lib");
+    ClassElementImpl classA = ElementFactory.classElement2("A");
     String methodName = "m";
-    MethodElement method = ElementFactory.methodElement(methodName, null, []);
-    classA.methods = <MethodElement> [method];
-    (library.definingCompilationUnit as CompilationUnitElementImpl).types = <ClassElement> [classA];
-    JUnitTestCase.assertNull(classA.lookUpInheritedConcreteMethod(methodName, library));
+    MethodElement method = ElementFactory.methodElement(methodName, null);
+    classA.methods = <MethodElement>[method];
+    (library.definingCompilationUnit as CompilationUnitElementImpl).types =
+        <ClassElement>[classA];
+    expect(classA.lookUpInheritedConcreteMethod(methodName, library), isNull);
   }
 
   void test_lookUpInheritedConcreteMethod_declaredAbstractAndInherited() {
@@ -485,17 +523,22 @@ class ClassElementImplTest extends EngineTestCase {
     // class B extends A {
     //   m();
     // }
-    LibraryElementImpl library = ElementFactory.library(createAnalysisContext(), "lib");
-    ClassElementImpl classA = ElementFactory.classElement2("A", []);
+    LibraryElementImpl library =
+        ElementFactory.library(createAnalysisContext(), "lib");
+    ClassElementImpl classA = ElementFactory.classElement2("A");
     String methodName = "m";
-    MethodElement inheritedMethod = ElementFactory.methodElement(methodName, null, []);
-    classA.methods = <MethodElement> [inheritedMethod];
-    ClassElementImpl classB = ElementFactory.classElement("B", classA.type, []);
-    MethodElementImpl method = ElementFactory.methodElement(methodName, null, []);
+    MethodElement inheritedMethod =
+        ElementFactory.methodElement(methodName, null);
+    classA.methods = <MethodElement>[inheritedMethod];
+    ClassElementImpl classB = ElementFactory.classElement("B", classA.type);
+    MethodElementImpl method = ElementFactory.methodElement(methodName, null);
     method.abstract = true;
-    classB.methods = <MethodElement> [method];
-    (library.definingCompilationUnit as CompilationUnitElementImpl).types = <ClassElement> [classA, classB];
-    JUnitTestCase.assertSame(inheritedMethod, classB.lookUpInheritedConcreteMethod(methodName, library));
+    classB.methods = <MethodElement>[method];
+    (library.definingCompilationUnit as CompilationUnitElementImpl).types =
+        <ClassElement>[classA, classB];
+    expect(
+        classB.lookUpInheritedConcreteMethod(methodName, library),
+        same(inheritedMethod));
   }
 
   void test_lookUpInheritedConcreteMethod_declaredAndInherited() {
@@ -505,16 +548,21 @@ class ClassElementImplTest extends EngineTestCase {
     // class B extends A {
     //   m() {}
     // }
-    LibraryElementImpl library = ElementFactory.library(createAnalysisContext(), "lib");
-    ClassElementImpl classA = ElementFactory.classElement2("A", []);
+    LibraryElementImpl library =
+        ElementFactory.library(createAnalysisContext(), "lib");
+    ClassElementImpl classA = ElementFactory.classElement2("A");
     String methodName = "m";
-    MethodElement inheritedMethod = ElementFactory.methodElement(methodName, null, []);
-    classA.methods = <MethodElement> [inheritedMethod];
-    ClassElementImpl classB = ElementFactory.classElement("B", classA.type, []);
-    MethodElement method = ElementFactory.methodElement(methodName, null, []);
-    classB.methods = <MethodElement> [method];
-    (library.definingCompilationUnit as CompilationUnitElementImpl).types = <ClassElement> [classA, classB];
-    JUnitTestCase.assertSame(inheritedMethod, classB.lookUpInheritedConcreteMethod(methodName, library));
+    MethodElement inheritedMethod =
+        ElementFactory.methodElement(methodName, null);
+    classA.methods = <MethodElement>[inheritedMethod];
+    ClassElementImpl classB = ElementFactory.classElement("B", classA.type);
+    MethodElement method = ElementFactory.methodElement(methodName, null);
+    classB.methods = <MethodElement>[method];
+    (library.definingCompilationUnit as CompilationUnitElementImpl).types =
+        <ClassElement>[classA, classB];
+    expect(
+        classB.lookUpInheritedConcreteMethod(methodName, library),
+        same(inheritedMethod));
   }
 
   void test_lookUpInheritedConcreteMethod_declaredAndInheritedAbstract() {
@@ -524,21 +572,25 @@ class ClassElementImplTest extends EngineTestCase {
     // class B extends A {
     //   m() {}
     // }
-    LibraryElementImpl library = ElementFactory.library(createAnalysisContext(), "lib");
-    ClassElementImpl classA = ElementFactory.classElement2("A", []);
+    LibraryElementImpl library =
+        ElementFactory.library(createAnalysisContext(), "lib");
+    ClassElementImpl classA = ElementFactory.classElement2("A");
     classA.abstract = true;
     String methodName = "m";
-    MethodElementImpl inheritedMethod = ElementFactory.methodElement(methodName, null, []);
+    MethodElementImpl inheritedMethod =
+        ElementFactory.methodElement(methodName, null);
     inheritedMethod.abstract = true;
-    classA.methods = <MethodElement> [inheritedMethod];
-    ClassElementImpl classB = ElementFactory.classElement("B", classA.type, []);
-    MethodElement method = ElementFactory.methodElement(methodName, null, []);
-    classB.methods = <MethodElement> [method];
-    (library.definingCompilationUnit as CompilationUnitElementImpl).types = <ClassElement> [classA, classB];
-    JUnitTestCase.assertNull(classB.lookUpInheritedConcreteMethod(methodName, library));
+    classA.methods = <MethodElement>[inheritedMethod];
+    ClassElementImpl classB = ElementFactory.classElement("B", classA.type);
+    MethodElement method = ElementFactory.methodElement(methodName, null);
+    classB.methods = <MethodElement>[method];
+    (library.definingCompilationUnit as CompilationUnitElementImpl).types =
+        <ClassElement>[classA, classB];
+    expect(classB.lookUpInheritedConcreteMethod(methodName, library), isNull);
   }
 
-  void test_lookUpInheritedConcreteMethod_declaredAndInheritedWithAbstractBetween() {
+  void
+      test_lookUpInheritedConcreteMethod_declaredAndInheritedWithAbstractBetween() {
     // class A {
     //   m() {}
     // }
@@ -548,20 +600,26 @@ class ClassElementImplTest extends EngineTestCase {
     // class C extends B {
     //   m() {}
     // }
-    LibraryElementImpl library = ElementFactory.library(createAnalysisContext(), "lib");
-    ClassElementImpl classA = ElementFactory.classElement2("A", []);
+    LibraryElementImpl library =
+        ElementFactory.library(createAnalysisContext(), "lib");
+    ClassElementImpl classA = ElementFactory.classElement2("A");
     String methodName = "m";
-    MethodElement inheritedMethod = ElementFactory.methodElement(methodName, null, []);
-    classA.methods = <MethodElement> [inheritedMethod];
-    ClassElementImpl classB = ElementFactory.classElement("B", classA.type, []);
-    MethodElementImpl abstractMethod = ElementFactory.methodElement(methodName, null, []);
+    MethodElement inheritedMethod =
+        ElementFactory.methodElement(methodName, null);
+    classA.methods = <MethodElement>[inheritedMethod];
+    ClassElementImpl classB = ElementFactory.classElement("B", classA.type);
+    MethodElementImpl abstractMethod =
+        ElementFactory.methodElement(methodName, null);
     abstractMethod.abstract = true;
-    classB.methods = <MethodElement> [abstractMethod];
-    ClassElementImpl classC = ElementFactory.classElement("C", classB.type, []);
-    MethodElementImpl method = ElementFactory.methodElement(methodName, null, []);
-    classC.methods = <MethodElement> [method];
-    (library.definingCompilationUnit as CompilationUnitElementImpl).types = <ClassElement> [classA, classB, classC];
-    JUnitTestCase.assertSame(inheritedMethod, classC.lookUpInheritedConcreteMethod(methodName, library));
+    classB.methods = <MethodElement>[abstractMethod];
+    ClassElementImpl classC = ElementFactory.classElement("C", classB.type);
+    MethodElementImpl method = ElementFactory.methodElement(methodName, null);
+    classC.methods = <MethodElement>[method];
+    (library.definingCompilationUnit as CompilationUnitElementImpl).types =
+        <ClassElement>[classA, classB, classC];
+    expect(
+        classC.lookUpInheritedConcreteMethod(methodName, library),
+        same(inheritedMethod));
   }
 
   void test_lookUpInheritedConcreteMethod_inherited() {
@@ -570,36 +628,46 @@ class ClassElementImplTest extends EngineTestCase {
     // }
     // class B extends A {
     // }
-    LibraryElementImpl library = ElementFactory.library(createAnalysisContext(), "lib");
-    ClassElementImpl classA = ElementFactory.classElement2("A", []);
+    LibraryElementImpl library =
+        ElementFactory.library(createAnalysisContext(), "lib");
+    ClassElementImpl classA = ElementFactory.classElement2("A");
     String methodName = "m";
-    MethodElement inheritedMethod = ElementFactory.methodElement(methodName, null, []);
-    classA.methods = <MethodElement> [inheritedMethod];
-    ClassElementImpl classB = ElementFactory.classElement("B", classA.type, []);
-    (library.definingCompilationUnit as CompilationUnitElementImpl).types = <ClassElement> [classA, classB];
-    JUnitTestCase.assertSame(inheritedMethod, classB.lookUpInheritedConcreteMethod(methodName, library));
+    MethodElement inheritedMethod =
+        ElementFactory.methodElement(methodName, null);
+    classA.methods = <MethodElement>[inheritedMethod];
+    ClassElementImpl classB = ElementFactory.classElement("B", classA.type);
+    (library.definingCompilationUnit as CompilationUnitElementImpl).types =
+        <ClassElement>[classA, classB];
+    expect(
+        classB.lookUpInheritedConcreteMethod(methodName, library),
+        same(inheritedMethod));
   }
 
   void test_lookUpInheritedConcreteMethod_undeclared() {
     // class A {
     // }
-    LibraryElementImpl library = ElementFactory.library(createAnalysisContext(), "lib");
-    ClassElementImpl classA = ElementFactory.classElement2("A", []);
-    (library.definingCompilationUnit as CompilationUnitElementImpl).types = <ClassElement> [classA];
-    JUnitTestCase.assertNull(classA.lookUpInheritedConcreteMethod("m", library));
+    LibraryElementImpl library =
+        ElementFactory.library(createAnalysisContext(), "lib");
+    ClassElementImpl classA = ElementFactory.classElement2("A");
+    (library.definingCompilationUnit as CompilationUnitElementImpl).types =
+        <ClassElement>[classA];
+    expect(classA.lookUpInheritedConcreteMethod("m", library), isNull);
   }
 
   void test_lookUpInheritedConcreteSetter_declared() {
     // class A {
     //   set g(x) {}
     // }
-    LibraryElementImpl library = ElementFactory.library(createAnalysisContext(), "lib");
-    ClassElementImpl classA = ElementFactory.classElement2("A", []);
+    LibraryElementImpl library =
+        ElementFactory.library(createAnalysisContext(), "lib");
+    ClassElementImpl classA = ElementFactory.classElement2("A");
     String setterName = "s";
-    PropertyAccessorElement setter = ElementFactory.setterElement(setterName, false, null);
-    classA.accessors = <PropertyAccessorElement> [setter];
-    (library.definingCompilationUnit as CompilationUnitElementImpl).types = <ClassElement> [classA];
-    JUnitTestCase.assertNull(classA.lookUpInheritedConcreteSetter(setterName, library));
+    PropertyAccessorElement setter =
+        ElementFactory.setterElement(setterName, false, null);
+    classA.accessors = <PropertyAccessorElement>[setter];
+    (library.definingCompilationUnit as CompilationUnitElementImpl).types =
+        <ClassElement>[classA];
+    expect(classA.lookUpInheritedConcreteSetter(setterName, library), isNull);
   }
 
   void test_lookUpInheritedConcreteSetter_inherited() {
@@ -608,23 +676,30 @@ class ClassElementImplTest extends EngineTestCase {
     // }
     // class B extends A {
     // }
-    LibraryElementImpl library = ElementFactory.library(createAnalysisContext(), "lib");
-    ClassElementImpl classA = ElementFactory.classElement2("A", []);
+    LibraryElementImpl library =
+        ElementFactory.library(createAnalysisContext(), "lib");
+    ClassElementImpl classA = ElementFactory.classElement2("A");
     String setterName = "s";
-    PropertyAccessorElement setter = ElementFactory.setterElement(setterName, false, null);
-    classA.accessors = <PropertyAccessorElement> [setter];
-    ClassElementImpl classB = ElementFactory.classElement("B", classA.type, []);
-    (library.definingCompilationUnit as CompilationUnitElementImpl).types = <ClassElement> [classA, classB];
-    JUnitTestCase.assertSame(setter, classB.lookUpInheritedConcreteSetter(setterName, library));
+    PropertyAccessorElement setter =
+        ElementFactory.setterElement(setterName, false, null);
+    classA.accessors = <PropertyAccessorElement>[setter];
+    ClassElementImpl classB = ElementFactory.classElement("B", classA.type);
+    (library.definingCompilationUnit as CompilationUnitElementImpl).types =
+        <ClassElement>[classA, classB];
+    expect(
+        classB.lookUpInheritedConcreteSetter(setterName, library),
+        same(setter));
   }
 
   void test_lookUpInheritedConcreteSetter_undeclared() {
     // class A {
     // }
-    LibraryElementImpl library = ElementFactory.library(createAnalysisContext(), "lib");
-    ClassElementImpl classA = ElementFactory.classElement2("A", []);
-    (library.definingCompilationUnit as CompilationUnitElementImpl).types = <ClassElement> [classA];
-    JUnitTestCase.assertNull(classA.lookUpInheritedConcreteSetter("s", library));
+    LibraryElementImpl library =
+        ElementFactory.library(createAnalysisContext(), "lib");
+    ClassElementImpl classA = ElementFactory.classElement2("A");
+    (library.definingCompilationUnit as CompilationUnitElementImpl).types =
+        <ClassElement>[classA];
+    expect(classA.lookUpInheritedConcreteSetter("s", library), isNull);
   }
 
   void test_lookUpInheritedConcreteSetter_undeclared_recursive() {
@@ -632,25 +707,29 @@ class ClassElementImplTest extends EngineTestCase {
     // }
     // class B extends A {
     // }
-    LibraryElementImpl library = ElementFactory.library(createAnalysisContext(), "lib");
-    ClassElementImpl classA = ElementFactory.classElement2("A", []);
-    ClassElementImpl classB = ElementFactory.classElement("B", classA.type, []);
+    LibraryElementImpl library =
+        ElementFactory.library(createAnalysisContext(), "lib");
+    ClassElementImpl classA = ElementFactory.classElement2("A");
+    ClassElementImpl classB = ElementFactory.classElement("B", classA.type);
     classA.supertype = classB.type;
-    (library.definingCompilationUnit as CompilationUnitElementImpl).types = <ClassElement> [classA, classB];
-    JUnitTestCase.assertNull(classA.lookUpInheritedConcreteSetter("s", library));
+    (library.definingCompilationUnit as CompilationUnitElementImpl).types =
+        <ClassElement>[classA, classB];
+    expect(classA.lookUpInheritedConcreteSetter("s", library), isNull);
   }
 
   void test_lookUpInheritedMethod_declared() {
     // class A {
     //   m() {}
     // }
-    LibraryElementImpl library = ElementFactory.library(createAnalysisContext(), "lib");
-    ClassElementImpl classA = ElementFactory.classElement2("A", []);
+    LibraryElementImpl library =
+        ElementFactory.library(createAnalysisContext(), "lib");
+    ClassElementImpl classA = ElementFactory.classElement2("A");
     String methodName = "m";
-    MethodElement method = ElementFactory.methodElement(methodName, null, []);
-    classA.methods = <MethodElement> [method];
-    (library.definingCompilationUnit as CompilationUnitElementImpl).types = <ClassElement> [classA];
-    JUnitTestCase.assertNull(classA.lookUpInheritedMethod(methodName, library));
+    MethodElement method = ElementFactory.methodElement(methodName, null);
+    classA.methods = <MethodElement>[method];
+    (library.definingCompilationUnit as CompilationUnitElementImpl).types =
+        <ClassElement>[classA];
+    expect(classA.lookUpInheritedMethod(methodName, library), isNull);
   }
 
   void test_lookUpInheritedMethod_declaredAndInherited() {
@@ -660,16 +739,21 @@ class ClassElementImplTest extends EngineTestCase {
     // class B extends A {
     //   m() {}
     // }
-    LibraryElementImpl library = ElementFactory.library(createAnalysisContext(), "lib");
-    ClassElementImpl classA = ElementFactory.classElement2("A", []);
+    LibraryElementImpl library =
+        ElementFactory.library(createAnalysisContext(), "lib");
+    ClassElementImpl classA = ElementFactory.classElement2("A");
     String methodName = "m";
-    MethodElement inheritedMethod = ElementFactory.methodElement(methodName, null, []);
-    classA.methods = <MethodElement> [inheritedMethod];
-    ClassElementImpl classB = ElementFactory.classElement("B", classA.type, []);
-    MethodElement method = ElementFactory.methodElement(methodName, null, []);
-    classB.methods = <MethodElement> [method];
-    (library.definingCompilationUnit as CompilationUnitElementImpl).types = <ClassElement> [classA, classB];
-    JUnitTestCase.assertSame(inheritedMethod, classB.lookUpInheritedMethod(methodName, library));
+    MethodElement inheritedMethod =
+        ElementFactory.methodElement(methodName, null);
+    classA.methods = <MethodElement>[inheritedMethod];
+    ClassElementImpl classB = ElementFactory.classElement("B", classA.type);
+    MethodElement method = ElementFactory.methodElement(methodName, null);
+    classB.methods = <MethodElement>[method];
+    (library.definingCompilationUnit as CompilationUnitElementImpl).types =
+        <ClassElement>[classA, classB];
+    expect(
+        classB.lookUpInheritedMethod(methodName, library),
+        same(inheritedMethod));
   }
 
   void test_lookUpInheritedMethod_inherited() {
@@ -678,73 +762,91 @@ class ClassElementImplTest extends EngineTestCase {
     // }
     // class B extends A {
     // }
-    LibraryElementImpl library = ElementFactory.library(createAnalysisContext(), "lib");
-    ClassElementImpl classA = ElementFactory.classElement2("A", []);
+    LibraryElementImpl library =
+        ElementFactory.library(createAnalysisContext(), "lib");
+    ClassElementImpl classA = ElementFactory.classElement2("A");
     String methodName = "m";
-    MethodElement inheritedMethod = ElementFactory.methodElement(methodName, null, []);
-    classA.methods = <MethodElement> [inheritedMethod];
-    ClassElementImpl classB = ElementFactory.classElement("B", classA.type, []);
-    (library.definingCompilationUnit as CompilationUnitElementImpl).types = <ClassElement> [classA, classB];
-    JUnitTestCase.assertSame(inheritedMethod, classB.lookUpInheritedMethod(methodName, library));
+    MethodElement inheritedMethod =
+        ElementFactory.methodElement(methodName, null);
+    classA.methods = <MethodElement>[inheritedMethod];
+    ClassElementImpl classB = ElementFactory.classElement("B", classA.type);
+    (library.definingCompilationUnit as CompilationUnitElementImpl).types =
+        <ClassElement>[classA, classB];
+    expect(
+        classB.lookUpInheritedMethod(methodName, library),
+        same(inheritedMethod));
   }
 
   void test_lookUpInheritedMethod_undeclared() {
     // class A {
     // }
-    LibraryElementImpl library = ElementFactory.library(createAnalysisContext(), "lib");
-    ClassElementImpl classA = ElementFactory.classElement2("A", []);
-    (library.definingCompilationUnit as CompilationUnitElementImpl).types = <ClassElement> [classA];
-    JUnitTestCase.assertNull(classA.lookUpInheritedMethod("m", library));
+    LibraryElementImpl library =
+        ElementFactory.library(createAnalysisContext(), "lib");
+    ClassElementImpl classA = ElementFactory.classElement2("A");
+    (library.definingCompilationUnit as CompilationUnitElementImpl).types =
+        <ClassElement>[classA];
+    expect(classA.lookUpInheritedMethod("m", library), isNull);
   }
 
   void test_lookUpMethod_declared() {
-    LibraryElementImpl library = ElementFactory.library(createAnalysisContext(), "lib");
-    ClassElementImpl classA = ElementFactory.classElement2("A", []);
+    LibraryElementImpl library =
+        ElementFactory.library(createAnalysisContext(), "lib");
+    ClassElementImpl classA = ElementFactory.classElement2("A");
     String methodName = "m";
-    MethodElement method = ElementFactory.methodElement(methodName, null, []);
-    classA.methods = <MethodElement> [method];
-    (library.definingCompilationUnit as CompilationUnitElementImpl).types = <ClassElement> [classA];
-    JUnitTestCase.assertSame(method, classA.lookUpMethod(methodName, library));
+    MethodElement method = ElementFactory.methodElement(methodName, null);
+    classA.methods = <MethodElement>[method];
+    (library.definingCompilationUnit as CompilationUnitElementImpl).types =
+        <ClassElement>[classA];
+    expect(classA.lookUpMethod(methodName, library), same(method));
   }
 
   void test_lookUpMethod_inherited() {
-    LibraryElementImpl library = ElementFactory.library(createAnalysisContext(), "lib");
-    ClassElementImpl classA = ElementFactory.classElement2("A", []);
+    LibraryElementImpl library =
+        ElementFactory.library(createAnalysisContext(), "lib");
+    ClassElementImpl classA = ElementFactory.classElement2("A");
     String methodName = "m";
-    MethodElement method = ElementFactory.methodElement(methodName, null, []);
-    classA.methods = <MethodElement> [method];
-    ClassElementImpl classB = ElementFactory.classElement("B", classA.type, []);
-    (library.definingCompilationUnit as CompilationUnitElementImpl).types = <ClassElement> [classA, classB];
-    JUnitTestCase.assertSame(method, classB.lookUpMethod(methodName, library));
+    MethodElement method = ElementFactory.methodElement(methodName, null);
+    classA.methods = <MethodElement>[method];
+    ClassElementImpl classB = ElementFactory.classElement("B", classA.type);
+    (library.definingCompilationUnit as CompilationUnitElementImpl).types =
+        <ClassElement>[classA, classB];
+    expect(classB.lookUpMethod(methodName, library), same(method));
   }
 
   void test_lookUpMethod_undeclared() {
-    LibraryElementImpl library = ElementFactory.library(createAnalysisContext(), "lib");
-    ClassElementImpl classA = ElementFactory.classElement2("A", []);
-    (library.definingCompilationUnit as CompilationUnitElementImpl).types = <ClassElement> [classA];
-    JUnitTestCase.assertNull(classA.lookUpMethod("m", library));
+    LibraryElementImpl library =
+        ElementFactory.library(createAnalysisContext(), "lib");
+    ClassElementImpl classA = ElementFactory.classElement2("A");
+    (library.definingCompilationUnit as CompilationUnitElementImpl).types =
+        <ClassElement>[classA];
+    expect(classA.lookUpMethod("m", library), isNull);
   }
 
   void test_lookUpMethod_undeclared_recursive() {
-    LibraryElementImpl library = ElementFactory.library(createAnalysisContext(), "lib");
-    ClassElementImpl classA = ElementFactory.classElement2("A", []);
-    ClassElementImpl classB = ElementFactory.classElement("B", classA.type, []);
+    LibraryElementImpl library =
+        ElementFactory.library(createAnalysisContext(), "lib");
+    ClassElementImpl classA = ElementFactory.classElement2("A");
+    ClassElementImpl classB = ElementFactory.classElement("B", classA.type);
     classA.supertype = classB.type;
-    (library.definingCompilationUnit as CompilationUnitElementImpl).types = <ClassElement> [classA, classB];
-    JUnitTestCase.assertNull(classA.lookUpMethod("m", library));
+    (library.definingCompilationUnit as CompilationUnitElementImpl).types =
+        <ClassElement>[classA, classB];
+    expect(classA.lookUpMethod("m", library), isNull);
   }
 
   void test_lookUpSetter_declared() {
     // class A {
     //   set g(x) {}
     // }
-    LibraryElementImpl library = ElementFactory.library(createAnalysisContext(), "lib");
-    ClassElementImpl classA = ElementFactory.classElement2("A", []);
+    LibraryElementImpl library =
+        ElementFactory.library(createAnalysisContext(), "lib");
+    ClassElementImpl classA = ElementFactory.classElement2("A");
     String setterName = "s";
-    PropertyAccessorElement setter = ElementFactory.setterElement(setterName, false, null);
-    classA.accessors = <PropertyAccessorElement> [setter];
-    (library.definingCompilationUnit as CompilationUnitElementImpl).types = <ClassElement> [classA];
-    JUnitTestCase.assertSame(setter, classA.lookUpSetter(setterName, library));
+    PropertyAccessorElement setter =
+        ElementFactory.setterElement(setterName, false, null);
+    classA.accessors = <PropertyAccessorElement>[setter];
+    (library.definingCompilationUnit as CompilationUnitElementImpl).types =
+        <ClassElement>[classA];
+    expect(classA.lookUpSetter(setterName, library), same(setter));
   }
 
   void test_lookUpSetter_inherited() {
@@ -753,23 +855,28 @@ class ClassElementImplTest extends EngineTestCase {
     // }
     // class B extends A {
     // }
-    LibraryElementImpl library = ElementFactory.library(createAnalysisContext(), "lib");
-    ClassElementImpl classA = ElementFactory.classElement2("A", []);
+    LibraryElementImpl library =
+        ElementFactory.library(createAnalysisContext(), "lib");
+    ClassElementImpl classA = ElementFactory.classElement2("A");
     String setterName = "s";
-    PropertyAccessorElement setter = ElementFactory.setterElement(setterName, false, null);
-    classA.accessors = <PropertyAccessorElement> [setter];
-    ClassElementImpl classB = ElementFactory.classElement("B", classA.type, []);
-    (library.definingCompilationUnit as CompilationUnitElementImpl).types = <ClassElement> [classA, classB];
-    JUnitTestCase.assertSame(setter, classB.lookUpSetter(setterName, library));
+    PropertyAccessorElement setter =
+        ElementFactory.setterElement(setterName, false, null);
+    classA.accessors = <PropertyAccessorElement>[setter];
+    ClassElementImpl classB = ElementFactory.classElement("B", classA.type);
+    (library.definingCompilationUnit as CompilationUnitElementImpl).types =
+        <ClassElement>[classA, classB];
+    expect(classB.lookUpSetter(setterName, library), same(setter));
   }
 
   void test_lookUpSetter_undeclared() {
     // class A {
     // }
-    LibraryElementImpl library = ElementFactory.library(createAnalysisContext(), "lib");
-    ClassElementImpl classA = ElementFactory.classElement2("A", []);
-    (library.definingCompilationUnit as CompilationUnitElementImpl).types = <ClassElement> [classA];
-    JUnitTestCase.assertNull(classA.lookUpSetter("s", library));
+    LibraryElementImpl library =
+        ElementFactory.library(createAnalysisContext(), "lib");
+    ClassElementImpl classA = ElementFactory.classElement2("A");
+    (library.definingCompilationUnit as CompilationUnitElementImpl).types =
+        <ClassElement>[classA];
+    expect(classA.lookUpSetter("s", library), isNull);
   }
 
   void test_lookUpSetter_undeclared_recursive() {
@@ -777,468 +884,175 @@ class ClassElementImplTest extends EngineTestCase {
     // }
     // class B extends A {
     // }
-    LibraryElementImpl library = ElementFactory.library(createAnalysisContext(), "lib");
-    ClassElementImpl classA = ElementFactory.classElement2("A", []);
-    ClassElementImpl classB = ElementFactory.classElement("B", classA.type, []);
+    LibraryElementImpl library =
+        ElementFactory.library(createAnalysisContext(), "lib");
+    ClassElementImpl classA = ElementFactory.classElement2("A");
+    ClassElementImpl classB = ElementFactory.classElement("B", classA.type);
     classA.supertype = classB.type;
-    (library.definingCompilationUnit as CompilationUnitElementImpl).types = <ClassElement> [classA, classB];
-    JUnitTestCase.assertNull(classA.lookUpSetter("s", library));
-  }
-
-  static dartSuite() {
-    _ut.group('ClassElementImplTest', () {
-      _ut.test('test_getAllSupertypes_interface', () {
-        final __test = new ClassElementImplTest();
-        runJUnitTest(__test, __test.test_getAllSupertypes_interface);
-      });
-      _ut.test('test_getAllSupertypes_mixins', () {
-        final __test = new ClassElementImplTest();
-        runJUnitTest(__test, __test.test_getAllSupertypes_mixins);
-      });
-      _ut.test('test_getAllSupertypes_recursive', () {
-        final __test = new ClassElementImplTest();
-        runJUnitTest(__test, __test.test_getAllSupertypes_recursive);
-      });
-      _ut.test('test_getField', () {
-        final __test = new ClassElementImplTest();
-        runJUnitTest(__test, __test.test_getField);
-      });
-      _ut.test('test_getMethod_declared', () {
-        final __test = new ClassElementImplTest();
-        runJUnitTest(__test, __test.test_getMethod_declared);
-      });
-      _ut.test('test_getMethod_undeclared', () {
-        final __test = new ClassElementImplTest();
-        runJUnitTest(__test, __test.test_getMethod_undeclared);
-      });
-      _ut.test('test_getNode', () {
-        final __test = new ClassElementImplTest();
-        runJUnitTest(__test, __test.test_getNode);
-      });
-      _ut.test('test_hasNonFinalField_false_const', () {
-        final __test = new ClassElementImplTest();
-        runJUnitTest(__test, __test.test_hasNonFinalField_false_const);
-      });
-      _ut.test('test_hasNonFinalField_false_final', () {
-        final __test = new ClassElementImplTest();
-        runJUnitTest(__test, __test.test_hasNonFinalField_false_final);
-      });
-      _ut.test('test_hasNonFinalField_false_recursive', () {
-        final __test = new ClassElementImplTest();
-        runJUnitTest(__test, __test.test_hasNonFinalField_false_recursive);
-      });
-      _ut.test('test_hasNonFinalField_true_immediate', () {
-        final __test = new ClassElementImplTest();
-        runJUnitTest(__test, __test.test_hasNonFinalField_true_immediate);
-      });
-      _ut.test('test_hasNonFinalField_true_inherited', () {
-        final __test = new ClassElementImplTest();
-        runJUnitTest(__test, __test.test_hasNonFinalField_true_inherited);
-      });
-      _ut.test('test_hasStaticMember_false_empty', () {
-        final __test = new ClassElementImplTest();
-        runJUnitTest(__test, __test.test_hasStaticMember_false_empty);
-      });
-      _ut.test('test_hasStaticMember_false_instanceMethod', () {
-        final __test = new ClassElementImplTest();
-        runJUnitTest(__test, __test.test_hasStaticMember_false_instanceMethod);
-      });
-      _ut.test('test_hasStaticMember_instanceGetter', () {
-        final __test = new ClassElementImplTest();
-        runJUnitTest(__test, __test.test_hasStaticMember_instanceGetter);
-      });
-      _ut.test('test_hasStaticMember_true_getter', () {
-        final __test = new ClassElementImplTest();
-        runJUnitTest(__test, __test.test_hasStaticMember_true_getter);
-      });
-      _ut.test('test_hasStaticMember_true_method', () {
-        final __test = new ClassElementImplTest();
-        runJUnitTest(__test, __test.test_hasStaticMember_true_method);
-      });
-      _ut.test('test_hasStaticMember_true_setter', () {
-        final __test = new ClassElementImplTest();
-        runJUnitTest(__test, __test.test_hasStaticMember_true_setter);
-      });
-      _ut.test('test_lookUpConcreteMethod_declared', () {
-        final __test = new ClassElementImplTest();
-        runJUnitTest(__test, __test.test_lookUpConcreteMethod_declared);
-      });
-      _ut.test('test_lookUpConcreteMethod_declaredAbstract', () {
-        final __test = new ClassElementImplTest();
-        runJUnitTest(__test, __test.test_lookUpConcreteMethod_declaredAbstract);
-      });
-      _ut.test('test_lookUpConcreteMethod_declaredAbstractAndInherited', () {
-        final __test = new ClassElementImplTest();
-        runJUnitTest(__test, __test.test_lookUpConcreteMethod_declaredAbstractAndInherited);
-      });
-      _ut.test('test_lookUpConcreteMethod_declaredAndInherited', () {
-        final __test = new ClassElementImplTest();
-        runJUnitTest(__test, __test.test_lookUpConcreteMethod_declaredAndInherited);
-      });
-      _ut.test('test_lookUpConcreteMethod_declaredAndInheritedAbstract', () {
-        final __test = new ClassElementImplTest();
-        runJUnitTest(__test, __test.test_lookUpConcreteMethod_declaredAndInheritedAbstract);
-      });
-      _ut.test('test_lookUpConcreteMethod_inherited', () {
-        final __test = new ClassElementImplTest();
-        runJUnitTest(__test, __test.test_lookUpConcreteMethod_inherited);
-      });
-      _ut.test('test_lookUpConcreteMethod_undeclared', () {
-        final __test = new ClassElementImplTest();
-        runJUnitTest(__test, __test.test_lookUpConcreteMethod_undeclared);
-      });
-      _ut.test('test_lookUpGetter_declared', () {
-        final __test = new ClassElementImplTest();
-        runJUnitTest(__test, __test.test_lookUpGetter_declared);
-      });
-      _ut.test('test_lookUpGetter_inherited', () {
-        final __test = new ClassElementImplTest();
-        runJUnitTest(__test, __test.test_lookUpGetter_inherited);
-      });
-      _ut.test('test_lookUpGetter_undeclared', () {
-        final __test = new ClassElementImplTest();
-        runJUnitTest(__test, __test.test_lookUpGetter_undeclared);
-      });
-      _ut.test('test_lookUpGetter_undeclared_recursive', () {
-        final __test = new ClassElementImplTest();
-        runJUnitTest(__test, __test.test_lookUpGetter_undeclared_recursive);
-      });
-      _ut.test('test_lookUpInheritedConcreteGetter_declared', () {
-        final __test = new ClassElementImplTest();
-        runJUnitTest(__test, __test.test_lookUpInheritedConcreteGetter_declared);
-      });
-      _ut.test('test_lookUpInheritedConcreteGetter_inherited', () {
-        final __test = new ClassElementImplTest();
-        runJUnitTest(__test, __test.test_lookUpInheritedConcreteGetter_inherited);
-      });
-      _ut.test('test_lookUpInheritedConcreteGetter_undeclared', () {
-        final __test = new ClassElementImplTest();
-        runJUnitTest(__test, __test.test_lookUpInheritedConcreteGetter_undeclared);
-      });
-      _ut.test('test_lookUpInheritedConcreteGetter_undeclared_recursive', () {
-        final __test = new ClassElementImplTest();
-        runJUnitTest(__test, __test.test_lookUpInheritedConcreteGetter_undeclared_recursive);
-      });
-      _ut.test('test_lookUpInheritedConcreteMethod_declared', () {
-        final __test = new ClassElementImplTest();
-        runJUnitTest(__test, __test.test_lookUpInheritedConcreteMethod_declared);
-      });
-      _ut.test('test_lookUpInheritedConcreteMethod_declaredAbstractAndInherited', () {
-        final __test = new ClassElementImplTest();
-        runJUnitTest(__test, __test.test_lookUpInheritedConcreteMethod_declaredAbstractAndInherited);
-      });
-      _ut.test('test_lookUpInheritedConcreteMethod_declaredAndInherited', () {
-        final __test = new ClassElementImplTest();
-        runJUnitTest(__test, __test.test_lookUpInheritedConcreteMethod_declaredAndInherited);
-      });
-      _ut.test('test_lookUpInheritedConcreteMethod_declaredAndInheritedAbstract', () {
-        final __test = new ClassElementImplTest();
-        runJUnitTest(__test, __test.test_lookUpInheritedConcreteMethod_declaredAndInheritedAbstract);
-      });
-      _ut.test('test_lookUpInheritedConcreteMethod_declaredAndInheritedWithAbstractBetween', () {
-        final __test = new ClassElementImplTest();
-        runJUnitTest(__test, __test.test_lookUpInheritedConcreteMethod_declaredAndInheritedWithAbstractBetween);
-      });
-      _ut.test('test_lookUpInheritedConcreteMethod_inherited', () {
-        final __test = new ClassElementImplTest();
-        runJUnitTest(__test, __test.test_lookUpInheritedConcreteMethod_inherited);
-      });
-      _ut.test('test_lookUpInheritedConcreteMethod_undeclared', () {
-        final __test = new ClassElementImplTest();
-        runJUnitTest(__test, __test.test_lookUpInheritedConcreteMethod_undeclared);
-      });
-      _ut.test('test_lookUpInheritedConcreteSetter_declared', () {
-        final __test = new ClassElementImplTest();
-        runJUnitTest(__test, __test.test_lookUpInheritedConcreteSetter_declared);
-      });
-      _ut.test('test_lookUpInheritedConcreteSetter_inherited', () {
-        final __test = new ClassElementImplTest();
-        runJUnitTest(__test, __test.test_lookUpInheritedConcreteSetter_inherited);
-      });
-      _ut.test('test_lookUpInheritedConcreteSetter_undeclared', () {
-        final __test = new ClassElementImplTest();
-        runJUnitTest(__test, __test.test_lookUpInheritedConcreteSetter_undeclared);
-      });
-      _ut.test('test_lookUpInheritedConcreteSetter_undeclared_recursive', () {
-        final __test = new ClassElementImplTest();
-        runJUnitTest(__test, __test.test_lookUpInheritedConcreteSetter_undeclared_recursive);
-      });
-      _ut.test('test_lookUpInheritedMethod_declared', () {
-        final __test = new ClassElementImplTest();
-        runJUnitTest(__test, __test.test_lookUpInheritedMethod_declared);
-      });
-      _ut.test('test_lookUpInheritedMethod_declaredAndInherited', () {
-        final __test = new ClassElementImplTest();
-        runJUnitTest(__test, __test.test_lookUpInheritedMethod_declaredAndInherited);
-      });
-      _ut.test('test_lookUpInheritedMethod_inherited', () {
-        final __test = new ClassElementImplTest();
-        runJUnitTest(__test, __test.test_lookUpInheritedMethod_inherited);
-      });
-      _ut.test('test_lookUpInheritedMethod_undeclared', () {
-        final __test = new ClassElementImplTest();
-        runJUnitTest(__test, __test.test_lookUpInheritedMethod_undeclared);
-      });
-      _ut.test('test_lookUpMethod_declared', () {
-        final __test = new ClassElementImplTest();
-        runJUnitTest(__test, __test.test_lookUpMethod_declared);
-      });
-      _ut.test('test_lookUpMethod_inherited', () {
-        final __test = new ClassElementImplTest();
-        runJUnitTest(__test, __test.test_lookUpMethod_inherited);
-      });
-      _ut.test('test_lookUpMethod_undeclared', () {
-        final __test = new ClassElementImplTest();
-        runJUnitTest(__test, __test.test_lookUpMethod_undeclared);
-      });
-      _ut.test('test_lookUpMethod_undeclared_recursive', () {
-        final __test = new ClassElementImplTest();
-        runJUnitTest(__test, __test.test_lookUpMethod_undeclared_recursive);
-      });
-      _ut.test('test_lookUpSetter_declared', () {
-        final __test = new ClassElementImplTest();
-        runJUnitTest(__test, __test.test_lookUpSetter_declared);
-      });
-      _ut.test('test_lookUpSetter_inherited', () {
-        final __test = new ClassElementImplTest();
-        runJUnitTest(__test, __test.test_lookUpSetter_inherited);
-      });
-      _ut.test('test_lookUpSetter_undeclared', () {
-        final __test = new ClassElementImplTest();
-        runJUnitTest(__test, __test.test_lookUpSetter_undeclared);
-      });
-      _ut.test('test_lookUpSetter_undeclared_recursive', () {
-        final __test = new ClassElementImplTest();
-        runJUnitTest(__test, __test.test_lookUpSetter_undeclared_recursive);
-      });
-    });
+    (library.definingCompilationUnit as CompilationUnitElementImpl).types =
+        <ClassElement>[classA, classB];
+    expect(classA.lookUpSetter("s", library), isNull);
   }
 }
 
+@reflectiveTest
 class CompilationUnitElementImplTest extends EngineTestCase {
   void test_getEnum_declared() {
     TestTypeProvider typeProvider = new TestTypeProvider();
-    CompilationUnitElementImpl unit = ElementFactory.compilationUnit("/lib.dart");
+    CompilationUnitElementImpl unit =
+        ElementFactory.compilationUnit("/lib.dart");
     String enumName = "E";
-    ClassElement enumElement = ElementFactory.enumElement(typeProvider, enumName, []);
-    unit.enums = <ClassElement> [enumElement];
-    JUnitTestCase.assertSame(enumElement, unit.getEnum(enumName));
+    ClassElement enumElement =
+        ElementFactory.enumElement(typeProvider, enumName);
+    unit.enums = <ClassElement>[enumElement];
+    expect(unit.getEnum(enumName), same(enumElement));
   }
 
   void test_getEnum_undeclared() {
     TestTypeProvider typeProvider = new TestTypeProvider();
-    CompilationUnitElementImpl unit = ElementFactory.compilationUnit("/lib.dart");
+    CompilationUnitElementImpl unit =
+        ElementFactory.compilationUnit("/lib.dart");
     String enumName = "E";
-    ClassElement enumElement = ElementFactory.enumElement(typeProvider, enumName, []);
-    unit.enums = <ClassElement> [enumElement];
-    JUnitTestCase.assertNull(unit.getEnum("${enumName}x"));
+    ClassElement enumElement =
+        ElementFactory.enumElement(typeProvider, enumName);
+    unit.enums = <ClassElement>[enumElement];
+    expect(unit.getEnum("${enumName}x"), isNull);
   }
 
   void test_getType_declared() {
-    CompilationUnitElementImpl unit = ElementFactory.compilationUnit("/lib.dart");
+    CompilationUnitElementImpl unit =
+        ElementFactory.compilationUnit("/lib.dart");
     String className = "C";
-    ClassElement classElement = ElementFactory.classElement2(className, []);
-    unit.types = <ClassElement> [classElement];
-    JUnitTestCase.assertSame(classElement, unit.getType(className));
+    ClassElement classElement = ElementFactory.classElement2(className);
+    unit.types = <ClassElement>[classElement];
+    expect(unit.getType(className), same(classElement));
   }
 
   void test_getType_undeclared() {
-    CompilationUnitElementImpl unit = ElementFactory.compilationUnit("/lib.dart");
+    CompilationUnitElementImpl unit =
+        ElementFactory.compilationUnit("/lib.dart");
     String className = "C";
-    ClassElement classElement = ElementFactory.classElement2(className, []);
-    unit.types = <ClassElement> [classElement];
-    JUnitTestCase.assertNull(unit.getType("${className}x"));
-  }
-
-  static dartSuite() {
-    _ut.group('CompilationUnitElementImplTest', () {
-      _ut.test('test_getEnum_declared', () {
-        final __test = new CompilationUnitElementImplTest();
-        runJUnitTest(__test, __test.test_getEnum_declared);
-      });
-      _ut.test('test_getEnum_undeclared', () {
-        final __test = new CompilationUnitElementImplTest();
-        runJUnitTest(__test, __test.test_getEnum_undeclared);
-      });
-      _ut.test('test_getType_declared', () {
-        final __test = new CompilationUnitElementImplTest();
-        runJUnitTest(__test, __test.test_getType_declared);
-      });
-      _ut.test('test_getType_undeclared', () {
-        final __test = new CompilationUnitElementImplTest();
-        runJUnitTest(__test, __test.test_getType_undeclared);
-      });
-    });
+    ClassElement classElement = ElementFactory.classElement2(className);
+    unit.types = <ClassElement>[classElement];
+    expect(unit.getType("${className}x"), isNull);
   }
 }
 
+@reflectiveTest
 class ElementImplTest extends EngineTestCase {
   void test_equals() {
-    LibraryElementImpl library = ElementFactory.library(createAnalysisContext(), "lib");
-    ClassElementImpl classElement = ElementFactory.classElement2("C", []);
-    (library.definingCompilationUnit as CompilationUnitElementImpl).types = <ClassElement> [classElement];
-    FieldElement field = ElementFactory.fieldElement("next", false, false, false, classElement.type);
-    classElement.fields = <FieldElement> [field];
-    JUnitTestCase.assertTrue(field == field);
-    JUnitTestCase.assertFalse(field == field.getter);
-    JUnitTestCase.assertFalse(field == field.setter);
-    JUnitTestCase.assertFalse(field.getter == field.setter);
+    LibraryElementImpl library =
+        ElementFactory.library(createAnalysisContext(), "lib");
+    ClassElementImpl classElement = ElementFactory.classElement2("C");
+    (library.definingCompilationUnit as CompilationUnitElementImpl).types =
+        <ClassElement>[classElement];
+    FieldElement field =
+        ElementFactory.fieldElement("next", false, false, false, classElement.type);
+    classElement.fields = <FieldElement>[field];
+    expect(field == field, isTrue);
+    expect(field == field.getter, isFalse);
+    expect(field == field.setter, isFalse);
+    expect(field.getter == field.setter, isFalse);
   }
 
   void test_isAccessibleIn_private_differentLibrary() {
     AnalysisContextImpl context = createAnalysisContext();
     LibraryElementImpl library1 = ElementFactory.library(context, "lib1");
-    ClassElement classElement = ElementFactory.classElement2("_C", []);
-    (library1.definingCompilationUnit as CompilationUnitElementImpl).types = <ClassElement> [classElement];
+    ClassElement classElement = ElementFactory.classElement2("_C");
+    (library1.definingCompilationUnit as CompilationUnitElementImpl).types =
+        <ClassElement>[classElement];
     LibraryElementImpl library2 = ElementFactory.library(context, "lib2");
-    JUnitTestCase.assertFalse(classElement.isAccessibleIn(library2));
+    expect(classElement.isAccessibleIn(library2), isFalse);
   }
 
   void test_isAccessibleIn_private_sameLibrary() {
-    LibraryElementImpl library = ElementFactory.library(createAnalysisContext(), "lib");
-    ClassElement classElement = ElementFactory.classElement2("_C", []);
-    (library.definingCompilationUnit as CompilationUnitElementImpl).types = <ClassElement> [classElement];
-    JUnitTestCase.assertTrue(classElement.isAccessibleIn(library));
+    LibraryElementImpl library =
+        ElementFactory.library(createAnalysisContext(), "lib");
+    ClassElement classElement = ElementFactory.classElement2("_C");
+    (library.definingCompilationUnit as CompilationUnitElementImpl).types =
+        <ClassElement>[classElement];
+    expect(classElement.isAccessibleIn(library), isTrue);
   }
 
   void test_isAccessibleIn_public_differentLibrary() {
     AnalysisContextImpl context = createAnalysisContext();
     LibraryElementImpl library1 = ElementFactory.library(context, "lib1");
-    ClassElement classElement = ElementFactory.classElement2("C", []);
-    (library1.definingCompilationUnit as CompilationUnitElementImpl).types = <ClassElement> [classElement];
+    ClassElement classElement = ElementFactory.classElement2("C");
+    (library1.definingCompilationUnit as CompilationUnitElementImpl).types =
+        <ClassElement>[classElement];
     LibraryElementImpl library2 = ElementFactory.library(context, "lib2");
-    JUnitTestCase.assertTrue(classElement.isAccessibleIn(library2));
+    expect(classElement.isAccessibleIn(library2), isTrue);
   }
 
   void test_isAccessibleIn_public_sameLibrary() {
-    LibraryElementImpl library = ElementFactory.library(createAnalysisContext(), "lib");
-    ClassElement classElement = ElementFactory.classElement2("C", []);
-    (library.definingCompilationUnit as CompilationUnitElementImpl).types = <ClassElement> [classElement];
-    JUnitTestCase.assertTrue(classElement.isAccessibleIn(library));
+    LibraryElementImpl library =
+        ElementFactory.library(createAnalysisContext(), "lib");
+    ClassElement classElement = ElementFactory.classElement2("C");
+    (library.definingCompilationUnit as CompilationUnitElementImpl).types =
+        <ClassElement>[classElement];
+    expect(classElement.isAccessibleIn(library), isTrue);
   }
 
   void test_isPrivate_false() {
-    Element element = ElementFactory.classElement2("C", []);
-    JUnitTestCase.assertFalse(element.isPrivate);
+    Element element = ElementFactory.classElement2("C");
+    expect(element.isPrivate, isFalse);
   }
 
   void test_isPrivate_null() {
-    Element element = ElementFactory.classElement2(null, []);
-    JUnitTestCase.assertTrue(element.isPrivate);
+    Element element = ElementFactory.classElement2(null);
+    expect(element.isPrivate, isTrue);
   }
 
   void test_isPrivate_true() {
-    Element element = ElementFactory.classElement2("_C", []);
-    JUnitTestCase.assertTrue(element.isPrivate);
+    Element element = ElementFactory.classElement2("_C");
+    expect(element.isPrivate, isTrue);
   }
 
   void test_isPublic_false() {
-    Element element = ElementFactory.classElement2("_C", []);
-    JUnitTestCase.assertFalse(element.isPublic);
+    Element element = ElementFactory.classElement2("_C");
+    expect(element.isPublic, isFalse);
   }
 
   void test_isPublic_null() {
-    Element element = ElementFactory.classElement2(null, []);
-    JUnitTestCase.assertFalse(element.isPublic);
+    Element element = ElementFactory.classElement2(null);
+    expect(element.isPublic, isFalse);
   }
 
   void test_isPublic_true() {
-    Element element = ElementFactory.classElement2("C", []);
-    JUnitTestCase.assertTrue(element.isPublic);
+    Element element = ElementFactory.classElement2("C");
+    expect(element.isPublic, isTrue);
   }
 
   void test_SORT_BY_OFFSET() {
-    ClassElementImpl classElementA = ElementFactory.classElement2("A", []);
+    ClassElementImpl classElementA = ElementFactory.classElement2("A");
     classElementA.nameOffset = 1;
-    ClassElementImpl classElementB = ElementFactory.classElement2("B", []);
+    ClassElementImpl classElementB = ElementFactory.classElement2("B");
     classElementB.nameOffset = 2;
-    JUnitTestCase.assertEquals(0, Element.SORT_BY_OFFSET(classElementA, classElementA));
-    JUnitTestCase.assertTrue(Element.SORT_BY_OFFSET(classElementA, classElementB) < 0);
-    JUnitTestCase.assertTrue(Element.SORT_BY_OFFSET(classElementB, classElementA) > 0);
-  }
-
-  static dartSuite() {
-    _ut.group('ElementImplTest', () {
-      _ut.test('test_SORT_BY_OFFSET', () {
-        final __test = new ElementImplTest();
-        runJUnitTest(__test, __test.test_SORT_BY_OFFSET);
-      });
-      _ut.test('test_equals', () {
-        final __test = new ElementImplTest();
-        runJUnitTest(__test, __test.test_equals);
-      });
-      _ut.test('test_isAccessibleIn_private_differentLibrary', () {
-        final __test = new ElementImplTest();
-        runJUnitTest(__test, __test.test_isAccessibleIn_private_differentLibrary);
-      });
-      _ut.test('test_isAccessibleIn_private_sameLibrary', () {
-        final __test = new ElementImplTest();
-        runJUnitTest(__test, __test.test_isAccessibleIn_private_sameLibrary);
-      });
-      _ut.test('test_isAccessibleIn_public_differentLibrary', () {
-        final __test = new ElementImplTest();
-        runJUnitTest(__test, __test.test_isAccessibleIn_public_differentLibrary);
-      });
-      _ut.test('test_isAccessibleIn_public_sameLibrary', () {
-        final __test = new ElementImplTest();
-        runJUnitTest(__test, __test.test_isAccessibleIn_public_sameLibrary);
-      });
-      _ut.test('test_isPrivate_false', () {
-        final __test = new ElementImplTest();
-        runJUnitTest(__test, __test.test_isPrivate_false);
-      });
-      _ut.test('test_isPrivate_null', () {
-        final __test = new ElementImplTest();
-        runJUnitTest(__test, __test.test_isPrivate_null);
-      });
-      _ut.test('test_isPrivate_true', () {
-        final __test = new ElementImplTest();
-        runJUnitTest(__test, __test.test_isPrivate_true);
-      });
-      _ut.test('test_isPublic_false', () {
-        final __test = new ElementImplTest();
-        runJUnitTest(__test, __test.test_isPublic_false);
-      });
-      _ut.test('test_isPublic_null', () {
-        final __test = new ElementImplTest();
-        runJUnitTest(__test, __test.test_isPublic_null);
-      });
-      _ut.test('test_isPublic_true', () {
-        final __test = new ElementImplTest();
-        runJUnitTest(__test, __test.test_isPublic_true);
-      });
-    });
+    expect(Element.SORT_BY_OFFSET(classElementA, classElementA), 0);
+    expect(Element.SORT_BY_OFFSET(classElementA, classElementB) < 0, isTrue);
+    expect(Element.SORT_BY_OFFSET(classElementB, classElementA) > 0, isTrue);
   }
 }
 
+@reflectiveTest
 class ElementKindTest extends EngineTestCase {
   void test_of_nonNull() {
-    JUnitTestCase.assertSame(ElementKind.CLASS, ElementKind.of(ElementFactory.classElement2("A", [])));
+    expect(
+        ElementKind.of(ElementFactory.classElement2("A")),
+        same(ElementKind.CLASS));
   }
 
   void test_of_null() {
-    JUnitTestCase.assertSame(ElementKind.ERROR, ElementKind.of(null));
-  }
-
-  static dartSuite() {
-    _ut.group('ElementKindTest', () {
-      _ut.test('test_of_nonNull', () {
-        final __test = new ElementKindTest();
-        runJUnitTest(__test, __test.test_of_nonNull);
-      });
-      _ut.test('test_of_null', () {
-        final __test = new ElementKindTest();
-        runJUnitTest(__test, __test.test_of_null);
-      });
-    });
+    expect(ElementKind.of(null), same(ElementKind.ERROR));
   }
 }
 
+@reflectiveTest
 class ElementLocationImplTest extends EngineTestCase {
   void test_create_encoding() {
     String encoding = "a;b;c";
     ElementLocationImpl location = new ElementLocationImpl.con2(encoding);
-    JUnitTestCase.assertEquals(encoding, location.encoding);
+    expect(location.encoding, encoding);
   }
 
   /**
@@ -1247,138 +1061,107 @@ class ElementLocationImplTest extends EngineTestCase {
   void test_create_encoding_emptyLast() {
     String encoding = "a;b;c;";
     ElementLocationImpl location = new ElementLocationImpl.con2(encoding);
-    JUnitTestCase.assertEquals(encoding, location.encoding);
+    expect(location.encoding, encoding);
   }
 
   void test_equals_equal() {
     String encoding = "a;b;c";
     ElementLocationImpl first = new ElementLocationImpl.con2(encoding);
     ElementLocationImpl second = new ElementLocationImpl.con2(encoding);
-    JUnitTestCase.assertTrue(first == second);
+    expect(first == second, isTrue);
   }
 
   void test_equals_notEqual_differentLengths() {
     ElementLocationImpl first = new ElementLocationImpl.con2("a;b;c");
     ElementLocationImpl second = new ElementLocationImpl.con2("a;b;c;d");
-    JUnitTestCase.assertFalse(first == second);
+    expect(first == second, isFalse);
   }
 
   void test_equals_notEqual_notLocation() {
     ElementLocationImpl first = new ElementLocationImpl.con2("a;b;c");
-    JUnitTestCase.assertFalse(first == "a;b;d");
+    expect(first == "a;b;d", isFalse);
   }
 
   void test_equals_notEqual_sameLengths() {
     ElementLocationImpl first = new ElementLocationImpl.con2("a;b;c");
     ElementLocationImpl second = new ElementLocationImpl.con2("a;b;d");
-    JUnitTestCase.assertFalse(first == second);
+    expect(first == second, isFalse);
   }
 
   void test_getComponents() {
     String encoding = "a;b;c";
     ElementLocationImpl location = new ElementLocationImpl.con2(encoding);
     List<String> components = location.components;
-    EngineTestCase.assertLength(3, components);
-    JUnitTestCase.assertEquals("a", components[0]);
-    JUnitTestCase.assertEquals("b", components[1]);
-    JUnitTestCase.assertEquals("c", components[2]);
+    expect(components, hasLength(3));
+    expect(components[0], "a");
+    expect(components[1], "b");
+    expect(components[2], "c");
   }
 
   void test_getEncoding() {
     String encoding = "a;b;c;;d";
     ElementLocationImpl location = new ElementLocationImpl.con2(encoding);
-    JUnitTestCase.assertEquals(encoding, location.encoding);
+    expect(location.encoding, encoding);
   }
 
   void test_hashCode_equal() {
     String encoding = "a;b;c";
     ElementLocationImpl first = new ElementLocationImpl.con2(encoding);
     ElementLocationImpl second = new ElementLocationImpl.con2(encoding);
-    JUnitTestCase.assertTrue(first.hashCode == second.hashCode);
-  }
-
-  static dartSuite() {
-    _ut.group('ElementLocationImplTest', () {
-      _ut.test('test_create_encoding', () {
-        final __test = new ElementLocationImplTest();
-        runJUnitTest(__test, __test.test_create_encoding);
-      });
-      _ut.test('test_create_encoding_emptyLast', () {
-        final __test = new ElementLocationImplTest();
-        runJUnitTest(__test, __test.test_create_encoding_emptyLast);
-      });
-      _ut.test('test_equals_equal', () {
-        final __test = new ElementLocationImplTest();
-        runJUnitTest(__test, __test.test_equals_equal);
-      });
-      _ut.test('test_equals_notEqual_differentLengths', () {
-        final __test = new ElementLocationImplTest();
-        runJUnitTest(__test, __test.test_equals_notEqual_differentLengths);
-      });
-      _ut.test('test_equals_notEqual_notLocation', () {
-        final __test = new ElementLocationImplTest();
-        runJUnitTest(__test, __test.test_equals_notEqual_notLocation);
-      });
-      _ut.test('test_equals_notEqual_sameLengths', () {
-        final __test = new ElementLocationImplTest();
-        runJUnitTest(__test, __test.test_equals_notEqual_sameLengths);
-      });
-      _ut.test('test_getComponents', () {
-        final __test = new ElementLocationImplTest();
-        runJUnitTest(__test, __test.test_getComponents);
-      });
-      _ut.test('test_getEncoding', () {
-        final __test = new ElementLocationImplTest();
-        runJUnitTest(__test, __test.test_getEncoding);
-      });
-      _ut.test('test_hashCode_equal', () {
-        final __test = new ElementLocationImplTest();
-        runJUnitTest(__test, __test.test_hashCode_equal);
-      });
-    });
+    expect(first.hashCode == second.hashCode, isTrue);
   }
 }
 
+@reflectiveTest
 class FunctionTypeImplTest extends EngineTestCase {
   void test_creation() {
-    JUnitTestCase.assertNotNull(new FunctionTypeImpl.con1(new FunctionElementImpl.forNode(AstFactory.identifier3("f"))));
+    expect(
+        new FunctionTypeImpl.con1(
+            new FunctionElementImpl.forNode(AstFactory.identifier3("f"))),
+        isNotNull);
   }
 
   void test_getElement() {
-    FunctionElementImpl typeElement = new FunctionElementImpl.forNode(AstFactory.identifier3("f"));
+    FunctionElementImpl typeElement =
+        new FunctionElementImpl.forNode(AstFactory.identifier3("f"));
     FunctionTypeImpl type = new FunctionTypeImpl.con1(typeElement);
-    JUnitTestCase.assertEquals(typeElement, type.element);
+    expect(type.element, typeElement);
   }
 
   void test_getNamedParameterTypes() {
-    FunctionTypeImpl type = new FunctionTypeImpl.con1(new FunctionElementImpl.forNode(AstFactory.identifier3("f")));
+    FunctionTypeImpl type = new FunctionTypeImpl.con1(
+        new FunctionElementImpl.forNode(AstFactory.identifier3("f")));
     Map<String, DartType> types = type.namedParameterTypes;
-    EngineTestCase.assertSizeOfMap(0, types);
+    expect(types, hasLength(0));
   }
 
   void test_getNormalParameterTypes() {
-    FunctionTypeImpl type = new FunctionTypeImpl.con1(new FunctionElementImpl.forNode(AstFactory.identifier3("f")));
+    FunctionTypeImpl type = new FunctionTypeImpl.con1(
+        new FunctionElementImpl.forNode(AstFactory.identifier3("f")));
     List<DartType> types = type.normalParameterTypes;
-    EngineTestCase.assertLength(0, types);
+    expect(types, hasLength(0));
   }
 
   void test_getReturnType() {
     DartType expectedReturnType = VoidTypeImpl.instance;
-    FunctionElementImpl functionElement = new FunctionElementImpl.forNode(AstFactory.identifier3("f"));
+    FunctionElementImpl functionElement =
+        new FunctionElementImpl.forNode(AstFactory.identifier3("f"));
     functionElement.returnType = expectedReturnType;
     FunctionTypeImpl type = new FunctionTypeImpl.con1(functionElement);
     DartType returnType = type.returnType;
-    JUnitTestCase.assertEquals(expectedReturnType, returnType);
+    expect(returnType, expectedReturnType);
   }
 
   void test_getTypeArguments() {
-    FunctionTypeImpl type = new FunctionTypeImpl.con1(new FunctionElementImpl.forNode(AstFactory.identifier3("f")));
+    FunctionTypeImpl type = new FunctionTypeImpl.con1(
+        new FunctionElementImpl.forNode(AstFactory.identifier3("f")));
     List<DartType> types = type.typeArguments;
-    EngineTestCase.assertLength(0, types);
+    expect(types, hasLength(0));
   }
 
   void test_hashCode_element() {
-    FunctionTypeImpl type = new FunctionTypeImpl.con1(new FunctionElementImpl.forNode(AstFactory.identifier3("f")));
+    FunctionTypeImpl type = new FunctionTypeImpl.con1(
+        new FunctionElementImpl.forNode(AstFactory.identifier3("f")));
     type.hashCode;
   }
 
@@ -1389,61 +1172,84 @@ class FunctionTypeImplTest extends EngineTestCase {
 
   void test_isAssignableTo_normalAndPositionalArgs() {
     // ([a]) -> void <: (a) -> void
-    ClassElement a = ElementFactory.classElement2("A", []);
-    FunctionType t = ElementFactory.functionElement6("t", null, <ClassElement> [a]).type;
-    FunctionType s = ElementFactory.functionElement5("s", <ClassElement> [a]).type;
-    JUnitTestCase.assertTrue(t.isSubtypeOf(s));
-    JUnitTestCase.assertFalse(s.isSubtypeOf(t));
+    ClassElement a = ElementFactory.classElement2("A");
+    FunctionType t =
+        ElementFactory.functionElement6("t", null, <ClassElement>[a]).type;
+    FunctionType s =
+        ElementFactory.functionElement5("s", <ClassElement>[a]).type;
+    expect(t.isSubtypeOf(s), isTrue);
+    expect(s.isSubtypeOf(t), isFalse);
     // assignable iff subtype
-    JUnitTestCase.assertTrue(t.isAssignableTo(s));
-    JUnitTestCase.assertFalse(s.isAssignableTo(t));
+    expect(t.isAssignableTo(s), isTrue);
+    expect(s.isAssignableTo(t), isFalse);
   }
 
   void test_isSubtypeOf_baseCase_classFunction() {
     // () -> void <: Function
-    ClassElementImpl functionElement = ElementFactory.classElement2("Function", []);
-    InterfaceTypeImpl functionType = new InterfaceTypeImpl_FunctionTypeImplTest_test_isSubtypeOf_baseCase_classFunction(functionElement);
+    ClassElementImpl functionElement = ElementFactory.classElement2("Function");
+    InterfaceTypeImpl functionType =
+        new _FunctionTypeImplTest_isSubtypeOf_baseCase_classFunction(functionElement);
     FunctionType f = ElementFactory.functionElement("f").type;
-    JUnitTestCase.assertTrue(f.isSubtypeOf(functionType));
+    expect(f.isSubtypeOf(functionType), isTrue);
   }
 
   void test_isSubtypeOf_baseCase_notFunctionType() {
     // class C
     // ! () -> void <: C
     FunctionType f = ElementFactory.functionElement("f").type;
-    InterfaceType t = ElementFactory.classElement2("C", []).type;
-    JUnitTestCase.assertFalse(f.isSubtypeOf(t));
+    InterfaceType t = ElementFactory.classElement2("C").type;
+    expect(f.isSubtypeOf(t), isFalse);
   }
 
   void test_isSubtypeOf_baseCase_null() {
     // ! () -> void <: null
     FunctionType f = ElementFactory.functionElement("f").type;
-    JUnitTestCase.assertFalse(f.isSubtypeOf(null));
+    expect(f.isSubtypeOf(null), isFalse);
   }
 
   void test_isSubtypeOf_baseCase_self() {
     // () -> void <: () -> void
     FunctionType f = ElementFactory.functionElement("f").type;
-    JUnitTestCase.assertTrue(f.isSubtypeOf(f));
+    expect(f.isSubtypeOf(f), isTrue);
   }
 
   void test_isSubtypeOf_namedParameters_isAssignable() {
     // B extends A
     // ({name: A}) -> void <: ({name: B}) -> void
     // ({name: B}) -> void <: ({name: A}) -> void
-    ClassElement a = ElementFactory.classElement2("A", []);
-    ClassElement b = ElementFactory.classElement("B", a.type, []);
-    FunctionType t = ElementFactory.functionElement4("t", null, null, <String> ["name"], <ClassElement> [a]).type;
-    FunctionType s = ElementFactory.functionElement4("s", null, null, <String> ["name"], <ClassElement> [b]).type;
-    JUnitTestCase.assertTrue(t.isSubtypeOf(s));
-    JUnitTestCase.assertTrue(s.isSubtypeOf(t));
+    ClassElement a = ElementFactory.classElement2("A");
+    ClassElement b = ElementFactory.classElement("B", a.type);
+    FunctionType t = ElementFactory.functionElement4(
+        "t",
+        null,
+        null,
+        <String>["name"],
+        <ClassElement>[a]).type;
+    FunctionType s = ElementFactory.functionElement4(
+        "s",
+        null,
+        null,
+        <String>["name"],
+        <ClassElement>[b]).type;
+    expect(t.isSubtypeOf(s), isTrue);
+    expect(s.isSubtypeOf(t), isTrue);
   }
 
   void test_isSubtypeOf_namedParameters_isNotAssignable() {
     // ! ({name: A}) -> void <: ({name: B}) -> void
-    FunctionType t = ElementFactory.functionElement4("t", null, null, <String> ["name"], <ClassElement> [ElementFactory.classElement2("A", [])]).type;
-    FunctionType s = ElementFactory.functionElement4("s", null, null, <String> ["name"], <ClassElement> [ElementFactory.classElement2("B", [])]).type;
-    JUnitTestCase.assertFalse(t.isSubtypeOf(s));
+    FunctionType t = ElementFactory.functionElement4(
+        "t",
+        null,
+        null,
+        <String>["name"],
+        <ClassElement>[ElementFactory.classElement2("A")]).type;
+    FunctionType s = ElementFactory.functionElement4(
+        "s",
+        null,
+        null,
+        <String>["name"],
+        <ClassElement>[ElementFactory.classElement2("B")]).type;
+    expect(t.isSubtypeOf(s), isFalse);
   }
 
   void test_isSubtypeOf_namedParameters_namesDifferent() {
@@ -1452,189 +1258,285 @@ class FunctionTypeImplTest extends EngineTestCase {
     // void s({A diff}) {}
     // ! t <: s
     // ! s <: t
-    ClassElement a = ElementFactory.classElement2("A", []);
-    ClassElement b = ElementFactory.classElement("B", a.type, []);
-    FunctionType t = ElementFactory.functionElement4("t", null, null, <String> ["name"], <ClassElement> [a]).type;
-    FunctionType s = ElementFactory.functionElement4("s", null, null, <String> ["diff"], <ClassElement> [b]).type;
-    JUnitTestCase.assertFalse(t.isSubtypeOf(s));
-    JUnitTestCase.assertFalse(s.isSubtypeOf(t));
+    ClassElement a = ElementFactory.classElement2("A");
+    ClassElement b = ElementFactory.classElement("B", a.type);
+    FunctionType t = ElementFactory.functionElement4(
+        "t",
+        null,
+        null,
+        <String>["name"],
+        <ClassElement>[a]).type;
+    FunctionType s = ElementFactory.functionElement4(
+        "s",
+        null,
+        null,
+        <String>["diff"],
+        <ClassElement>[b]).type;
+    expect(t.isSubtypeOf(s), isFalse);
+    expect(s.isSubtypeOf(t), isFalse);
   }
 
   void test_isSubtypeOf_namedParameters_orderOfParams() {
     // B extends A
     // ({A: A, B: B}) -> void <: ({B: B, A: A}) -> void
-    ClassElement a = ElementFactory.classElement2("A", []);
-    ClassElement b = ElementFactory.classElement("B", a.type, []);
-    FunctionType t = ElementFactory.functionElement4("t", null, null, <String> ["A", "B"], <ClassElement> [a, b]).type;
-    FunctionType s = ElementFactory.functionElement4("s", null, null, <String> ["B", "A"], <ClassElement> [b, a]).type;
-    JUnitTestCase.assertTrue(t.isSubtypeOf(s));
+    ClassElement a = ElementFactory.classElement2("A");
+    ClassElement b = ElementFactory.classElement("B", a.type);
+    FunctionType t = ElementFactory.functionElement4(
+        "t",
+        null,
+        null,
+        <String>["A", "B"],
+        <ClassElement>[a, b]).type;
+    FunctionType s = ElementFactory.functionElement4(
+        "s",
+        null,
+        null,
+        <String>["B", "A"],
+        <ClassElement>[b, a]).type;
+    expect(t.isSubtypeOf(s), isTrue);
   }
 
   void test_isSubtypeOf_namedParameters_orderOfParams2() {
     // B extends A
     // ! ({B: B}) -> void <: ({B: B, A: A}) -> void
-    ClassElement a = ElementFactory.classElement2("A", []);
-    ClassElement b = ElementFactory.classElement("B", a.type, []);
-    FunctionType t = ElementFactory.functionElement4("t", null, null, <String> ["B"], <ClassElement> [b]).type;
-    FunctionType s = ElementFactory.functionElement4("s", null, null, <String> ["B", "A"], <ClassElement> [b, a]).type;
-    JUnitTestCase.assertFalse(t.isSubtypeOf(s));
+    ClassElement a = ElementFactory.classElement2("A");
+    ClassElement b = ElementFactory.classElement("B", a.type);
+    FunctionType t = ElementFactory.functionElement4(
+        "t",
+        null,
+        null,
+        <String>["B"],
+        <ClassElement>[b]).type;
+    FunctionType s = ElementFactory.functionElement4(
+        "s",
+        null,
+        null,
+        <String>["B", "A"],
+        <ClassElement>[b, a]).type;
+    expect(t.isSubtypeOf(s), isFalse);
   }
 
   void test_isSubtypeOf_namedParameters_orderOfParams3() {
     // B extends A
     // ({A: A, B: B}) -> void <: ({A: A}) -> void
-    ClassElement a = ElementFactory.classElement2("A", []);
-    ClassElement b = ElementFactory.classElement("B", a.type, []);
-    FunctionType t = ElementFactory.functionElement4("t", null, null, <String> ["A", "B"], <ClassElement> [a, b]).type;
-    FunctionType s = ElementFactory.functionElement4("s", null, null, <String> ["B"], <ClassElement> [b]).type;
-    JUnitTestCase.assertTrue(t.isSubtypeOf(s));
+    ClassElement a = ElementFactory.classElement2("A");
+    ClassElement b = ElementFactory.classElement("B", a.type);
+    FunctionType t = ElementFactory.functionElement4(
+        "t",
+        null,
+        null,
+        <String>["A", "B"],
+        <ClassElement>[a, b]).type;
+    FunctionType s = ElementFactory.functionElement4(
+        "s",
+        null,
+        null,
+        <String>["B"],
+        <ClassElement>[b]).type;
+    expect(t.isSubtypeOf(s), isTrue);
   }
 
   void test_isSubtypeOf_namedParameters_sHasMoreParams() {
     // B extends A
     // ! ({name: A}) -> void <: ({name: B, name2: B}) -> void
-    ClassElement a = ElementFactory.classElement2("A", []);
-    ClassElement b = ElementFactory.classElement("B", a.type, []);
-    FunctionType t = ElementFactory.functionElement4("t", null, null, <String> ["name"], <ClassElement> [a]).type;
-    FunctionType s = ElementFactory.functionElement4("s", null, null, <String> ["name", "name2"], <ClassElement> [b, b]).type;
-    JUnitTestCase.assertFalse(t.isSubtypeOf(s));
+    ClassElement a = ElementFactory.classElement2("A");
+    ClassElement b = ElementFactory.classElement("B", a.type);
+    FunctionType t = ElementFactory.functionElement4(
+        "t",
+        null,
+        null,
+        <String>["name"],
+        <ClassElement>[a]).type;
+    FunctionType s = ElementFactory.functionElement4(
+        "s",
+        null,
+        null,
+        <String>["name", "name2"],
+        <ClassElement>[b, b]).type;
+    expect(t.isSubtypeOf(s), isFalse);
   }
 
   void test_isSubtypeOf_namedParameters_tHasMoreParams() {
     // B extends A
     // ({name: A, name2: A}) -> void <: ({name: B}) -> void
-    ClassElement a = ElementFactory.classElement2("A", []);
-    ClassElement b = ElementFactory.classElement("B", a.type, []);
-    FunctionType t = ElementFactory.functionElement4("t", null, null, <String> ["name", "name2"], <ClassElement> [a, a]).type;
-    FunctionType s = ElementFactory.functionElement4("s", null, null, <String> ["name"], <ClassElement> [b]).type;
-    JUnitTestCase.assertTrue(t.isSubtypeOf(s));
+    ClassElement a = ElementFactory.classElement2("A");
+    ClassElement b = ElementFactory.classElement("B", a.type);
+    FunctionType t = ElementFactory.functionElement4(
+        "t",
+        null,
+        null,
+        <String>["name", "name2"],
+        <ClassElement>[a, a]).type;
+    FunctionType s = ElementFactory.functionElement4(
+        "s",
+        null,
+        null,
+        <String>["name"],
+        <ClassElement>[b]).type;
+    expect(t.isSubtypeOf(s), isTrue);
   }
 
   void test_isSubtypeOf_normalAndPositionalArgs_1() {
     // ([a]) -> void <: (a) -> void
-    ClassElement a = ElementFactory.classElement2("A", []);
-    FunctionType t = ElementFactory.functionElement6("t", null, <ClassElement> [a]).type;
-    FunctionType s = ElementFactory.functionElement5("s", <ClassElement> [a]).type;
-    JUnitTestCase.assertTrue(t.isSubtypeOf(s));
-    JUnitTestCase.assertFalse(s.isSubtypeOf(t));
+    ClassElement a = ElementFactory.classElement2("A");
+    FunctionType t =
+        ElementFactory.functionElement6("t", null, <ClassElement>[a]).type;
+    FunctionType s =
+        ElementFactory.functionElement5("s", <ClassElement>[a]).type;
+    expect(t.isSubtypeOf(s), isTrue);
+    expect(s.isSubtypeOf(t), isFalse);
   }
 
   void test_isSubtypeOf_normalAndPositionalArgs_2() {
     // (a, [a]) -> void <: (a) -> void
-    ClassElement a = ElementFactory.classElement2("A", []);
-    FunctionType t = ElementFactory.functionElement6("t", <ClassElement> [a], <ClassElement> [a]).type;
-    FunctionType s = ElementFactory.functionElement5("s", <ClassElement> [a]).type;
-    JUnitTestCase.assertTrue(t.isSubtypeOf(s));
-    JUnitTestCase.assertFalse(s.isSubtypeOf(t));
+    ClassElement a = ElementFactory.classElement2("A");
+    FunctionType t = ElementFactory.functionElement6(
+        "t",
+        <ClassElement>[a],
+        <ClassElement>[a]).type;
+    FunctionType s =
+        ElementFactory.functionElement5("s", <ClassElement>[a]).type;
+    expect(t.isSubtypeOf(s), isTrue);
+    expect(s.isSubtypeOf(t), isFalse);
   }
 
   void test_isSubtypeOf_normalAndPositionalArgs_3() {
     // ([a]) -> void <: () -> void
-    ClassElement a = ElementFactory.classElement2("A", []);
-    FunctionType t = ElementFactory.functionElement6("t", null, <ClassElement> [a]).type;
+    ClassElement a = ElementFactory.classElement2("A");
+    FunctionType t =
+        ElementFactory.functionElement6("t", null, <ClassElement>[a]).type;
     FunctionType s = ElementFactory.functionElement("s").type;
-    JUnitTestCase.assertTrue(t.isSubtypeOf(s));
-    JUnitTestCase.assertFalse(s.isSubtypeOf(t));
+    expect(t.isSubtypeOf(s), isTrue);
+    expect(s.isSubtypeOf(t), isFalse);
   }
 
   void test_isSubtypeOf_normalAndPositionalArgs_4() {
     // (a, b, [c, d, e]) -> void <: (a, b, c, [d]) -> void
-    ClassElement a = ElementFactory.classElement2("A", []);
-    ClassElement b = ElementFactory.classElement2("B", []);
-    ClassElement c = ElementFactory.classElement2("C", []);
-    ClassElement d = ElementFactory.classElement2("D", []);
-    ClassElement e = ElementFactory.classElement2("E", []);
-    FunctionType t = ElementFactory.functionElement6("t", <ClassElement> [a, b], <ClassElement> [c, d, e]).type;
-    FunctionType s = ElementFactory.functionElement6("s", <ClassElement> [a, b, c], <ClassElement> [d]).type;
-    JUnitTestCase.assertTrue(t.isSubtypeOf(s));
-    JUnitTestCase.assertFalse(s.isSubtypeOf(t));
+    ClassElement a = ElementFactory.classElement2("A");
+    ClassElement b = ElementFactory.classElement2("B");
+    ClassElement c = ElementFactory.classElement2("C");
+    ClassElement d = ElementFactory.classElement2("D");
+    ClassElement e = ElementFactory.classElement2("E");
+    FunctionType t = ElementFactory.functionElement6(
+        "t",
+        <ClassElement>[a, b],
+        <ClassElement>[c, d, e]).type;
+    FunctionType s = ElementFactory.functionElement6(
+        "s",
+        <ClassElement>[a, b, c],
+        <ClassElement>[d]).type;
+    expect(t.isSubtypeOf(s), isTrue);
+    expect(s.isSubtypeOf(t), isFalse);
   }
 
   void test_isSubtypeOf_normalParameters_isAssignable() {
     // B extends A
     // (a) -> void <: (b) -> void
     // (b) -> void <: (a) -> void
-    ClassElement a = ElementFactory.classElement2("A", []);
-    ClassElement b = ElementFactory.classElement("B", a.type, []);
-    FunctionType t = ElementFactory.functionElement5("t", <ClassElement> [a]).type;
-    FunctionType s = ElementFactory.functionElement5("s", <ClassElement> [b]).type;
-    JUnitTestCase.assertTrue(t.isSubtypeOf(s));
-    JUnitTestCase.assertTrue(s.isSubtypeOf(t));
+    ClassElement a = ElementFactory.classElement2("A");
+    ClassElement b = ElementFactory.classElement("B", a.type);
+    FunctionType t =
+        ElementFactory.functionElement5("t", <ClassElement>[a]).type;
+    FunctionType s =
+        ElementFactory.functionElement5("s", <ClassElement>[b]).type;
+    expect(t.isSubtypeOf(s), isTrue);
+    expect(s.isSubtypeOf(t), isTrue);
   }
 
   void test_isSubtypeOf_normalParameters_isNotAssignable() {
     // ! (a) -> void <: (b) -> void
-    FunctionType t = ElementFactory.functionElement5("t", <ClassElement> [ElementFactory.classElement2("A", [])]).type;
-    FunctionType s = ElementFactory.functionElement5("s", <ClassElement> [ElementFactory.classElement2("B", [])]).type;
-    JUnitTestCase.assertFalse(t.isSubtypeOf(s));
+    FunctionType t = ElementFactory.functionElement5(
+        "t",
+        <ClassElement>[ElementFactory.classElement2("A")]).type;
+    FunctionType s = ElementFactory.functionElement5(
+        "s",
+        <ClassElement>[ElementFactory.classElement2("B")]).type;
+    expect(t.isSubtypeOf(s), isFalse);
   }
 
   void test_isSubtypeOf_normalParameters_sHasMoreParams() {
     // B extends A
     // ! (a) -> void <: (b, b) -> void
-    ClassElement a = ElementFactory.classElement2("A", []);
-    ClassElement b = ElementFactory.classElement("B", a.type, []);
-    FunctionType t = ElementFactory.functionElement5("t", <ClassElement> [a]).type;
-    FunctionType s = ElementFactory.functionElement5("s", <ClassElement> [b, b]).type;
-    JUnitTestCase.assertFalse(t.isSubtypeOf(s));
+    ClassElement a = ElementFactory.classElement2("A");
+    ClassElement b = ElementFactory.classElement("B", a.type);
+    FunctionType t =
+        ElementFactory.functionElement5("t", <ClassElement>[a]).type;
+    FunctionType s =
+        ElementFactory.functionElement5("s", <ClassElement>[b, b]).type;
+    expect(t.isSubtypeOf(s), isFalse);
   }
 
   void test_isSubtypeOf_normalParameters_tHasMoreParams() {
     // B extends A
     // ! (a, a) -> void <: (a) -> void
-    ClassElement a = ElementFactory.classElement2("A", []);
-    ClassElement b = ElementFactory.classElement("B", a.type, []);
-    FunctionType t = ElementFactory.functionElement5("t", <ClassElement> [a, a]).type;
-    FunctionType s = ElementFactory.functionElement5("s", <ClassElement> [b]).type;
-    // note, this is a different assertion from the other "tHasMoreParams" tests, this is
-    // intentional as it is a difference of the "normal parameters"
-    JUnitTestCase.assertFalse(t.isSubtypeOf(s));
+    ClassElement a = ElementFactory.classElement2("A");
+    ClassElement b = ElementFactory.classElement("B", a.type);
+    FunctionType t =
+        ElementFactory.functionElement5("t", <ClassElement>[a, a]).type;
+    FunctionType s =
+        ElementFactory.functionElement5("s", <ClassElement>[b]).type;
+    // note, this is a different assertion from the other "tHasMoreParams"
+    // tests, this is intentional as it is a difference of the "normal
+    // parameters"
+    expect(t.isSubtypeOf(s), isFalse);
   }
 
   void test_isSubtypeOf_Object() {
     // () -> void <: Object
     FunctionType f = ElementFactory.functionElement("f").type;
     InterfaceType t = ElementFactory.object.type;
-    JUnitTestCase.assertTrue(f.isSubtypeOf(t));
+    expect(f.isSubtypeOf(t), isTrue);
   }
 
   void test_isSubtypeOf_positionalParameters_isAssignable() {
     // B extends A
     // ([a]) -> void <: ([b]) -> void
     // ([b]) -> void <: ([a]) -> void
-    ClassElement a = ElementFactory.classElement2("A", []);
-    ClassElement b = ElementFactory.classElement("B", a.type, []);
-    FunctionType t = ElementFactory.functionElement6("t", null, <ClassElement> [a]).type;
-    FunctionType s = ElementFactory.functionElement6("s", null, <ClassElement> [b]).type;
-    JUnitTestCase.assertTrue(t.isSubtypeOf(s));
-    JUnitTestCase.assertTrue(s.isSubtypeOf(t));
+    ClassElement a = ElementFactory.classElement2("A");
+    ClassElement b = ElementFactory.classElement("B", a.type);
+    FunctionType t =
+        ElementFactory.functionElement6("t", null, <ClassElement>[a]).type;
+    FunctionType s =
+        ElementFactory.functionElement6("s", null, <ClassElement>[b]).type;
+    expect(t.isSubtypeOf(s), isTrue);
+    expect(s.isSubtypeOf(t), isTrue);
   }
 
   void test_isSubtypeOf_positionalParameters_isNotAssignable() {
     // ! ([a]) -> void <: ([b]) -> void
-    FunctionType t = ElementFactory.functionElement6("t", null, <ClassElement> [ElementFactory.classElement2("A", [])]).type;
-    FunctionType s = ElementFactory.functionElement6("s", null, <ClassElement> [ElementFactory.classElement2("B", [])]).type;
-    JUnitTestCase.assertFalse(t.isSubtypeOf(s));
+    FunctionType t = ElementFactory.functionElement6(
+        "t",
+        null,
+        <ClassElement>[ElementFactory.classElement2("A")]).type;
+    FunctionType s = ElementFactory.functionElement6(
+        "s",
+        null,
+        <ClassElement>[ElementFactory.classElement2("B")]).type;
+    expect(t.isSubtypeOf(s), isFalse);
   }
 
   void test_isSubtypeOf_positionalParameters_sHasMoreParams() {
     // B extends A
     // ! ([a]) -> void <: ([b, b]) -> void
-    ClassElement a = ElementFactory.classElement2("A", []);
-    ClassElement b = ElementFactory.classElement("B", a.type, []);
-    FunctionType t = ElementFactory.functionElement6("t", null, <ClassElement> [a]).type;
-    FunctionType s = ElementFactory.functionElement6("s", null, <ClassElement> [b, b]).type;
-    JUnitTestCase.assertFalse(t.isSubtypeOf(s));
+    ClassElement a = ElementFactory.classElement2("A");
+    ClassElement b = ElementFactory.classElement("B", a.type);
+    FunctionType t =
+        ElementFactory.functionElement6("t", null, <ClassElement>[a]).type;
+    FunctionType s =
+        ElementFactory.functionElement6("s", null, <ClassElement>[b, b]).type;
+    expect(t.isSubtypeOf(s), isFalse);
   }
 
   void test_isSubtypeOf_positionalParameters_tHasMoreParams() {
     // B extends A
     // ([a, a]) -> void <: ([b]) -> void
-    ClassElement a = ElementFactory.classElement2("A", []);
-    ClassElement b = ElementFactory.classElement("B", a.type, []);
-    FunctionType t = ElementFactory.functionElement6("t", null, <ClassElement> [a, a]).type;
-    FunctionType s = ElementFactory.functionElement6("s", null, <ClassElement> [b]).type;
-    JUnitTestCase.assertTrue(t.isSubtypeOf(s));
+    ClassElement a = ElementFactory.classElement2("A");
+    ClassElement b = ElementFactory.classElement("B", a.type);
+    FunctionType t =
+        ElementFactory.functionElement6("t", null, <ClassElement>[a, a]).type;
+    FunctionType s =
+        ElementFactory.functionElement6("s", null, <ClassElement>[b]).type;
+    expect(t.isSubtypeOf(s), isTrue);
   }
 
   void test_isSubtypeOf_returnType_sIsVoid() {
@@ -1642,370 +1544,203 @@ class FunctionTypeImplTest extends EngineTestCase {
     FunctionType t = ElementFactory.functionElement("t").type;
     FunctionType s = ElementFactory.functionElement("s").type;
     // function s has the implicit return type of void, we assert it here
-    JUnitTestCase.assertTrue(VoidTypeImpl.instance == s.returnType);
-    JUnitTestCase.assertTrue(t.isSubtypeOf(s));
+    expect(VoidTypeImpl.instance == s.returnType, isTrue);
+    expect(t.isSubtypeOf(s), isTrue);
   }
 
   void test_isSubtypeOf_returnType_tAssignableToS() {
     // B extends A
     // () -> A <: () -> B
     // () -> B <: () -> A
-    ClassElement a = ElementFactory.classElement2("A", []);
-    ClassElement b = ElementFactory.classElement("B", a.type, []);
+    ClassElement a = ElementFactory.classElement2("A");
+    ClassElement b = ElementFactory.classElement("B", a.type);
     FunctionType t = ElementFactory.functionElement2("t", a).type;
     FunctionType s = ElementFactory.functionElement2("s", b).type;
-    JUnitTestCase.assertTrue(t.isSubtypeOf(s));
-    JUnitTestCase.assertTrue(s.isSubtypeOf(t));
+    expect(t.isSubtypeOf(s), isTrue);
+    expect(s.isSubtypeOf(t), isTrue);
   }
 
   void test_isSubtypeOf_returnType_tNotAssignableToS() {
     // ! () -> A <: () -> B
-    FunctionType t = ElementFactory.functionElement2("t", ElementFactory.classElement2("A", [])).type;
-    FunctionType s = ElementFactory.functionElement2("s", ElementFactory.classElement2("B", [])).type;
-    JUnitTestCase.assertFalse(t.isSubtypeOf(s));
+    FunctionType t =
+        ElementFactory.functionElement2("t", ElementFactory.classElement2("A")).type;
+    FunctionType s =
+        ElementFactory.functionElement2("s", ElementFactory.classElement2("B")).type;
+    expect(t.isSubtypeOf(s), isFalse);
   }
 
   void test_isSubtypeOf_typeParameters_matchesBounds() {
     TestTypeProvider provider = new TestTypeProvider();
     InterfaceType boolType = provider.boolType;
     InterfaceType stringType = provider.stringType;
-    TypeParameterElementImpl parameterB = new TypeParameterElementImpl.forNode(AstFactory.identifier3("B"));
+    TypeParameterElementImpl parameterB =
+        new TypeParameterElementImpl.forNode(AstFactory.identifier3("B"));
     parameterB.bound = boolType;
     TypeParameterTypeImpl typeB = new TypeParameterTypeImpl(parameterB);
-    TypeParameterElementImpl parameterS = new TypeParameterElementImpl.forNode(AstFactory.identifier3("S"));
+    TypeParameterElementImpl parameterS =
+        new TypeParameterElementImpl.forNode(AstFactory.identifier3("S"));
     parameterS.bound = stringType;
     TypeParameterTypeImpl typeS = new TypeParameterTypeImpl(parameterS);
-    FunctionElementImpl functionAliasElement = new FunctionElementImpl.forNode(AstFactory.identifier3("func"));
-    functionAliasElement.parameters = <ParameterElement> [
+    FunctionElementImpl functionAliasElement =
+        new FunctionElementImpl.forNode(AstFactory.identifier3("func"));
+    functionAliasElement.parameters = <ParameterElement>[
         ElementFactory.requiredParameter2("a", typeB),
         ElementFactory.positionalParameter2("b", typeS)];
     functionAliasElement.returnType = stringType;
-    FunctionTypeImpl functionAliasType = new FunctionTypeImpl.con1(functionAliasElement);
+    FunctionTypeImpl functionAliasType =
+        new FunctionTypeImpl.con1(functionAliasElement);
     functionAliasElement.type = functionAliasType;
-    FunctionElementImpl functionElement = new FunctionElementImpl.forNode(AstFactory.identifier3("f"));
-    functionElement.parameters = <ParameterElement> [
+    FunctionElementImpl functionElement =
+        new FunctionElementImpl.forNode(AstFactory.identifier3("f"));
+    functionElement.parameters = <ParameterElement>[
         ElementFactory.requiredParameter2("c", boolType),
         ElementFactory.positionalParameter2("d", stringType)];
     functionElement.returnType = provider.dynamicType;
     FunctionTypeImpl functionType = new FunctionTypeImpl.con1(functionElement);
     functionElement.type = functionType;
-    JUnitTestCase.assertTrue(functionType.isAssignableTo(functionAliasType));
+    expect(functionType.isAssignableTo(functionAliasType), isTrue);
   }
 
   void test_isSubtypeOf_wrongFunctionType_normal_named() {
     // ! (a) -> void <: ({name: A}) -> void
     // ! ({name: A}) -> void <: (a) -> void
-    ClassElement a = ElementFactory.classElement2("A", []);
-    FunctionType t = ElementFactory.functionElement5("t", <ClassElement> [a]).type;
-    FunctionType s = ElementFactory.functionElement7("s", null, <String> ["name"], <ClassElement> [a]).type;
-    JUnitTestCase.assertFalse(t.isSubtypeOf(s));
-    JUnitTestCase.assertFalse(s.isSubtypeOf(t));
+    ClassElement a = ElementFactory.classElement2("A");
+    FunctionType t =
+        ElementFactory.functionElement5("t", <ClassElement>[a]).type;
+    FunctionType s = ElementFactory.functionElement7(
+        "s",
+        null,
+        <String>["name"],
+        <ClassElement>[a]).type;
+    expect(t.isSubtypeOf(s), isFalse);
+    expect(s.isSubtypeOf(t), isFalse);
   }
 
   void test_isSubtypeOf_wrongFunctionType_optional_named() {
     // ! ([a]) -> void <: ({name: A}) -> void
     // ! ({name: A}) -> void <: ([a]) -> void
-    ClassElement a = ElementFactory.classElement2("A", []);
-    FunctionType t = ElementFactory.functionElement6("t", null, <ClassElement> [a]).type;
-    FunctionType s = ElementFactory.functionElement7("s", null, <String> ["name"], <ClassElement> [a]).type;
-    JUnitTestCase.assertFalse(t.isSubtypeOf(s));
-    JUnitTestCase.assertFalse(s.isSubtypeOf(t));
+    ClassElement a = ElementFactory.classElement2("A");
+    FunctionType t =
+        ElementFactory.functionElement6("t", null, <ClassElement>[a]).type;
+    FunctionType s = ElementFactory.functionElement7(
+        "s",
+        null,
+        <String>["name"],
+        <ClassElement>[a]).type;
+    expect(t.isSubtypeOf(s), isFalse);
+    expect(s.isSubtypeOf(t), isFalse);
   }
 
   void test_setTypeArguments() {
     ClassElementImpl enclosingClass = ElementFactory.classElement2("C", ["E"]);
-    MethodElementImpl methodElement = new MethodElementImpl.forNode(AstFactory.identifier3("m"));
-    enclosingClass.methods = <MethodElement> [methodElement];
+    MethodElementImpl methodElement =
+        new MethodElementImpl.forNode(AstFactory.identifier3("m"));
+    enclosingClass.methods = <MethodElement>[methodElement];
     FunctionTypeImpl type = new FunctionTypeImpl.con1(methodElement);
     DartType expectedType = enclosingClass.typeParameters[0].type;
-    type.typeArguments = <DartType> [expectedType];
+    type.typeArguments = <DartType>[expectedType];
     List<DartType> arguments = type.typeArguments;
-    EngineTestCase.assertLength(1, arguments);
-    JUnitTestCase.assertEquals(expectedType, arguments[0]);
+    expect(arguments, hasLength(1));
+    expect(arguments[0], expectedType);
   }
 
   void test_substitute2_equal() {
     ClassElementImpl definingClass = ElementFactory.classElement2("C", ["E"]);
     TypeParameterType parameterType = definingClass.typeParameters[0].type;
-    MethodElementImpl functionElement = new MethodElementImpl.forNode(AstFactory.identifier3("m"));
+    MethodElementImpl functionElement =
+        new MethodElementImpl.forNode(AstFactory.identifier3("m"));
     String namedParameterName = "c";
-    functionElement.parameters = <ParameterElement> [
+    functionElement.parameters = <ParameterElement>[
         ElementFactory.requiredParameter2("a", parameterType),
         ElementFactory.positionalParameter2("b", parameterType),
         ElementFactory.namedParameter2(namedParameterName, parameterType)];
     functionElement.returnType = parameterType;
-    definingClass.methods = <MethodElement> [functionElement];
+    definingClass.methods = <MethodElement>[functionElement];
     FunctionTypeImpl functionType = new FunctionTypeImpl.con1(functionElement);
-    functionType.typeArguments = <DartType> [parameterType];
-    InterfaceTypeImpl argumentType = new InterfaceTypeImpl.con1(new ClassElementImpl.forNode(AstFactory.identifier3("D")));
-    FunctionType result = functionType.substitute2(<DartType> [argumentType], <DartType> [parameterType]);
-    JUnitTestCase.assertEquals(argumentType, result.returnType);
+    functionType.typeArguments = <DartType>[parameterType];
+    InterfaceTypeImpl argumentType = new InterfaceTypeImpl.con1(
+        new ClassElementImpl.forNode(AstFactory.identifier3("D")));
+    FunctionType result =
+        functionType.substitute2(<DartType>[argumentType], <DartType>[parameterType]);
+    expect(result.returnType, argumentType);
     List<DartType> normalParameters = result.normalParameterTypes;
-    EngineTestCase.assertLength(1, normalParameters);
-    JUnitTestCase.assertEquals(argumentType, normalParameters[0]);
+    expect(normalParameters, hasLength(1));
+    expect(normalParameters[0], argumentType);
     List<DartType> optionalParameters = result.optionalParameterTypes;
-    EngineTestCase.assertLength(1, optionalParameters);
-    JUnitTestCase.assertEquals(argumentType, optionalParameters[0]);
+    expect(optionalParameters, hasLength(1));
+    expect(optionalParameters[0], argumentType);
     Map<String, DartType> namedParameters = result.namedParameterTypes;
-    EngineTestCase.assertSizeOfMap(1, namedParameters);
-    JUnitTestCase.assertEquals(argumentType, namedParameters[namedParameterName]);
+    expect(namedParameters, hasLength(1));
+    expect(namedParameters[namedParameterName], argumentType);
   }
 
   void test_substitute2_notEqual() {
-    DartType returnType = new InterfaceTypeImpl.con1(new ClassElementImpl.forNode(AstFactory.identifier3("R")));
-    DartType normalParameterType = new InterfaceTypeImpl.con1(new ClassElementImpl.forNode(AstFactory.identifier3("A")));
-    DartType optionalParameterType = new InterfaceTypeImpl.con1(new ClassElementImpl.forNode(AstFactory.identifier3("B")));
-    DartType namedParameterType = new InterfaceTypeImpl.con1(new ClassElementImpl.forNode(AstFactory.identifier3("C")));
-    FunctionElementImpl functionElement = new FunctionElementImpl.forNode(AstFactory.identifier3("f"));
+    DartType returnType = new InterfaceTypeImpl.con1(
+        new ClassElementImpl.forNode(AstFactory.identifier3("R")));
+    DartType normalParameterType = new InterfaceTypeImpl.con1(
+        new ClassElementImpl.forNode(AstFactory.identifier3("A")));
+    DartType optionalParameterType = new InterfaceTypeImpl.con1(
+        new ClassElementImpl.forNode(AstFactory.identifier3("B")));
+    DartType namedParameterType = new InterfaceTypeImpl.con1(
+        new ClassElementImpl.forNode(AstFactory.identifier3("C")));
+    FunctionElementImpl functionElement =
+        new FunctionElementImpl.forNode(AstFactory.identifier3("f"));
     String namedParameterName = "c";
-    functionElement.parameters = <ParameterElement> [
+    functionElement.parameters = <ParameterElement>[
         ElementFactory.requiredParameter2("a", normalParameterType),
         ElementFactory.positionalParameter2("b", optionalParameterType),
         ElementFactory.namedParameter2(namedParameterName, namedParameterType)];
     functionElement.returnType = returnType;
     FunctionTypeImpl functionType = new FunctionTypeImpl.con1(functionElement);
-    InterfaceTypeImpl argumentType = new InterfaceTypeImpl.con1(new ClassElementImpl.forNode(AstFactory.identifier3("D")));
-    TypeParameterTypeImpl parameterType = new TypeParameterTypeImpl(new TypeParameterElementImpl.forNode(AstFactory.identifier3("E")));
-    FunctionType result = functionType.substitute2(<DartType> [argumentType], <DartType> [parameterType]);
-    JUnitTestCase.assertEquals(returnType, result.returnType);
+    InterfaceTypeImpl argumentType = new InterfaceTypeImpl.con1(
+        new ClassElementImpl.forNode(AstFactory.identifier3("D")));
+    TypeParameterTypeImpl parameterType = new TypeParameterTypeImpl(
+        new TypeParameterElementImpl.forNode(AstFactory.identifier3("E")));
+    FunctionType result =
+        functionType.substitute2(<DartType>[argumentType], <DartType>[parameterType]);
+    expect(result.returnType, returnType);
     List<DartType> normalParameters = result.normalParameterTypes;
-    EngineTestCase.assertLength(1, normalParameters);
-    JUnitTestCase.assertEquals(normalParameterType, normalParameters[0]);
+    expect(normalParameters, hasLength(1));
+    expect(normalParameters[0], normalParameterType);
     List<DartType> optionalParameters = result.optionalParameterTypes;
-    EngineTestCase.assertLength(1, optionalParameters);
-    JUnitTestCase.assertEquals(optionalParameterType, optionalParameters[0]);
+    expect(optionalParameters, hasLength(1));
+    expect(optionalParameters[0], optionalParameterType);
     Map<String, DartType> namedParameters = result.namedParameterTypes;
-    EngineTestCase.assertSizeOfMap(1, namedParameters);
-    JUnitTestCase.assertEquals(namedParameterType, namedParameters[namedParameterName]);
-  }
-
-  static dartSuite() {
-    _ut.group('FunctionTypeImplTest', () {
-      _ut.test('test_creation', () {
-        final __test = new FunctionTypeImplTest();
-        runJUnitTest(__test, __test.test_creation);
-      });
-      _ut.test('test_getElement', () {
-        final __test = new FunctionTypeImplTest();
-        runJUnitTest(__test, __test.test_getElement);
-      });
-      _ut.test('test_getNamedParameterTypes', () {
-        final __test = new FunctionTypeImplTest();
-        runJUnitTest(__test, __test.test_getNamedParameterTypes);
-      });
-      _ut.test('test_getNormalParameterTypes', () {
-        final __test = new FunctionTypeImplTest();
-        runJUnitTest(__test, __test.test_getNormalParameterTypes);
-      });
-      _ut.test('test_getReturnType', () {
-        final __test = new FunctionTypeImplTest();
-        runJUnitTest(__test, __test.test_getReturnType);
-      });
-      _ut.test('test_getTypeArguments', () {
-        final __test = new FunctionTypeImplTest();
-        runJUnitTest(__test, __test.test_getTypeArguments);
-      });
-      _ut.test('test_hashCode_element', () {
-        final __test = new FunctionTypeImplTest();
-        runJUnitTest(__test, __test.test_hashCode_element);
-      });
-      _ut.test('test_hashCode_noElement', () {
-        final __test = new FunctionTypeImplTest();
-        runJUnitTest(__test, __test.test_hashCode_noElement);
-      });
-      _ut.test('test_isAssignableTo_normalAndPositionalArgs', () {
-        final __test = new FunctionTypeImplTest();
-        runJUnitTest(__test, __test.test_isAssignableTo_normalAndPositionalArgs);
-      });
-      _ut.test('test_isSubtypeOf_Object', () {
-        final __test = new FunctionTypeImplTest();
-        runJUnitTest(__test, __test.test_isSubtypeOf_Object);
-      });
-      _ut.test('test_isSubtypeOf_baseCase_classFunction', () {
-        final __test = new FunctionTypeImplTest();
-        runJUnitTest(__test, __test.test_isSubtypeOf_baseCase_classFunction);
-      });
-      _ut.test('test_isSubtypeOf_baseCase_notFunctionType', () {
-        final __test = new FunctionTypeImplTest();
-        runJUnitTest(__test, __test.test_isSubtypeOf_baseCase_notFunctionType);
-      });
-      _ut.test('test_isSubtypeOf_baseCase_null', () {
-        final __test = new FunctionTypeImplTest();
-        runJUnitTest(__test, __test.test_isSubtypeOf_baseCase_null);
-      });
-      _ut.test('test_isSubtypeOf_baseCase_self', () {
-        final __test = new FunctionTypeImplTest();
-        runJUnitTest(__test, __test.test_isSubtypeOf_baseCase_self);
-      });
-      _ut.test('test_isSubtypeOf_namedParameters_isAssignable', () {
-        final __test = new FunctionTypeImplTest();
-        runJUnitTest(__test, __test.test_isSubtypeOf_namedParameters_isAssignable);
-      });
-      _ut.test('test_isSubtypeOf_namedParameters_isNotAssignable', () {
-        final __test = new FunctionTypeImplTest();
-        runJUnitTest(__test, __test.test_isSubtypeOf_namedParameters_isNotAssignable);
-      });
-      _ut.test('test_isSubtypeOf_namedParameters_namesDifferent', () {
-        final __test = new FunctionTypeImplTest();
-        runJUnitTest(__test, __test.test_isSubtypeOf_namedParameters_namesDifferent);
-      });
-      _ut.test('test_isSubtypeOf_namedParameters_orderOfParams', () {
-        final __test = new FunctionTypeImplTest();
-        runJUnitTest(__test, __test.test_isSubtypeOf_namedParameters_orderOfParams);
-      });
-      _ut.test('test_isSubtypeOf_namedParameters_orderOfParams2', () {
-        final __test = new FunctionTypeImplTest();
-        runJUnitTest(__test, __test.test_isSubtypeOf_namedParameters_orderOfParams2);
-      });
-      _ut.test('test_isSubtypeOf_namedParameters_orderOfParams3', () {
-        final __test = new FunctionTypeImplTest();
-        runJUnitTest(__test, __test.test_isSubtypeOf_namedParameters_orderOfParams3);
-      });
-      _ut.test('test_isSubtypeOf_namedParameters_sHasMoreParams', () {
-        final __test = new FunctionTypeImplTest();
-        runJUnitTest(__test, __test.test_isSubtypeOf_namedParameters_sHasMoreParams);
-      });
-      _ut.test('test_isSubtypeOf_namedParameters_tHasMoreParams', () {
-        final __test = new FunctionTypeImplTest();
-        runJUnitTest(__test, __test.test_isSubtypeOf_namedParameters_tHasMoreParams);
-      });
-      _ut.test('test_isSubtypeOf_normalAndPositionalArgs_1', () {
-        final __test = new FunctionTypeImplTest();
-        runJUnitTest(__test, __test.test_isSubtypeOf_normalAndPositionalArgs_1);
-      });
-      _ut.test('test_isSubtypeOf_normalAndPositionalArgs_2', () {
-        final __test = new FunctionTypeImplTest();
-        runJUnitTest(__test, __test.test_isSubtypeOf_normalAndPositionalArgs_2);
-      });
-      _ut.test('test_isSubtypeOf_normalAndPositionalArgs_3', () {
-        final __test = new FunctionTypeImplTest();
-        runJUnitTest(__test, __test.test_isSubtypeOf_normalAndPositionalArgs_3);
-      });
-      _ut.test('test_isSubtypeOf_normalAndPositionalArgs_4', () {
-        final __test = new FunctionTypeImplTest();
-        runJUnitTest(__test, __test.test_isSubtypeOf_normalAndPositionalArgs_4);
-      });
-      _ut.test('test_isSubtypeOf_normalParameters_isAssignable', () {
-        final __test = new FunctionTypeImplTest();
-        runJUnitTest(__test, __test.test_isSubtypeOf_normalParameters_isAssignable);
-      });
-      _ut.test('test_isSubtypeOf_normalParameters_isNotAssignable', () {
-        final __test = new FunctionTypeImplTest();
-        runJUnitTest(__test, __test.test_isSubtypeOf_normalParameters_isNotAssignable);
-      });
-      _ut.test('test_isSubtypeOf_normalParameters_sHasMoreParams', () {
-        final __test = new FunctionTypeImplTest();
-        runJUnitTest(__test, __test.test_isSubtypeOf_normalParameters_sHasMoreParams);
-      });
-      _ut.test('test_isSubtypeOf_normalParameters_tHasMoreParams', () {
-        final __test = new FunctionTypeImplTest();
-        runJUnitTest(__test, __test.test_isSubtypeOf_normalParameters_tHasMoreParams);
-      });
-      _ut.test('test_isSubtypeOf_positionalParameters_isAssignable', () {
-        final __test = new FunctionTypeImplTest();
-        runJUnitTest(__test, __test.test_isSubtypeOf_positionalParameters_isAssignable);
-      });
-      _ut.test('test_isSubtypeOf_positionalParameters_isNotAssignable', () {
-        final __test = new FunctionTypeImplTest();
-        runJUnitTest(__test, __test.test_isSubtypeOf_positionalParameters_isNotAssignable);
-      });
-      _ut.test('test_isSubtypeOf_positionalParameters_sHasMoreParams', () {
-        final __test = new FunctionTypeImplTest();
-        runJUnitTest(__test, __test.test_isSubtypeOf_positionalParameters_sHasMoreParams);
-      });
-      _ut.test('test_isSubtypeOf_positionalParameters_tHasMoreParams', () {
-        final __test = new FunctionTypeImplTest();
-        runJUnitTest(__test, __test.test_isSubtypeOf_positionalParameters_tHasMoreParams);
-      });
-      _ut.test('test_isSubtypeOf_returnType_sIsVoid', () {
-        final __test = new FunctionTypeImplTest();
-        runJUnitTest(__test, __test.test_isSubtypeOf_returnType_sIsVoid);
-      });
-      _ut.test('test_isSubtypeOf_returnType_tAssignableToS', () {
-        final __test = new FunctionTypeImplTest();
-        runJUnitTest(__test, __test.test_isSubtypeOf_returnType_tAssignableToS);
-      });
-      _ut.test('test_isSubtypeOf_returnType_tNotAssignableToS', () {
-        final __test = new FunctionTypeImplTest();
-        runJUnitTest(__test, __test.test_isSubtypeOf_returnType_tNotAssignableToS);
-      });
-      _ut.test('test_isSubtypeOf_typeParameters_matchesBounds', () {
-        final __test = new FunctionTypeImplTest();
-        runJUnitTest(__test, __test.test_isSubtypeOf_typeParameters_matchesBounds);
-      });
-      _ut.test('test_isSubtypeOf_wrongFunctionType_normal_named', () {
-        final __test = new FunctionTypeImplTest();
-        runJUnitTest(__test, __test.test_isSubtypeOf_wrongFunctionType_normal_named);
-      });
-      _ut.test('test_isSubtypeOf_wrongFunctionType_optional_named', () {
-        final __test = new FunctionTypeImplTest();
-        runJUnitTest(__test, __test.test_isSubtypeOf_wrongFunctionType_optional_named);
-      });
-      _ut.test('test_setTypeArguments', () {
-        final __test = new FunctionTypeImplTest();
-        runJUnitTest(__test, __test.test_setTypeArguments);
-      });
-      _ut.test('test_substitute2_equal', () {
-        final __test = new FunctionTypeImplTest();
-        runJUnitTest(__test, __test.test_substitute2_equal);
-      });
-      _ut.test('test_substitute2_notEqual', () {
-        final __test = new FunctionTypeImplTest();
-        runJUnitTest(__test, __test.test_substitute2_notEqual);
-      });
-    });
+    expect(namedParameters, hasLength(1));
+    expect(namedParameters[namedParameterName], namedParameterType);
   }
 }
 
+@reflectiveTest
 class HtmlElementImplTest extends EngineTestCase {
   void test_equals_differentSource() {
     AnalysisContextImpl context = createAnalysisContext();
     HtmlElementImpl elementA = ElementFactory.htmlUnit(context, "indexA.html");
     HtmlElementImpl elementB = ElementFactory.htmlUnit(context, "indexB.html");
-    JUnitTestCase.assertFalse(elementA == elementB);
+    expect(elementA == elementB, isFalse);
   }
 
   void test_equals_null() {
     AnalysisContextImpl context = createAnalysisContext();
     HtmlElementImpl element = ElementFactory.htmlUnit(context, "index.html");
-    JUnitTestCase.assertFalse(element == null);
+    expect(element == null, isFalse);
   }
 
   void test_equals_sameSource() {
     AnalysisContextImpl context = createAnalysisContext();
     HtmlElementImpl elementA = ElementFactory.htmlUnit(context, "index.html");
     HtmlElementImpl elementB = ElementFactory.htmlUnit(context, "index.html");
-    JUnitTestCase.assertTrue(elementA == elementB);
+    expect(elementA == elementB, isTrue);
   }
 
   void test_equals_self() {
     AnalysisContextImpl context = createAnalysisContext();
     HtmlElementImpl element = ElementFactory.htmlUnit(context, "index.html");
-    JUnitTestCase.assertTrue(element == element);
-  }
-
-  static dartSuite() {
-    _ut.group('HtmlElementImplTest', () {
-      _ut.test('test_equals_differentSource', () {
-        final __test = new HtmlElementImplTest();
-        runJUnitTest(__test, __test.test_equals_differentSource);
-      });
-      _ut.test('test_equals_null', () {
-        final __test = new HtmlElementImplTest();
-        runJUnitTest(__test, __test.test_equals_null);
-      });
-      _ut.test('test_equals_sameSource', () {
-        final __test = new HtmlElementImplTest();
-        runJUnitTest(__test, __test.test_equals_sameSource);
-      });
-      _ut.test('test_equals_self', () {
-        final __test = new HtmlElementImplTest();
-        runJUnitTest(__test, __test.test_equals_self);
-      });
-    });
+    expect(element == element, isTrue);
   }
 }
 
+@reflectiveTest
 class InterfaceTypeImplTest extends EngineTestCase {
   /**
    * The type provider used to access the types.
@@ -2029,19 +1764,24 @@ class InterfaceTypeImplTest extends EngineTestCase {
     //    \ /
     //     E
     //
-    ClassElementImpl classA = ElementFactory.classElement2("A", []);
-    ClassElementImpl classB = ElementFactory.classElement2("B", []);
-    ClassElementImpl classC = ElementFactory.classElement2("C", []);
-    ClassElementImpl classD = ElementFactory.classElement2("D", []);
-    ClassElementImpl classE = ElementFactory.classElement2("E", []);
-    classB.interfaces = <InterfaceType> [classA.type];
-    classC.interfaces = <InterfaceType> [classA.type];
-    classD.interfaces = <InterfaceType> [classC.type];
-    classE.interfaces = <InterfaceType> [classB.type, classD.type];
-    // assertion: even though the longest path to Object for typeB is 2, and typeE implements typeB,
-    // the longest path for typeE is 4 since it also implements typeD
-    JUnitTestCase.assertEquals(2, InterfaceTypeImpl.computeLongestInheritancePathToObject(classB.type));
-    JUnitTestCase.assertEquals(4, InterfaceTypeImpl.computeLongestInheritancePathToObject(classE.type));
+    ClassElementImpl classA = ElementFactory.classElement2("A");
+    ClassElementImpl classB = ElementFactory.classElement2("B");
+    ClassElementImpl classC = ElementFactory.classElement2("C");
+    ClassElementImpl classD = ElementFactory.classElement2("D");
+    ClassElementImpl classE = ElementFactory.classElement2("E");
+    classB.interfaces = <InterfaceType>[classA.type];
+    classC.interfaces = <InterfaceType>[classA.type];
+    classD.interfaces = <InterfaceType>[classC.type];
+    classE.interfaces = <InterfaceType>[classB.type, classD.type];
+    // assertion: even though the longest path to Object for typeB is 2, and
+    // typeE implements typeB, the longest path for typeE is 4 since it also
+    // implements typeD
+    expect(
+        InterfaceTypeImpl.computeLongestInheritancePathToObject(classB.type),
+        2);
+    expect(
+        InterfaceTypeImpl.computeLongestInheritancePathToObject(classE.type),
+        4);
   }
 
   void test_computeLongestInheritancePathToObject_multipleSuperclassPaths() {
@@ -2056,16 +1796,21 @@ class InterfaceTypeImplTest extends EngineTestCase {
     //    \ /
     //     E
     //
-    ClassElement classA = ElementFactory.classElement2("A", []);
-    ClassElement classB = ElementFactory.classElement("B", classA.type, []);
-    ClassElement classC = ElementFactory.classElement("C", classA.type, []);
-    ClassElement classD = ElementFactory.classElement("D", classC.type, []);
-    ClassElementImpl classE = ElementFactory.classElement("E", classB.type, []);
-    classE.interfaces = <InterfaceType> [classD.type];
-    // assertion: even though the longest path to Object for typeB is 2, and typeE extends typeB,
-    // the longest path for typeE is 4 since it also implements typeD
-    JUnitTestCase.assertEquals(2, InterfaceTypeImpl.computeLongestInheritancePathToObject(classB.type));
-    JUnitTestCase.assertEquals(4, InterfaceTypeImpl.computeLongestInheritancePathToObject(classE.type));
+    ClassElement classA = ElementFactory.classElement2("A");
+    ClassElement classB = ElementFactory.classElement("B", classA.type);
+    ClassElement classC = ElementFactory.classElement("C", classA.type);
+    ClassElement classD = ElementFactory.classElement("D", classC.type);
+    ClassElementImpl classE = ElementFactory.classElement("E", classB.type);
+    classE.interfaces = <InterfaceType>[classD.type];
+    // assertion: even though the longest path to Object for typeB is 2, and
+    // typeE extends typeB, the longest path for typeE is 4 since it also
+    // implements typeD
+    expect(
+        InterfaceTypeImpl.computeLongestInheritancePathToObject(classB.type),
+        2);
+    expect(
+        InterfaceTypeImpl.computeLongestInheritancePathToObject(classE.type),
+        4);
   }
 
   void test_computeLongestInheritancePathToObject_object() {
@@ -2074,16 +1819,18 @@ class InterfaceTypeImplTest extends EngineTestCase {
     //     |
     //     A
     //
-    ClassElement classA = ElementFactory.classElement2("A", []);
+    ClassElement classA = ElementFactory.classElement2("A");
     InterfaceType object = classA.supertype;
-    JUnitTestCase.assertEquals(0, InterfaceTypeImpl.computeLongestInheritancePathToObject(object));
+    expect(InterfaceTypeImpl.computeLongestInheritancePathToObject(object), 0);
   }
 
   void test_computeLongestInheritancePathToObject_recursion() {
-    ClassElementImpl classA = ElementFactory.classElement2("A", []);
-    ClassElementImpl classB = ElementFactory.classElement("B", classA.type, []);
+    ClassElementImpl classA = ElementFactory.classElement2("A");
+    ClassElementImpl classB = ElementFactory.classElement("B", classA.type);
     classA.supertype = classB.type;
-    JUnitTestCase.assertEquals(2, InterfaceTypeImpl.computeLongestInheritancePathToObject(classA.type));
+    expect(
+        InterfaceTypeImpl.computeLongestInheritancePathToObject(classA.type),
+        2);
   }
 
   void test_computeLongestInheritancePathToObject_singleInterfacePath() {
@@ -2096,14 +1843,20 @@ class InterfaceTypeImplTest extends EngineTestCase {
     //     |
     //     C
     //
-    ClassElementImpl classA = ElementFactory.classElement2("A", []);
-    ClassElementImpl classB = ElementFactory.classElement2("B", []);
-    ClassElementImpl classC = ElementFactory.classElement2("C", []);
-    classB.interfaces = <InterfaceType> [classA.type];
-    classC.interfaces = <InterfaceType> [classB.type];
-    JUnitTestCase.assertEquals(1, InterfaceTypeImpl.computeLongestInheritancePathToObject(classA.type));
-    JUnitTestCase.assertEquals(2, InterfaceTypeImpl.computeLongestInheritancePathToObject(classB.type));
-    JUnitTestCase.assertEquals(3, InterfaceTypeImpl.computeLongestInheritancePathToObject(classC.type));
+    ClassElementImpl classA = ElementFactory.classElement2("A");
+    ClassElementImpl classB = ElementFactory.classElement2("B");
+    ClassElementImpl classC = ElementFactory.classElement2("C");
+    classB.interfaces = <InterfaceType>[classA.type];
+    classC.interfaces = <InterfaceType>[classB.type];
+    expect(
+        InterfaceTypeImpl.computeLongestInheritancePathToObject(classA.type),
+        1);
+    expect(
+        InterfaceTypeImpl.computeLongestInheritancePathToObject(classB.type),
+        2);
+    expect(
+        InterfaceTypeImpl.computeLongestInheritancePathToObject(classC.type),
+        3);
   }
 
   void test_computeLongestInheritancePathToObject_singleSuperclassPath() {
@@ -2116,12 +1869,18 @@ class InterfaceTypeImplTest extends EngineTestCase {
     //     |
     //     C
     //
-    ClassElement classA = ElementFactory.classElement2("A", []);
-    ClassElement classB = ElementFactory.classElement("B", classA.type, []);
-    ClassElement classC = ElementFactory.classElement("C", classB.type, []);
-    JUnitTestCase.assertEquals(1, InterfaceTypeImpl.computeLongestInheritancePathToObject(classA.type));
-    JUnitTestCase.assertEquals(2, InterfaceTypeImpl.computeLongestInheritancePathToObject(classB.type));
-    JUnitTestCase.assertEquals(3, InterfaceTypeImpl.computeLongestInheritancePathToObject(classC.type));
+    ClassElement classA = ElementFactory.classElement2("A");
+    ClassElement classB = ElementFactory.classElement("B", classA.type);
+    ClassElement classC = ElementFactory.classElement("C", classB.type);
+    expect(
+        InterfaceTypeImpl.computeLongestInheritancePathToObject(classA.type),
+        1);
+    expect(
+        InterfaceTypeImpl.computeLongestInheritancePathToObject(classB.type),
+        2);
+    expect(
+        InterfaceTypeImpl.computeLongestInheritancePathToObject(classC.type),
+        3);
   }
 
   void test_computeSuperinterfaceSet_genericInterfacePath() {
@@ -2134,36 +1893,39 @@ class InterfaceTypeImplTest extends EngineTestCase {
     //
     //  D
     //
-    ClassElementImpl classA = ElementFactory.classElement2("A", []);
+    ClassElementImpl classA = ElementFactory.classElement2("A");
     ClassElementImpl classB = ElementFactory.classElement2("B", ["T"]);
     ClassElementImpl classC = ElementFactory.classElement2("C", ["T"]);
-    ClassElement classD = ElementFactory.classElement2("D", []);
+    ClassElement classD = ElementFactory.classElement2("D");
     InterfaceType typeA = classA.type;
-    classB.interfaces = <InterfaceType> [typeA];
+    classB.interfaces = <InterfaceType>[typeA];
     InterfaceTypeImpl typeBT = new InterfaceTypeImpl.con1(classB);
     DartType typeT = classC.type.typeArguments[0];
-    typeBT.typeArguments = <DartType> [typeT];
-    classC.interfaces = <InterfaceType> [typeBT];
+    typeBT.typeArguments = <DartType>[typeT];
+    classC.interfaces = <InterfaceType>[typeBT];
     // A
-    Set<InterfaceType> superinterfacesOfA = InterfaceTypeImpl.computeSuperinterfaceSet(typeA);
-    EngineTestCase.assertSizeOfSet(1, superinterfacesOfA);
+    Set<InterfaceType> superinterfacesOfA =
+        InterfaceTypeImpl.computeSuperinterfaceSet(typeA);
+    expect(superinterfacesOfA, hasLength(1));
     InterfaceType typeObject = ElementFactory.object.type;
-    JUnitTestCase.assertTrue(superinterfacesOfA.contains(typeObject));
+    expect(superinterfacesOfA.contains(typeObject), isTrue);
     // B<D>
     InterfaceTypeImpl typeBD = new InterfaceTypeImpl.con1(classB);
-    typeBD.typeArguments = <DartType> [classD.type];
-    Set<InterfaceType> superinterfacesOfBD = InterfaceTypeImpl.computeSuperinterfaceSet(typeBD);
-    EngineTestCase.assertSizeOfSet(2, superinterfacesOfBD);
-    JUnitTestCase.assertTrue(superinterfacesOfBD.contains(typeObject));
-    JUnitTestCase.assertTrue(superinterfacesOfBD.contains(typeA));
+    typeBD.typeArguments = <DartType>[classD.type];
+    Set<InterfaceType> superinterfacesOfBD =
+        InterfaceTypeImpl.computeSuperinterfaceSet(typeBD);
+    expect(superinterfacesOfBD, hasLength(2));
+    expect(superinterfacesOfBD.contains(typeObject), isTrue);
+    expect(superinterfacesOfBD.contains(typeA), isTrue);
     // C<D>
     InterfaceTypeImpl typeCD = new InterfaceTypeImpl.con1(classC);
-    typeCD.typeArguments = <DartType> [classD.type];
-    Set<InterfaceType> superinterfacesOfCD = InterfaceTypeImpl.computeSuperinterfaceSet(typeCD);
-    EngineTestCase.assertSizeOfSet(3, superinterfacesOfCD);
-    JUnitTestCase.assertTrue(superinterfacesOfCD.contains(typeObject));
-    JUnitTestCase.assertTrue(superinterfacesOfCD.contains(typeA));
-    JUnitTestCase.assertTrue(superinterfacesOfCD.contains(typeBD));
+    typeCD.typeArguments = <DartType>[classD.type];
+    Set<InterfaceType> superinterfacesOfCD =
+        InterfaceTypeImpl.computeSuperinterfaceSet(typeCD);
+    expect(superinterfacesOfCD, hasLength(3));
+    expect(superinterfacesOfCD.contains(typeObject), isTrue);
+    expect(superinterfacesOfCD.contains(typeA), isTrue);
+    expect(superinterfacesOfCD.contains(typeBD), isTrue);
   }
 
   void test_computeSuperinterfaceSet_genericSuperclassPath() {
@@ -2176,115 +1938,126 @@ class InterfaceTypeImplTest extends EngineTestCase {
     //
     //  D
     //
-    ClassElement classA = ElementFactory.classElement2("A", []);
+    ClassElement classA = ElementFactory.classElement2("A");
     InterfaceType typeA = classA.type;
     ClassElement classB = ElementFactory.classElement("B", typeA, ["T"]);
     ClassElementImpl classC = ElementFactory.classElement2("C", ["T"]);
     InterfaceTypeImpl typeBT = new InterfaceTypeImpl.con1(classB);
     DartType typeT = classC.type.typeArguments[0];
-    typeBT.typeArguments = <DartType> [typeT];
+    typeBT.typeArguments = <DartType>[typeT];
     classC.supertype = typeBT;
-    ClassElement classD = ElementFactory.classElement2("D", []);
+    ClassElement classD = ElementFactory.classElement2("D");
     // A
-    Set<InterfaceType> superinterfacesOfA = InterfaceTypeImpl.computeSuperinterfaceSet(typeA);
-    EngineTestCase.assertSizeOfSet(1, superinterfacesOfA);
+    Set<InterfaceType> superinterfacesOfA =
+        InterfaceTypeImpl.computeSuperinterfaceSet(typeA);
+    expect(superinterfacesOfA, hasLength(1));
     InterfaceType typeObject = ElementFactory.object.type;
-    JUnitTestCase.assertTrue(superinterfacesOfA.contains(typeObject));
+    expect(superinterfacesOfA.contains(typeObject), isTrue);
     // B<D>
     InterfaceTypeImpl typeBD = new InterfaceTypeImpl.con1(classB);
-    typeBD.typeArguments = <DartType> [classD.type];
-    Set<InterfaceType> superinterfacesOfBD = InterfaceTypeImpl.computeSuperinterfaceSet(typeBD);
-    EngineTestCase.assertSizeOfSet(2, superinterfacesOfBD);
-    JUnitTestCase.assertTrue(superinterfacesOfBD.contains(typeObject));
-    JUnitTestCase.assertTrue(superinterfacesOfBD.contains(typeA));
+    typeBD.typeArguments = <DartType>[classD.type];
+    Set<InterfaceType> superinterfacesOfBD =
+        InterfaceTypeImpl.computeSuperinterfaceSet(typeBD);
+    expect(superinterfacesOfBD, hasLength(2));
+    expect(superinterfacesOfBD.contains(typeObject), isTrue);
+    expect(superinterfacesOfBD.contains(typeA), isTrue);
     // C<D>
     InterfaceTypeImpl typeCD = new InterfaceTypeImpl.con1(classC);
-    typeCD.typeArguments = <DartType> [classD.type];
-    Set<InterfaceType> superinterfacesOfCD = InterfaceTypeImpl.computeSuperinterfaceSet(typeCD);
-    EngineTestCase.assertSizeOfSet(3, superinterfacesOfCD);
-    JUnitTestCase.assertTrue(superinterfacesOfCD.contains(typeObject));
-    JUnitTestCase.assertTrue(superinterfacesOfCD.contains(typeA));
-    JUnitTestCase.assertTrue(superinterfacesOfCD.contains(typeBD));
+    typeCD.typeArguments = <DartType>[classD.type];
+    Set<InterfaceType> superinterfacesOfCD =
+        InterfaceTypeImpl.computeSuperinterfaceSet(typeCD);
+    expect(superinterfacesOfCD, hasLength(3));
+    expect(superinterfacesOfCD.contains(typeObject), isTrue);
+    expect(superinterfacesOfCD.contains(typeA), isTrue);
+    expect(superinterfacesOfCD.contains(typeBD), isTrue);
   }
 
   void test_computeSuperinterfaceSet_multipleInterfacePaths() {
-    ClassElementImpl classA = ElementFactory.classElement2("A", []);
-    ClassElementImpl classB = ElementFactory.classElement2("B", []);
-    ClassElementImpl classC = ElementFactory.classElement2("C", []);
-    ClassElementImpl classD = ElementFactory.classElement2("D", []);
-    ClassElementImpl classE = ElementFactory.classElement2("E", []);
-    classB.interfaces = <InterfaceType> [classA.type];
-    classC.interfaces = <InterfaceType> [classA.type];
-    classD.interfaces = <InterfaceType> [classC.type];
-    classE.interfaces = <InterfaceType> [classB.type, classD.type];
+    ClassElementImpl classA = ElementFactory.classElement2("A");
+    ClassElementImpl classB = ElementFactory.classElement2("B");
+    ClassElementImpl classC = ElementFactory.classElement2("C");
+    ClassElementImpl classD = ElementFactory.classElement2("D");
+    ClassElementImpl classE = ElementFactory.classElement2("E");
+    classB.interfaces = <InterfaceType>[classA.type];
+    classC.interfaces = <InterfaceType>[classA.type];
+    classD.interfaces = <InterfaceType>[classC.type];
+    classE.interfaces = <InterfaceType>[classB.type, classD.type];
     // D
-    Set<InterfaceType> superinterfacesOfD = InterfaceTypeImpl.computeSuperinterfaceSet(classD.type);
-    EngineTestCase.assertSizeOfSet(3, superinterfacesOfD);
-    JUnitTestCase.assertTrue(superinterfacesOfD.contains(ElementFactory.object.type));
-    JUnitTestCase.assertTrue(superinterfacesOfD.contains(classA.type));
-    JUnitTestCase.assertTrue(superinterfacesOfD.contains(classC.type));
+    Set<InterfaceType> superinterfacesOfD =
+        InterfaceTypeImpl.computeSuperinterfaceSet(classD.type);
+    expect(superinterfacesOfD, hasLength(3));
+    expect(superinterfacesOfD.contains(ElementFactory.object.type), isTrue);
+    expect(superinterfacesOfD.contains(classA.type), isTrue);
+    expect(superinterfacesOfD.contains(classC.type), isTrue);
     // E
-    Set<InterfaceType> superinterfacesOfE = InterfaceTypeImpl.computeSuperinterfaceSet(classE.type);
-    EngineTestCase.assertSizeOfSet(5, superinterfacesOfE);
-    JUnitTestCase.assertTrue(superinterfacesOfE.contains(ElementFactory.object.type));
-    JUnitTestCase.assertTrue(superinterfacesOfE.contains(classA.type));
-    JUnitTestCase.assertTrue(superinterfacesOfE.contains(classB.type));
-    JUnitTestCase.assertTrue(superinterfacesOfE.contains(classC.type));
-    JUnitTestCase.assertTrue(superinterfacesOfE.contains(classD.type));
+    Set<InterfaceType> superinterfacesOfE =
+        InterfaceTypeImpl.computeSuperinterfaceSet(classE.type);
+    expect(superinterfacesOfE, hasLength(5));
+    expect(superinterfacesOfE.contains(ElementFactory.object.type), isTrue);
+    expect(superinterfacesOfE.contains(classA.type), isTrue);
+    expect(superinterfacesOfE.contains(classB.type), isTrue);
+    expect(superinterfacesOfE.contains(classC.type), isTrue);
+    expect(superinterfacesOfE.contains(classD.type), isTrue);
   }
 
   void test_computeSuperinterfaceSet_multipleSuperclassPaths() {
-    ClassElement classA = ElementFactory.classElement2("A", []);
-    ClassElement classB = ElementFactory.classElement("B", classA.type, []);
-    ClassElement classC = ElementFactory.classElement("C", classA.type, []);
-    ClassElement classD = ElementFactory.classElement("D", classC.type, []);
-    ClassElementImpl classE = ElementFactory.classElement("E", classB.type, []);
-    classE.interfaces = <InterfaceType> [classD.type];
+    ClassElement classA = ElementFactory.classElement2("A");
+    ClassElement classB = ElementFactory.classElement("B", classA.type);
+    ClassElement classC = ElementFactory.classElement("C", classA.type);
+    ClassElement classD = ElementFactory.classElement("D", classC.type);
+    ClassElementImpl classE = ElementFactory.classElement("E", classB.type);
+    classE.interfaces = <InterfaceType>[classD.type];
     // D
-    Set<InterfaceType> superinterfacesOfD = InterfaceTypeImpl.computeSuperinterfaceSet(classD.type);
-    EngineTestCase.assertSizeOfSet(3, superinterfacesOfD);
-    JUnitTestCase.assertTrue(superinterfacesOfD.contains(ElementFactory.object.type));
-    JUnitTestCase.assertTrue(superinterfacesOfD.contains(classA.type));
-    JUnitTestCase.assertTrue(superinterfacesOfD.contains(classC.type));
+    Set<InterfaceType> superinterfacesOfD =
+        InterfaceTypeImpl.computeSuperinterfaceSet(classD.type);
+    expect(superinterfacesOfD, hasLength(3));
+    expect(superinterfacesOfD.contains(ElementFactory.object.type), isTrue);
+    expect(superinterfacesOfD.contains(classA.type), isTrue);
+    expect(superinterfacesOfD.contains(classC.type), isTrue);
     // E
-    Set<InterfaceType> superinterfacesOfE = InterfaceTypeImpl.computeSuperinterfaceSet(classE.type);
-    EngineTestCase.assertSizeOfSet(5, superinterfacesOfE);
-    JUnitTestCase.assertTrue(superinterfacesOfE.contains(ElementFactory.object.type));
-    JUnitTestCase.assertTrue(superinterfacesOfE.contains(classA.type));
-    JUnitTestCase.assertTrue(superinterfacesOfE.contains(classB.type));
-    JUnitTestCase.assertTrue(superinterfacesOfE.contains(classC.type));
-    JUnitTestCase.assertTrue(superinterfacesOfE.contains(classD.type));
+    Set<InterfaceType> superinterfacesOfE =
+        InterfaceTypeImpl.computeSuperinterfaceSet(classE.type);
+    expect(superinterfacesOfE, hasLength(5));
+    expect(superinterfacesOfE.contains(ElementFactory.object.type), isTrue);
+    expect(superinterfacesOfE.contains(classA.type), isTrue);
+    expect(superinterfacesOfE.contains(classB.type), isTrue);
+    expect(superinterfacesOfE.contains(classC.type), isTrue);
+    expect(superinterfacesOfE.contains(classD.type), isTrue);
   }
 
   void test_computeSuperinterfaceSet_recursion() {
-    ClassElementImpl classA = ElementFactory.classElement2("A", []);
-    ClassElementImpl classB = ElementFactory.classElement("B", classA.type, []);
+    ClassElementImpl classA = ElementFactory.classElement2("A");
+    ClassElementImpl classB = ElementFactory.classElement("B", classA.type);
     classA.supertype = classB.type;
-    Set<InterfaceType> superinterfacesOfB = InterfaceTypeImpl.computeSuperinterfaceSet(classB.type);
-    EngineTestCase.assertSizeOfSet(2, superinterfacesOfB);
+    Set<InterfaceType> superinterfacesOfB =
+        InterfaceTypeImpl.computeSuperinterfaceSet(classB.type);
+    expect(superinterfacesOfB, hasLength(2));
   }
 
   void test_computeSuperinterfaceSet_singleInterfacePath() {
-    ClassElementImpl classA = ElementFactory.classElement2("A", []);
-    ClassElementImpl classB = ElementFactory.classElement2("B", []);
-    ClassElementImpl classC = ElementFactory.classElement2("C", []);
-    classB.interfaces = <InterfaceType> [classA.type];
-    classC.interfaces = <InterfaceType> [classB.type];
+    ClassElementImpl classA = ElementFactory.classElement2("A");
+    ClassElementImpl classB = ElementFactory.classElement2("B");
+    ClassElementImpl classC = ElementFactory.classElement2("C");
+    classB.interfaces = <InterfaceType>[classA.type];
+    classC.interfaces = <InterfaceType>[classB.type];
     // A
-    Set<InterfaceType> superinterfacesOfA = InterfaceTypeImpl.computeSuperinterfaceSet(classA.type);
-    EngineTestCase.assertSizeOfSet(1, superinterfacesOfA);
-    JUnitTestCase.assertTrue(superinterfacesOfA.contains(ElementFactory.object.type));
+    Set<InterfaceType> superinterfacesOfA =
+        InterfaceTypeImpl.computeSuperinterfaceSet(classA.type);
+    expect(superinterfacesOfA, hasLength(1));
+    expect(superinterfacesOfA.contains(ElementFactory.object.type), isTrue);
     // B
-    Set<InterfaceType> superinterfacesOfB = InterfaceTypeImpl.computeSuperinterfaceSet(classB.type);
-    EngineTestCase.assertSizeOfSet(2, superinterfacesOfB);
-    JUnitTestCase.assertTrue(superinterfacesOfB.contains(ElementFactory.object.type));
-    JUnitTestCase.assertTrue(superinterfacesOfB.contains(classA.type));
+    Set<InterfaceType> superinterfacesOfB =
+        InterfaceTypeImpl.computeSuperinterfaceSet(classB.type);
+    expect(superinterfacesOfB, hasLength(2));
+    expect(superinterfacesOfB.contains(ElementFactory.object.type), isTrue);
+    expect(superinterfacesOfB.contains(classA.type), isTrue);
     // C
-    Set<InterfaceType> superinterfacesOfC = InterfaceTypeImpl.computeSuperinterfaceSet(classC.type);
-    EngineTestCase.assertSizeOfSet(3, superinterfacesOfC);
-    JUnitTestCase.assertTrue(superinterfacesOfC.contains(ElementFactory.object.type));
-    JUnitTestCase.assertTrue(superinterfacesOfC.contains(classA.type));
-    JUnitTestCase.assertTrue(superinterfacesOfC.contains(classB.type));
+    Set<InterfaceType> superinterfacesOfC =
+        InterfaceTypeImpl.computeSuperinterfaceSet(classC.type);
+    expect(superinterfacesOfC, hasLength(3));
+    expect(superinterfacesOfC.contains(ElementFactory.object.type), isTrue);
+    expect(superinterfacesOfC.contains(classA.type), isTrue);
+    expect(superinterfacesOfC.contains(classB.type), isTrue);
   }
 
   void test_computeSuperinterfaceSet_singleSuperclassPath() {
@@ -2295,61 +2068,69 @@ class InterfaceTypeImplTest extends EngineTestCase {
     //  |
     //  C
     //
-    ClassElement classA = ElementFactory.classElement2("A", []);
-    ClassElement classB = ElementFactory.classElement("B", classA.type, []);
-    ClassElement classC = ElementFactory.classElement("C", classB.type, []);
+    ClassElement classA = ElementFactory.classElement2("A");
+    ClassElement classB = ElementFactory.classElement("B", classA.type);
+    ClassElement classC = ElementFactory.classElement("C", classB.type);
     // A
-    Set<InterfaceType> superinterfacesOfA = InterfaceTypeImpl.computeSuperinterfaceSet(classA.type);
-    EngineTestCase.assertSizeOfSet(1, superinterfacesOfA);
-    JUnitTestCase.assertTrue(superinterfacesOfA.contains(ElementFactory.object.type));
+    Set<InterfaceType> superinterfacesOfA =
+        InterfaceTypeImpl.computeSuperinterfaceSet(classA.type);
+    expect(superinterfacesOfA, hasLength(1));
+    expect(superinterfacesOfA.contains(ElementFactory.object.type), isTrue);
     // B
-    Set<InterfaceType> superinterfacesOfB = InterfaceTypeImpl.computeSuperinterfaceSet(classB.type);
-    EngineTestCase.assertSizeOfSet(2, superinterfacesOfB);
-    JUnitTestCase.assertTrue(superinterfacesOfB.contains(ElementFactory.object.type));
-    JUnitTestCase.assertTrue(superinterfacesOfB.contains(classA.type));
+    Set<InterfaceType> superinterfacesOfB =
+        InterfaceTypeImpl.computeSuperinterfaceSet(classB.type);
+    expect(superinterfacesOfB, hasLength(2));
+    expect(superinterfacesOfB.contains(ElementFactory.object.type), isTrue);
+    expect(superinterfacesOfB.contains(classA.type), isTrue);
     // C
-    Set<InterfaceType> superinterfacesOfC = InterfaceTypeImpl.computeSuperinterfaceSet(classC.type);
-    EngineTestCase.assertSizeOfSet(3, superinterfacesOfC);
-    JUnitTestCase.assertTrue(superinterfacesOfC.contains(ElementFactory.object.type));
-    JUnitTestCase.assertTrue(superinterfacesOfC.contains(classA.type));
-    JUnitTestCase.assertTrue(superinterfacesOfC.contains(classB.type));
+    Set<InterfaceType> superinterfacesOfC =
+        InterfaceTypeImpl.computeSuperinterfaceSet(classC.type);
+    expect(superinterfacesOfC, hasLength(3));
+    expect(superinterfacesOfC.contains(ElementFactory.object.type), isTrue);
+    expect(superinterfacesOfC.contains(classA.type), isTrue);
+    expect(superinterfacesOfC.contains(classB.type), isTrue);
   }
 
   void test_creation() {
-    JUnitTestCase.assertNotNull(new InterfaceTypeImpl.con1(ElementFactory.classElement2("A", [])));
+    expect(
+        new InterfaceTypeImpl.con1(ElementFactory.classElement2("A")),
+        isNotNull);
   }
 
   void test_getAccessors() {
-    ClassElementImpl typeElement = ElementFactory.classElement2("A", []);
-    PropertyAccessorElement getterG = ElementFactory.getterElement("g", false, null);
-    PropertyAccessorElement getterH = ElementFactory.getterElement("h", false, null);
-    typeElement.accessors = <PropertyAccessorElement> [getterG, getterH];
+    ClassElementImpl typeElement = ElementFactory.classElement2("A");
+    PropertyAccessorElement getterG =
+        ElementFactory.getterElement("g", false, null);
+    PropertyAccessorElement getterH =
+        ElementFactory.getterElement("h", false, null);
+    typeElement.accessors = <PropertyAccessorElement>[getterG, getterH];
     InterfaceTypeImpl type = new InterfaceTypeImpl.con1(typeElement);
-    JUnitTestCase.assertEquals(2, type.accessors.length);
+    expect(type.accessors.length, 2);
   }
 
   void test_getAccessors_empty() {
-    ClassElementImpl typeElement = ElementFactory.classElement2("A", []);
+    ClassElementImpl typeElement = ElementFactory.classElement2("A");
     InterfaceTypeImpl type = new InterfaceTypeImpl.con1(typeElement);
-    JUnitTestCase.assertEquals(0, type.accessors.length);
+    expect(type.accessors.length, 0);
   }
 
   void test_getElement() {
-    ClassElementImpl typeElement = ElementFactory.classElement2("A", []);
+    ClassElementImpl typeElement = ElementFactory.classElement2("A");
     InterfaceTypeImpl type = new InterfaceTypeImpl.con1(typeElement);
-    JUnitTestCase.assertEquals(typeElement, type.element);
+    expect(type.element, typeElement);
   }
 
   void test_getGetter_implemented() {
     //
     // class A { g {} }
     //
-    ClassElementImpl classA = ElementFactory.classElement2("A", []);
+    ClassElementImpl classA = ElementFactory.classElement2("A");
     String getterName = "g";
-    PropertyAccessorElement getterG = ElementFactory.getterElement(getterName, false, null);
-    classA.accessors = <PropertyAccessorElement> [getterG];
+    PropertyAccessorElement getterG =
+        ElementFactory.getterElement(getterName, false, null);
+    classA.accessors = <PropertyAccessorElement>[getterG];
     InterfaceType typeA = classA.type;
-    JUnitTestCase.assertSame(getterG, typeA.getGetter(getterName));
+    expect(typeA.getGetter(getterName), same(getterG));
   }
 
   void test_getGetter_parameterized() {
@@ -2359,47 +2140,49 @@ class InterfaceTypeImplTest extends EngineTestCase {
     ClassElementImpl classA = ElementFactory.classElement2("A", ["E"]);
     DartType typeE = classA.type.typeArguments[0];
     String getterName = "g";
-    PropertyAccessorElement getterG = ElementFactory.getterElement(getterName, false, typeE);
-    classA.accessors = <PropertyAccessorElement> [getterG];
-    (getterG.type as FunctionTypeImpl).typeArguments = classA.type.typeArguments;
+    PropertyAccessorElement getterG =
+        ElementFactory.getterElement(getterName, false, typeE);
+    classA.accessors = <PropertyAccessorElement>[getterG];
+    (getterG.type as FunctionTypeImpl).typeArguments =
+        classA.type.typeArguments;
     //
     // A<I>
     //
-    InterfaceType typeI = ElementFactory.classElement2("I", []).type;
+    InterfaceType typeI = ElementFactory.classElement2("I").type;
     InterfaceTypeImpl typeAI = new InterfaceTypeImpl.con1(classA);
-    typeAI.typeArguments = <DartType> [typeI];
+    typeAI.typeArguments = <DartType>[typeI];
     PropertyAccessorElement getter = typeAI.getGetter(getterName);
-    JUnitTestCase.assertNotNull(getter);
+    expect(getter, isNotNull);
     FunctionType getterType = getter.type;
-    JUnitTestCase.assertSame(typeI, getterType.returnType);
+    expect(getterType.returnType, same(typeI));
   }
 
   void test_getGetter_unimplemented() {
     //
     // class A {}
     //
-    ClassElementImpl classA = ElementFactory.classElement2("A", []);
+    ClassElementImpl classA = ElementFactory.classElement2("A");
     InterfaceType typeA = classA.type;
-    JUnitTestCase.assertNull(typeA.getGetter("g"));
+    expect(typeA.getGetter("g"), isNull);
   }
 
   void test_getInterfaces_nonParameterized() {
     //
     // class C implements A, B
     //
-    ClassElementImpl classA = ElementFactory.classElement2("A", []);
+    ClassElementImpl classA = ElementFactory.classElement2("A");
     InterfaceType typeA = classA.type;
-    ClassElementImpl classB = ElementFactory.classElement2("B", []);
+    ClassElementImpl classB = ElementFactory.classElement2("B");
     InterfaceType typeB = classB.type;
-    ClassElementImpl classC = ElementFactory.classElement2("C", []);
-    classC.interfaces = <InterfaceType> [typeA, typeB];
+    ClassElementImpl classC = ElementFactory.classElement2("C");
+    classC.interfaces = <InterfaceType>[typeA, typeB];
     List<InterfaceType> interfaces = classC.type.interfaces;
-    EngineTestCase.assertLength(2, interfaces);
+    expect(interfaces, hasLength(2));
     if (identical(interfaces[0], typeA)) {
-      JUnitTestCase.assertSame(typeB, interfaces[1]);
+      expect(interfaces[1], same(typeB));
     } else {
-      JUnitTestCase.assertSame(typeB, interfaces[0]);
-      JUnitTestCase.assertSame(typeA, interfaces[1]);
+      expect(interfaces[0], same(typeB));
+      expect(interfaces[1], same(typeA));
     }
   }
 
@@ -2412,19 +2195,19 @@ class InterfaceTypeImplTest extends EngineTestCase {
     ClassElementImpl classB = ElementFactory.classElement2("B", ["F"]);
     InterfaceType typeB = classB.type;
     InterfaceTypeImpl typeAF = new InterfaceTypeImpl.con1(classA);
-    typeAF.typeArguments = <DartType> [typeB.typeArguments[0]];
-    classB.interfaces = <InterfaceType> [typeAF];
+    typeAF.typeArguments = <DartType>[typeB.typeArguments[0]];
+    classB.interfaces = <InterfaceType>[typeAF];
     //
     // B<I>
     //
-    InterfaceType typeI = ElementFactory.classElement2("I", []).type;
+    InterfaceType typeI = ElementFactory.classElement2("I").type;
     InterfaceTypeImpl typeBI = new InterfaceTypeImpl.con1(classB);
-    typeBI.typeArguments = <DartType> [typeI];
+    typeBI.typeArguments = <DartType>[typeI];
     List<InterfaceType> interfaces = typeBI.interfaces;
-    EngineTestCase.assertLength(1, interfaces);
+    expect(interfaces, hasLength(1));
     InterfaceType result = interfaces[0];
-    JUnitTestCase.assertSame(classA, result.element);
-    JUnitTestCase.assertSame(typeI, result.typeArguments[0]);
+    expect(result.element, same(classA));
+    expect(result.typeArguments[0], same(typeI));
   }
 
   void test_getLeastUpperBound_directInterfaceCase() {
@@ -2433,16 +2216,16 @@ class InterfaceTypeImplTest extends EngineTestCase {
     // class B implements A
     // class C implements B
     //
-    ClassElementImpl classA = ElementFactory.classElement2("A", []);
-    ClassElementImpl classB = ElementFactory.classElement2("B", []);
-    ClassElementImpl classC = ElementFactory.classElement2("C", []);
+    ClassElementImpl classA = ElementFactory.classElement2("A");
+    ClassElementImpl classB = ElementFactory.classElement2("B");
+    ClassElementImpl classC = ElementFactory.classElement2("C");
     InterfaceType typeA = classA.type;
     InterfaceType typeB = classB.type;
     InterfaceType typeC = classC.type;
-    classB.interfaces = <InterfaceType> [typeA];
-    classC.interfaces = <InterfaceType> [typeB];
-    JUnitTestCase.assertEquals(typeB, typeB.getLeastUpperBound(typeC));
-    JUnitTestCase.assertEquals(typeB, typeC.getLeastUpperBound(typeB));
+    classB.interfaces = <InterfaceType>[typeA];
+    classC.interfaces = <InterfaceType>[typeB];
+    expect(typeB.getLeastUpperBound(typeC), typeB);
+    expect(typeC.getLeastUpperBound(typeB), typeB);
   }
 
   void test_getLeastUpperBound_directSubclassCase() {
@@ -2451,19 +2234,20 @@ class InterfaceTypeImplTest extends EngineTestCase {
     // class B extends A
     // class C extends B
     //
-    ClassElementImpl classA = ElementFactory.classElement2("A", []);
-    ClassElementImpl classB = ElementFactory.classElement("B", classA.type, []);
-    ClassElementImpl classC = ElementFactory.classElement("C", classB.type, []);
+    ClassElementImpl classA = ElementFactory.classElement2("A");
+    ClassElementImpl classB = ElementFactory.classElement("B", classA.type);
+    ClassElementImpl classC = ElementFactory.classElement("C", classB.type);
     InterfaceType typeB = classB.type;
     InterfaceType typeC = classC.type;
-    JUnitTestCase.assertEquals(typeB, typeB.getLeastUpperBound(typeC));
-    JUnitTestCase.assertEquals(typeB, typeC.getLeastUpperBound(typeB));
+    expect(typeB.getLeastUpperBound(typeC), typeB);
+    expect(typeC.getLeastUpperBound(typeB), typeB);
   }
 
   void test_getLeastUpperBound_functionType() {
-    DartType interfaceType = ElementFactory.classElement2("A", []).type;
-    FunctionTypeImpl functionType = new FunctionTypeImpl.con1(new FunctionElementImpl.forNode(AstFactory.identifier3("f")));
-    JUnitTestCase.assertNull(interfaceType.getLeastUpperBound(functionType));
+    DartType interfaceType = ElementFactory.classElement2("A").type;
+    FunctionTypeImpl functionType = new FunctionTypeImpl.con1(
+        new FunctionElementImpl.forNode(AstFactory.identifier3("f")));
+    expect(interfaceType.getLeastUpperBound(functionType), isNull);
   }
 
   void test_getLeastUpperBound_mixinCase() {
@@ -2473,165 +2257,165 @@ class InterfaceTypeImplTest extends EngineTestCase {
     // class C extends A
     // class D extends B with M, N, O, P
     //
-    ClassElement classA = ElementFactory.classElement2("A", []);
-    ClassElement classB = ElementFactory.classElement("B", classA.type, []);
-    ClassElement classC = ElementFactory.classElement("C", classA.type, []);
-    ClassElementImpl classD = ElementFactory.classElement("D", classB.type, []);
+    ClassElement classA = ElementFactory.classElement2("A");
+    ClassElement classB = ElementFactory.classElement("B", classA.type);
+    ClassElement classC = ElementFactory.classElement("C", classA.type);
+    ClassElementImpl classD = ElementFactory.classElement("D", classB.type);
     InterfaceType typeA = classA.type;
     InterfaceType typeC = classC.type;
     InterfaceType typeD = classD.type;
-    classD.mixins = <InterfaceType> [
-        ElementFactory.classElement2("M", []).type,
-        ElementFactory.classElement2("N", []).type,
-        ElementFactory.classElement2("O", []).type,
-        ElementFactory.classElement2("P", []).type];
-    JUnitTestCase.assertEquals(typeA, typeD.getLeastUpperBound(typeC));
-    JUnitTestCase.assertEquals(typeA, typeC.getLeastUpperBound(typeD));
+    classD.mixins = <InterfaceType>[
+        ElementFactory.classElement2("M").type,
+        ElementFactory.classElement2("N").type,
+        ElementFactory.classElement2("O").type,
+        ElementFactory.classElement2("P").type];
+    expect(typeD.getLeastUpperBound(typeC), typeA);
+    expect(typeC.getLeastUpperBound(typeD), typeA);
   }
 
   void test_getLeastUpperBound_null() {
-    DartType interfaceType = ElementFactory.classElement2("A", []).type;
-    JUnitTestCase.assertNull(interfaceType.getLeastUpperBound(null));
+    DartType interfaceType = ElementFactory.classElement2("A").type;
+    expect(interfaceType.getLeastUpperBound(null), isNull);
   }
 
   void test_getLeastUpperBound_object() {
-    ClassElementImpl classA = ElementFactory.classElement2("A", []);
-    ClassElementImpl classB = ElementFactory.classElement2("B", []);
+    ClassElementImpl classA = ElementFactory.classElement2("A");
+    ClassElementImpl classB = ElementFactory.classElement2("B");
     InterfaceType typeA = classA.type;
     InterfaceType typeB = classB.type;
     DartType typeObject = typeA.element.supertype;
     // assert that object does not have a super type
-    JUnitTestCase.assertNull((typeObject.element as ClassElement).supertype);
+    expect((typeObject.element as ClassElement).supertype, isNull);
     // assert that both A and B have the same super type of Object
-    JUnitTestCase.assertEquals(typeObject, typeB.element.supertype);
+    expect(typeB.element.supertype, typeObject);
     // finally, assert that the only least upper bound of A and B is Object
-    JUnitTestCase.assertEquals(typeObject, typeA.getLeastUpperBound(typeB));
+    expect(typeA.getLeastUpperBound(typeB), typeObject);
   }
 
   void test_getLeastUpperBound_self() {
-    ClassElement classA = ElementFactory.classElement2("A", []);
+    ClassElement classA = ElementFactory.classElement2("A");
     InterfaceType typeA = classA.type;
-    JUnitTestCase.assertEquals(typeA, typeA.getLeastUpperBound(typeA));
+    expect(typeA.getLeastUpperBound(typeA), typeA);
   }
 
   void test_getLeastUpperBound_sharedSuperclass1() {
-    ClassElementImpl classA = ElementFactory.classElement2("A", []);
-    ClassElementImpl classB = ElementFactory.classElement("B", classA.type, []);
-    ClassElementImpl classC = ElementFactory.classElement("C", classA.type, []);
+    ClassElementImpl classA = ElementFactory.classElement2("A");
+    ClassElementImpl classB = ElementFactory.classElement("B", classA.type);
+    ClassElementImpl classC = ElementFactory.classElement("C", classA.type);
     InterfaceType typeA = classA.type;
     InterfaceType typeB = classB.type;
     InterfaceType typeC = classC.type;
-    JUnitTestCase.assertEquals(typeA, typeB.getLeastUpperBound(typeC));
-    JUnitTestCase.assertEquals(typeA, typeC.getLeastUpperBound(typeB));
+    expect(typeB.getLeastUpperBound(typeC), typeA);
+    expect(typeC.getLeastUpperBound(typeB), typeA);
   }
 
   void test_getLeastUpperBound_sharedSuperclass2() {
-    ClassElementImpl classA = ElementFactory.classElement2("A", []);
-    ClassElementImpl classB = ElementFactory.classElement("B", classA.type, []);
-    ClassElementImpl classC = ElementFactory.classElement("C", classA.type, []);
-    ClassElementImpl classD = ElementFactory.classElement("D", classC.type, []);
+    ClassElementImpl classA = ElementFactory.classElement2("A");
+    ClassElementImpl classB = ElementFactory.classElement("B", classA.type);
+    ClassElementImpl classC = ElementFactory.classElement("C", classA.type);
+    ClassElementImpl classD = ElementFactory.classElement("D", classC.type);
     InterfaceType typeA = classA.type;
     InterfaceType typeB = classB.type;
     InterfaceType typeD = classD.type;
-    JUnitTestCase.assertEquals(typeA, typeB.getLeastUpperBound(typeD));
-    JUnitTestCase.assertEquals(typeA, typeD.getLeastUpperBound(typeB));
+    expect(typeB.getLeastUpperBound(typeD), typeA);
+    expect(typeD.getLeastUpperBound(typeB), typeA);
   }
 
   void test_getLeastUpperBound_sharedSuperclass3() {
-    ClassElementImpl classA = ElementFactory.classElement2("A", []);
-    ClassElementImpl classB = ElementFactory.classElement("B", classA.type, []);
-    ClassElementImpl classC = ElementFactory.classElement("C", classB.type, []);
-    ClassElementImpl classD = ElementFactory.classElement("D", classB.type, []);
+    ClassElementImpl classA = ElementFactory.classElement2("A");
+    ClassElementImpl classB = ElementFactory.classElement("B", classA.type);
+    ClassElementImpl classC = ElementFactory.classElement("C", classB.type);
+    ClassElementImpl classD = ElementFactory.classElement("D", classB.type);
     InterfaceType typeB = classB.type;
     InterfaceType typeC = classC.type;
     InterfaceType typeD = classD.type;
-    JUnitTestCase.assertEquals(typeB, typeC.getLeastUpperBound(typeD));
-    JUnitTestCase.assertEquals(typeB, typeD.getLeastUpperBound(typeC));
+    expect(typeC.getLeastUpperBound(typeD), typeB);
+    expect(typeD.getLeastUpperBound(typeC), typeB);
   }
 
   void test_getLeastUpperBound_sharedSuperclass4() {
-    ClassElement classA = ElementFactory.classElement2("A", []);
-    ClassElement classA2 = ElementFactory.classElement2("A2", []);
-    ClassElement classA3 = ElementFactory.classElement2("A3", []);
-    ClassElementImpl classB = ElementFactory.classElement("B", classA.type, []);
-    ClassElementImpl classC = ElementFactory.classElement("C", classA.type, []);
+    ClassElement classA = ElementFactory.classElement2("A");
+    ClassElement classA2 = ElementFactory.classElement2("A2");
+    ClassElement classA3 = ElementFactory.classElement2("A3");
+    ClassElementImpl classB = ElementFactory.classElement("B", classA.type);
+    ClassElementImpl classC = ElementFactory.classElement("C", classA.type);
     InterfaceType typeA = classA.type;
     InterfaceType typeA2 = classA2.type;
     InterfaceType typeA3 = classA3.type;
     InterfaceType typeB = classB.type;
     InterfaceType typeC = classC.type;
-    classB.interfaces = <InterfaceType> [typeA2];
-    classC.interfaces = <InterfaceType> [typeA3];
-    JUnitTestCase.assertEquals(typeA, typeB.getLeastUpperBound(typeC));
-    JUnitTestCase.assertEquals(typeA, typeC.getLeastUpperBound(typeB));
+    classB.interfaces = <InterfaceType>[typeA2];
+    classC.interfaces = <InterfaceType>[typeA3];
+    expect(typeB.getLeastUpperBound(typeC), typeA);
+    expect(typeC.getLeastUpperBound(typeB), typeA);
   }
 
   void test_getLeastUpperBound_sharedSuperinterface1() {
-    ClassElementImpl classA = ElementFactory.classElement2("A", []);
-    ClassElementImpl classB = ElementFactory.classElement2("B", []);
-    ClassElementImpl classC = ElementFactory.classElement2("C", []);
+    ClassElementImpl classA = ElementFactory.classElement2("A");
+    ClassElementImpl classB = ElementFactory.classElement2("B");
+    ClassElementImpl classC = ElementFactory.classElement2("C");
     InterfaceType typeA = classA.type;
     InterfaceType typeB = classB.type;
     InterfaceType typeC = classC.type;
-    classB.interfaces = <InterfaceType> [typeA];
-    classC.interfaces = <InterfaceType> [typeA];
-    JUnitTestCase.assertEquals(typeA, typeB.getLeastUpperBound(typeC));
-    JUnitTestCase.assertEquals(typeA, typeC.getLeastUpperBound(typeB));
+    classB.interfaces = <InterfaceType>[typeA];
+    classC.interfaces = <InterfaceType>[typeA];
+    expect(typeB.getLeastUpperBound(typeC), typeA);
+    expect(typeC.getLeastUpperBound(typeB), typeA);
   }
 
   void test_getLeastUpperBound_sharedSuperinterface2() {
-    ClassElementImpl classA = ElementFactory.classElement2("A", []);
-    ClassElementImpl classB = ElementFactory.classElement2("B", []);
-    ClassElementImpl classC = ElementFactory.classElement2("C", []);
-    ClassElementImpl classD = ElementFactory.classElement2("D", []);
+    ClassElementImpl classA = ElementFactory.classElement2("A");
+    ClassElementImpl classB = ElementFactory.classElement2("B");
+    ClassElementImpl classC = ElementFactory.classElement2("C");
+    ClassElementImpl classD = ElementFactory.classElement2("D");
     InterfaceType typeA = classA.type;
     InterfaceType typeB = classB.type;
     InterfaceType typeC = classC.type;
     InterfaceType typeD = classD.type;
-    classB.interfaces = <InterfaceType> [typeA];
-    classC.interfaces = <InterfaceType> [typeA];
-    classD.interfaces = <InterfaceType> [typeC];
-    JUnitTestCase.assertEquals(typeA, typeB.getLeastUpperBound(typeD));
-    JUnitTestCase.assertEquals(typeA, typeD.getLeastUpperBound(typeB));
+    classB.interfaces = <InterfaceType>[typeA];
+    classC.interfaces = <InterfaceType>[typeA];
+    classD.interfaces = <InterfaceType>[typeC];
+    expect(typeB.getLeastUpperBound(typeD), typeA);
+    expect(typeD.getLeastUpperBound(typeB), typeA);
   }
 
   void test_getLeastUpperBound_sharedSuperinterface3() {
-    ClassElementImpl classA = ElementFactory.classElement2("A", []);
-    ClassElementImpl classB = ElementFactory.classElement2("B", []);
-    ClassElementImpl classC = ElementFactory.classElement2("C", []);
-    ClassElementImpl classD = ElementFactory.classElement2("D", []);
+    ClassElementImpl classA = ElementFactory.classElement2("A");
+    ClassElementImpl classB = ElementFactory.classElement2("B");
+    ClassElementImpl classC = ElementFactory.classElement2("C");
+    ClassElementImpl classD = ElementFactory.classElement2("D");
     InterfaceType typeA = classA.type;
     InterfaceType typeB = classB.type;
     InterfaceType typeC = classC.type;
     InterfaceType typeD = classD.type;
-    classB.interfaces = <InterfaceType> [typeA];
-    classC.interfaces = <InterfaceType> [typeB];
-    classD.interfaces = <InterfaceType> [typeB];
-    JUnitTestCase.assertEquals(typeB, typeC.getLeastUpperBound(typeD));
-    JUnitTestCase.assertEquals(typeB, typeD.getLeastUpperBound(typeC));
+    classB.interfaces = <InterfaceType>[typeA];
+    classC.interfaces = <InterfaceType>[typeB];
+    classD.interfaces = <InterfaceType>[typeB];
+    expect(typeC.getLeastUpperBound(typeD), typeB);
+    expect(typeD.getLeastUpperBound(typeC), typeB);
   }
 
   void test_getLeastUpperBound_sharedSuperinterface4() {
-    ClassElement classA = ElementFactory.classElement2("A", []);
-    ClassElement classA2 = ElementFactory.classElement2("A2", []);
-    ClassElement classA3 = ElementFactory.classElement2("A3", []);
-    ClassElementImpl classB = ElementFactory.classElement2("B", []);
-    ClassElementImpl classC = ElementFactory.classElement2("C", []);
+    ClassElement classA = ElementFactory.classElement2("A");
+    ClassElement classA2 = ElementFactory.classElement2("A2");
+    ClassElement classA3 = ElementFactory.classElement2("A3");
+    ClassElementImpl classB = ElementFactory.classElement2("B");
+    ClassElementImpl classC = ElementFactory.classElement2("C");
     InterfaceType typeA = classA.type;
     InterfaceType typeA2 = classA2.type;
     InterfaceType typeA3 = classA3.type;
     InterfaceType typeB = classB.type;
     InterfaceType typeC = classC.type;
-    classB.interfaces = <InterfaceType> [typeA, typeA2];
-    classC.interfaces = <InterfaceType> [typeA, typeA3];
-    JUnitTestCase.assertEquals(typeA, typeB.getLeastUpperBound(typeC));
-    JUnitTestCase.assertEquals(typeA, typeC.getLeastUpperBound(typeB));
+    classB.interfaces = <InterfaceType>[typeA, typeA2];
+    classC.interfaces = <InterfaceType>[typeA, typeA3];
+    expect(typeB.getLeastUpperBound(typeC), typeA);
+    expect(typeC.getLeastUpperBound(typeB), typeA);
   }
 
   void test_getLeastUpperBound_twoComparables() {
     InterfaceType string = _typeProvider.stringType;
     InterfaceType num = _typeProvider.numType;
-    JUnitTestCase.assertEquals(_typeProvider.objectType, string.getLeastUpperBound(num));
+    expect(string.getLeastUpperBound(num), _typeProvider.objectType);
   }
 
   void test_getLeastUpperBound_typeParameters_different() {
@@ -2642,9 +2426,12 @@ class InterfaceTypeImplTest extends EngineTestCase {
     InterfaceType listType = _typeProvider.listType;
     InterfaceType intType = _typeProvider.intType;
     InterfaceType doubleType = _typeProvider.doubleType;
-    InterfaceType listOfIntType = listType.substitute4(<DartType> [intType]);
-    InterfaceType listOfDoubleType = listType.substitute4(<DartType> [doubleType]);
-    JUnitTestCase.assertEquals(_typeProvider.objectType, listOfIntType.getLeastUpperBound(listOfDoubleType));
+    InterfaceType listOfIntType = listType.substitute4(<DartType>[intType]);
+    InterfaceType listOfDoubleType =
+        listType.substitute4(<DartType>[doubleType]);
+    expect(
+        listOfIntType.getLeastUpperBound(listOfDoubleType),
+        _typeProvider.objectType);
   }
 
   void test_getLeastUpperBound_typeParameters_same() {
@@ -2654,20 +2441,20 @@ class InterfaceTypeImplTest extends EngineTestCase {
     //
     InterfaceType listType = _typeProvider.listType;
     InterfaceType intType = _typeProvider.intType;
-    InterfaceType listOfIntType = listType.substitute4(<DartType> [intType]);
-    JUnitTestCase.assertEquals(listOfIntType, listOfIntType.getLeastUpperBound(listOfIntType));
+    InterfaceType listOfIntType = listType.substitute4(<DartType>[intType]);
+    expect(listOfIntType.getLeastUpperBound(listOfIntType), listOfIntType);
   }
 
   void test_getMethod_implemented() {
     //
     // class A { m() {} }
     //
-    ClassElementImpl classA = ElementFactory.classElement2("A", []);
+    ClassElementImpl classA = ElementFactory.classElement2("A");
     String methodName = "m";
-    MethodElementImpl methodM = ElementFactory.methodElement(methodName, null, []);
-    classA.methods = <MethodElement> [methodM];
+    MethodElementImpl methodM = ElementFactory.methodElement(methodName, null);
+    classA.methods = <MethodElement>[methodM];
     InterfaceType typeA = classA.type;
-    JUnitTestCase.assertSame(methodM, typeA.getMethod(methodName));
+    expect(typeA.getMethod(methodName), same(methodM));
   }
 
   void test_getMethod_parameterized() {
@@ -2677,65 +2464,67 @@ class InterfaceTypeImplTest extends EngineTestCase {
     ClassElementImpl classA = ElementFactory.classElement2("A", ["E"]);
     DartType typeE = classA.type.typeArguments[0];
     String methodName = "m";
-    MethodElementImpl methodM = ElementFactory.methodElement(methodName, typeE, [typeE]);
-    classA.methods = <MethodElement> [methodM];
-    (methodM.type as FunctionTypeImpl).typeArguments = classA.type.typeArguments;
+    MethodElementImpl methodM =
+        ElementFactory.methodElement(methodName, typeE, [typeE]);
+    classA.methods = <MethodElement>[methodM];
+    (methodM.type as FunctionTypeImpl).typeArguments =
+        classA.type.typeArguments;
     //
     // A<I>
     //
-    InterfaceType typeI = ElementFactory.classElement2("I", []).type;
+    InterfaceType typeI = ElementFactory.classElement2("I").type;
     InterfaceTypeImpl typeAI = new InterfaceTypeImpl.con1(classA);
-    typeAI.typeArguments = <DartType> [typeI];
+    typeAI.typeArguments = <DartType>[typeI];
     MethodElement method = typeAI.getMethod(methodName);
-    JUnitTestCase.assertNotNull(method);
+    expect(method, isNotNull);
     FunctionType methodType = method.type;
-    JUnitTestCase.assertSame(typeI, methodType.returnType);
+    expect(methodType.returnType, same(typeI));
     List<DartType> parameterTypes = methodType.normalParameterTypes;
-    EngineTestCase.assertLength(1, parameterTypes);
-    JUnitTestCase.assertSame(typeI, parameterTypes[0]);
+    expect(parameterTypes, hasLength(1));
+    expect(parameterTypes[0], same(typeI));
   }
 
   void test_getMethod_unimplemented() {
     //
     // class A {}
     //
-    ClassElementImpl classA = ElementFactory.classElement2("A", []);
+    ClassElementImpl classA = ElementFactory.classElement2("A");
     InterfaceType typeA = classA.type;
-    JUnitTestCase.assertNull(typeA.getMethod("m"));
+    expect(typeA.getMethod("m"), isNull);
   }
 
   void test_getMethods() {
-    ClassElementImpl typeElement = ElementFactory.classElement2("A", []);
-    MethodElementImpl methodOne = ElementFactory.methodElement("one", null, []);
-    MethodElementImpl methodTwo = ElementFactory.methodElement("two", null, []);
-    typeElement.methods = <MethodElement> [methodOne, methodTwo];
+    ClassElementImpl typeElement = ElementFactory.classElement2("A");
+    MethodElementImpl methodOne = ElementFactory.methodElement("one", null);
+    MethodElementImpl methodTwo = ElementFactory.methodElement("two", null);
+    typeElement.methods = <MethodElement>[methodOne, methodTwo];
     InterfaceTypeImpl type = new InterfaceTypeImpl.con1(typeElement);
-    JUnitTestCase.assertEquals(2, type.methods.length);
+    expect(type.methods.length, 2);
   }
 
   void test_getMethods_empty() {
-    ClassElementImpl typeElement = ElementFactory.classElement2("A", []);
+    ClassElementImpl typeElement = ElementFactory.classElement2("A");
     InterfaceTypeImpl type = new InterfaceTypeImpl.con1(typeElement);
-    JUnitTestCase.assertEquals(0, type.methods.length);
+    expect(type.methods.length, 0);
   }
 
   void test_getMixins_nonParameterized() {
     //
     // class C extends Object with A, B
     //
-    ClassElementImpl classA = ElementFactory.classElement2("A", []);
+    ClassElementImpl classA = ElementFactory.classElement2("A");
     InterfaceType typeA = classA.type;
-    ClassElementImpl classB = ElementFactory.classElement2("B", []);
+    ClassElementImpl classB = ElementFactory.classElement2("B");
     InterfaceType typeB = classB.type;
-    ClassElementImpl classC = ElementFactory.classElement2("C", []);
-    classC.mixins = <InterfaceType> [typeA, typeB];
+    ClassElementImpl classC = ElementFactory.classElement2("C");
+    classC.mixins = <InterfaceType>[typeA, typeB];
     List<InterfaceType> interfaces = classC.type.mixins;
-    EngineTestCase.assertLength(2, interfaces);
+    expect(interfaces, hasLength(2));
     if (identical(interfaces[0], typeA)) {
-      JUnitTestCase.assertSame(typeB, interfaces[1]);
+      expect(interfaces[1], same(typeB));
     } else {
-      JUnitTestCase.assertSame(typeB, interfaces[0]);
-      JUnitTestCase.assertSame(typeA, interfaces[1]);
+      expect(interfaces[0], same(typeB));
+      expect(interfaces[1], same(typeA));
     }
   }
 
@@ -2748,31 +2537,32 @@ class InterfaceTypeImplTest extends EngineTestCase {
     ClassElementImpl classB = ElementFactory.classElement2("B", ["F"]);
     InterfaceType typeB = classB.type;
     InterfaceTypeImpl typeAF = new InterfaceTypeImpl.con1(classA);
-    typeAF.typeArguments = <DartType> [typeB.typeArguments[0]];
-    classB.mixins = <InterfaceType> [typeAF];
+    typeAF.typeArguments = <DartType>[typeB.typeArguments[0]];
+    classB.mixins = <InterfaceType>[typeAF];
     //
     // B<I>
     //
-    InterfaceType typeI = ElementFactory.classElement2("I", []).type;
+    InterfaceType typeI = ElementFactory.classElement2("I").type;
     InterfaceTypeImpl typeBI = new InterfaceTypeImpl.con1(classB);
-    typeBI.typeArguments = <DartType> [typeI];
+    typeBI.typeArguments = <DartType>[typeI];
     List<InterfaceType> interfaces = typeBI.mixins;
-    EngineTestCase.assertLength(1, interfaces);
+    expect(interfaces, hasLength(1));
     InterfaceType result = interfaces[0];
-    JUnitTestCase.assertSame(classA, result.element);
-    JUnitTestCase.assertSame(typeI, result.typeArguments[0]);
+    expect(result.element, same(classA));
+    expect(result.typeArguments[0], same(typeI));
   }
 
   void test_getSetter_implemented() {
     //
     // class A { s() {} }
     //
-    ClassElementImpl classA = ElementFactory.classElement2("A", []);
+    ClassElementImpl classA = ElementFactory.classElement2("A");
     String setterName = "s";
-    PropertyAccessorElement setterS = ElementFactory.setterElement(setterName, false, null);
-    classA.accessors = <PropertyAccessorElement> [setterS];
+    PropertyAccessorElement setterS =
+        ElementFactory.setterElement(setterName, false, null);
+    classA.accessors = <PropertyAccessorElement>[setterS];
     InterfaceType typeA = classA.type;
-    JUnitTestCase.assertSame(setterS, typeA.getSetter(setterName));
+    expect(typeA.getSetter(setterName), same(setterS));
   }
 
   void test_getSetter_parameterized() {
@@ -2782,41 +2572,43 @@ class InterfaceTypeImplTest extends EngineTestCase {
     ClassElementImpl classA = ElementFactory.classElement2("A", ["E"]);
     DartType typeE = classA.type.typeArguments[0];
     String setterName = "s";
-    PropertyAccessorElement setterS = ElementFactory.setterElement(setterName, false, typeE);
-    classA.accessors = <PropertyAccessorElement> [setterS];
-    (setterS.type as FunctionTypeImpl).typeArguments = classA.type.typeArguments;
+    PropertyAccessorElement setterS =
+        ElementFactory.setterElement(setterName, false, typeE);
+    classA.accessors = <PropertyAccessorElement>[setterS];
+    (setterS.type as FunctionTypeImpl).typeArguments =
+        classA.type.typeArguments;
     //
     // A<I>
     //
-    InterfaceType typeI = ElementFactory.classElement2("I", []).type;
+    InterfaceType typeI = ElementFactory.classElement2("I").type;
     InterfaceTypeImpl typeAI = new InterfaceTypeImpl.con1(classA);
-    typeAI.typeArguments = <DartType> [typeI];
+    typeAI.typeArguments = <DartType>[typeI];
     PropertyAccessorElement setter = typeAI.getSetter(setterName);
-    JUnitTestCase.assertNotNull(setter);
+    expect(setter, isNotNull);
     FunctionType setterType = setter.type;
     List<DartType> parameterTypes = setterType.normalParameterTypes;
-    EngineTestCase.assertLength(1, parameterTypes);
-    JUnitTestCase.assertSame(typeI, parameterTypes[0]);
+    expect(parameterTypes, hasLength(1));
+    expect(parameterTypes[0], same(typeI));
   }
 
   void test_getSetter_unimplemented() {
     //
     // class A {}
     //
-    ClassElementImpl classA = ElementFactory.classElement2("A", []);
+    ClassElementImpl classA = ElementFactory.classElement2("A");
     InterfaceType typeA = classA.type;
-    JUnitTestCase.assertNull(typeA.getSetter("s"));
+    expect(typeA.getSetter("s"), isNull);
   }
 
   void test_getSuperclass_nonParameterized() {
     //
     // class B extends A
     //
-    ClassElementImpl classA = ElementFactory.classElement2("A", []);
+    ClassElementImpl classA = ElementFactory.classElement2("A");
     InterfaceType typeA = classA.type;
-    ClassElementImpl classB = ElementFactory.classElement("B", typeA, []);
+    ClassElementImpl classB = ElementFactory.classElement("B", typeA);
     InterfaceType typeB = classB.type;
-    JUnitTestCase.assertSame(typeA, typeB.superclass);
+    expect(typeB.superclass, same(typeA));
   }
 
   void test_getSuperclass_parameterized() {
@@ -2828,28 +2620,28 @@ class InterfaceTypeImplTest extends EngineTestCase {
     ClassElementImpl classB = ElementFactory.classElement2("B", ["F"]);
     InterfaceType typeB = classB.type;
     InterfaceTypeImpl typeAF = new InterfaceTypeImpl.con1(classA);
-    typeAF.typeArguments = <DartType> [typeB.typeArguments[0]];
+    typeAF.typeArguments = <DartType>[typeB.typeArguments[0]];
     classB.supertype = typeAF;
     //
     // B<I>
     //
-    InterfaceType typeI = ElementFactory.classElement2("I", []).type;
+    InterfaceType typeI = ElementFactory.classElement2("I").type;
     InterfaceTypeImpl typeBI = new InterfaceTypeImpl.con1(classB);
-    typeBI.typeArguments = <DartType> [typeI];
+    typeBI.typeArguments = <DartType>[typeI];
     InterfaceType superclass = typeBI.superclass;
-    JUnitTestCase.assertSame(classA, superclass.element);
-    JUnitTestCase.assertSame(typeI, superclass.typeArguments[0]);
+    expect(superclass.element, same(classA));
+    expect(superclass.typeArguments[0], same(typeI));
   }
 
   void test_getTypeArguments_empty() {
-    InterfaceType type = ElementFactory.classElement2("A", []).type;
-    EngineTestCase.assertLength(0, type.typeArguments);
+    InterfaceType type = ElementFactory.classElement2("A").type;
+    expect(type.typeArguments, hasLength(0));
   }
 
   void test_hashCode() {
-    ClassElement classA = ElementFactory.classElement2("A", []);
+    ClassElement classA = ElementFactory.classElement2("A");
     InterfaceType typeA = classA.type;
-    JUnitTestCase.assertFalse(0 == typeA.hashCode);
+    expect(0 == typeA.hashCode, isFalse);
   }
 
   void test_isAssignableTo_typeVariables() {
@@ -2865,96 +2657,99 @@ class InterfaceTypeImplTest extends EngineTestCase {
     ClassElement classA = ElementFactory.classElement2("A", ["E"]);
     ClassElement classB = ElementFactory.classElement2("B", ["F", "G"]);
     InterfaceTypeImpl typeAF = new InterfaceTypeImpl.con1(classA);
-    typeAF.typeArguments = <DartType> [classB.typeParameters[0].type];
+    typeAF.typeArguments = <DartType>[classB.typeParameters[0].type];
     InterfaceTypeImpl typeAG = new InterfaceTypeImpl.con1(classA);
-    typeAG.typeArguments = <DartType> [classB.typeParameters[1].type];
-    JUnitTestCase.assertFalse(typeAG.isAssignableTo(typeAF));
+    typeAG.typeArguments = <DartType>[classB.typeParameters[1].type];
+    expect(typeAG.isAssignableTo(typeAF), isFalse);
   }
 
   void test_isAssignableTo_void() {
-    JUnitTestCase.assertFalse(VoidTypeImpl.instance.isAssignableTo(_typeProvider.intType));
+    expect(
+        VoidTypeImpl.instance.isAssignableTo(_typeProvider.intType),
+        isFalse);
   }
 
   void test_isDirectSupertypeOf_extends() {
-    ClassElement classA = ElementFactory.classElement2("A", []);
-    ClassElement classB = ElementFactory.classElement("B", classA.type, []);
+    ClassElement classA = ElementFactory.classElement2("A");
+    ClassElement classB = ElementFactory.classElement("B", classA.type);
     InterfaceType typeA = classA.type;
     InterfaceType typeB = classB.type;
-    JUnitTestCase.assertTrue(typeA.isDirectSupertypeOf(typeB));
+    expect(typeA.isDirectSupertypeOf(typeB), isTrue);
   }
 
   void test_isDirectSupertypeOf_false() {
-    ClassElement classA = ElementFactory.classElement2("A", []);
-    ClassElement classB = ElementFactory.classElement2("B", []);
-    ClassElement classC = ElementFactory.classElement("C", classB.type, []);
+    ClassElement classA = ElementFactory.classElement2("A");
+    ClassElement classB = ElementFactory.classElement2("B");
+    ClassElement classC = ElementFactory.classElement("C", classB.type);
     InterfaceType typeA = classA.type;
     InterfaceType typeC = classC.type;
-    JUnitTestCase.assertFalse(typeA.isDirectSupertypeOf(typeC));
+    expect(typeA.isDirectSupertypeOf(typeC), isFalse);
   }
 
   void test_isDirectSupertypeOf_implements() {
-    ClassElementImpl classA = ElementFactory.classElement2("A", []);
-    ClassElementImpl classB = ElementFactory.classElement2("B", []);
+    ClassElementImpl classA = ElementFactory.classElement2("A");
+    ClassElementImpl classB = ElementFactory.classElement2("B");
     InterfaceType typeA = classA.type;
     InterfaceType typeB = classB.type;
-    classB.interfaces = <InterfaceType> [typeA];
-    JUnitTestCase.assertTrue(typeA.isDirectSupertypeOf(typeB));
+    classB.interfaces = <InterfaceType>[typeA];
+    expect(typeA.isDirectSupertypeOf(typeB), isTrue);
   }
 
   void test_isDirectSupertypeOf_with() {
-    ClassElementImpl classA = ElementFactory.classElement2("A", []);
-    ClassElementImpl classB = ElementFactory.classElement2("B", []);
+    ClassElementImpl classA = ElementFactory.classElement2("A");
+    ClassElementImpl classB = ElementFactory.classElement2("B");
     InterfaceType typeA = classA.type;
     InterfaceType typeB = classB.type;
-    classB.mixins = <InterfaceType> [typeA];
-    JUnitTestCase.assertTrue(typeA.isDirectSupertypeOf(typeB));
+    classB.mixins = <InterfaceType>[typeA];
+    expect(typeA.isDirectSupertypeOf(typeB), isTrue);
   }
 
   void test_isMoreSpecificThan_bottom() {
-    DartType type = ElementFactory.classElement2("A", []).type;
-    JUnitTestCase.assertTrue(BottomTypeImpl.instance.isMoreSpecificThan(type));
+    DartType type = ElementFactory.classElement2("A").type;
+    expect(BottomTypeImpl.instance.isMoreSpecificThan(type), isTrue);
   }
 
   void test_isMoreSpecificThan_covariance() {
     ClassElement classA = ElementFactory.classElement2("A", ["E"]);
-    ClassElement classI = ElementFactory.classElement2("I", []);
-    ClassElement classJ = ElementFactory.classElement("J", classI.type, []);
+    ClassElement classI = ElementFactory.classElement2("I");
+    ClassElement classJ = ElementFactory.classElement("J", classI.type);
     InterfaceTypeImpl typeAI = new InterfaceTypeImpl.con1(classA);
     InterfaceTypeImpl typeAJ = new InterfaceTypeImpl.con1(classA);
-    typeAI.typeArguments = <DartType> [classI.type];
-    typeAJ.typeArguments = <DartType> [classJ.type];
-    JUnitTestCase.assertTrue(typeAJ.isMoreSpecificThan(typeAI));
-    JUnitTestCase.assertFalse(typeAI.isMoreSpecificThan(typeAJ));
+    typeAI.typeArguments = <DartType>[classI.type];
+    typeAJ.typeArguments = <DartType>[classJ.type];
+    expect(typeAJ.isMoreSpecificThan(typeAI), isTrue);
+    expect(typeAI.isMoreSpecificThan(typeAJ), isFalse);
   }
 
   void test_isMoreSpecificThan_directSupertype() {
-    ClassElement classA = ElementFactory.classElement2("A", []);
-    ClassElement classB = ElementFactory.classElement("B", classA.type, []);
+    ClassElement classA = ElementFactory.classElement2("A");
+    ClassElement classB = ElementFactory.classElement("B", classA.type);
     InterfaceType typeA = classA.type;
     InterfaceType typeB = classB.type;
-    JUnitTestCase.assertTrue(typeB.isMoreSpecificThan(typeA));
+    expect(typeB.isMoreSpecificThan(typeA), isTrue);
     // the opposite test tests a different branch in isMoreSpecificThan()
-    JUnitTestCase.assertFalse(typeA.isMoreSpecificThan(typeB));
+    expect(typeA.isMoreSpecificThan(typeB), isFalse);
   }
 
   void test_isMoreSpecificThan_dynamic() {
-    InterfaceType type = ElementFactory.classElement2("A", []).type;
-    JUnitTestCase.assertTrue(type.isMoreSpecificThan(DynamicTypeImpl.instance));
+    InterfaceType type = ElementFactory.classElement2("A").type;
+    expect(type.isMoreSpecificThan(DynamicTypeImpl.instance), isTrue);
   }
 
   void test_isMoreSpecificThan_generic() {
     ClassElement classA = ElementFactory.classElement2("A", ["E"]);
-    ClassElement classB = ElementFactory.classElement2("B", []);
+    ClassElement classB = ElementFactory.classElement2("B");
     DartType dynamicType = DynamicTypeImpl.instance;
-    InterfaceType typeAOfDynamic = classA.type.substitute4(<DartType> [dynamicType]);
-    InterfaceType typeAOfB = classA.type.substitute4(<DartType> [classB.type]);
-    JUnitTestCase.assertFalse(typeAOfDynamic.isMoreSpecificThan(typeAOfB));
-    JUnitTestCase.assertTrue(typeAOfB.isMoreSpecificThan(typeAOfDynamic));
+    InterfaceType typeAOfDynamic =
+        classA.type.substitute4(<DartType>[dynamicType]);
+    InterfaceType typeAOfB = classA.type.substitute4(<DartType>[classB.type]);
+    expect(typeAOfDynamic.isMoreSpecificThan(typeAOfB), isFalse);
+    expect(typeAOfB.isMoreSpecificThan(typeAOfDynamic), isTrue);
   }
 
   void test_isMoreSpecificThan_self() {
-    InterfaceType type = ElementFactory.classElement2("A", []).type;
-    JUnitTestCase.assertTrue(type.isMoreSpecificThan(type));
+    InterfaceType type = ElementFactory.classElement2("A").type;
+    expect(type.isMoreSpecificThan(type), isTrue);
   }
 
   void test_isMoreSpecificThan_transitive_interface() {
@@ -2963,13 +2758,13 @@ class InterfaceTypeImplTest extends EngineTestCase {
     //  class B extends A {}
     //  class C implements B {}
     //
-    ClassElementImpl classA = ElementFactory.classElement2("A", []);
-    ClassElementImpl classB = ElementFactory.classElement("B", classA.type, []);
-    ClassElementImpl classC = ElementFactory.classElement2("C", []);
-    classC.interfaces = <InterfaceType> [classB.type];
+    ClassElementImpl classA = ElementFactory.classElement2("A");
+    ClassElementImpl classB = ElementFactory.classElement("B", classA.type);
+    ClassElementImpl classC = ElementFactory.classElement2("C");
+    classC.interfaces = <InterfaceType>[classB.type];
     InterfaceType typeA = classA.type;
     InterfaceType typeC = classC.type;
-    JUnitTestCase.assertTrue(typeC.isMoreSpecificThan(typeA));
+    expect(typeC.isMoreSpecificThan(typeA), isTrue);
   }
 
   void test_isMoreSpecificThan_transitive_mixin() {
@@ -2978,13 +2773,13 @@ class InterfaceTypeImplTest extends EngineTestCase {
     //  class B extends A {}
     //  class C with B {}
     //
-    ClassElementImpl classA = ElementFactory.classElement2("A", []);
-    ClassElementImpl classB = ElementFactory.classElement("B", classA.type, []);
-    ClassElementImpl classC = ElementFactory.classElement2("C", []);
-    classC.mixins = <InterfaceType> [classB.type];
+    ClassElementImpl classA = ElementFactory.classElement2("A");
+    ClassElementImpl classB = ElementFactory.classElement("B", classA.type);
+    ClassElementImpl classC = ElementFactory.classElement2("C");
+    classC.mixins = <InterfaceType>[classB.type];
     InterfaceType typeA = classA.type;
     InterfaceType typeC = classC.type;
-    JUnitTestCase.assertTrue(typeC.isMoreSpecificThan(typeA));
+    expect(typeC.isMoreSpecificThan(typeA), isTrue);
   }
 
   void test_isMoreSpecificThan_transitive_recursive() {
@@ -2993,13 +2788,13 @@ class InterfaceTypeImplTest extends EngineTestCase {
     //  class B extends A {}
     //  class C {}
     //
-    ClassElementImpl classA = ElementFactory.classElement2("A", []);
-    ClassElementImpl classB = ElementFactory.classElement("B", classA.type, []);
-    ClassElementImpl classC = ElementFactory.classElement2("C", []);
+    ClassElementImpl classA = ElementFactory.classElement2("A");
+    ClassElementImpl classB = ElementFactory.classElement("B", classA.type);
+    ClassElementImpl classC = ElementFactory.classElement2("C");
     InterfaceType typeA = classA.type;
     InterfaceType typeC = classC.type;
     classA.supertype = classB.type;
-    JUnitTestCase.assertFalse(typeA.isMoreSpecificThan(typeC));
+    expect(typeA.isMoreSpecificThan(typeC), isFalse);
   }
 
   void test_isMoreSpecificThan_transitive_superclass() {
@@ -3008,12 +2803,12 @@ class InterfaceTypeImplTest extends EngineTestCase {
     //  class B extends A {}
     //  class C extends B {}
     //
-    ClassElement classA = ElementFactory.classElement2("A", []);
-    ClassElement classB = ElementFactory.classElement("B", classA.type, []);
-    ClassElement classC = ElementFactory.classElement("C", classB.type, []);
+    ClassElement classA = ElementFactory.classElement2("A");
+    ClassElement classB = ElementFactory.classElement("B", classA.type);
+    ClassElement classC = ElementFactory.classElement("C", classB.type);
     InterfaceType typeA = classA.type;
     InterfaceType typeC = classC.type;
-    JUnitTestCase.assertTrue(typeC.isMoreSpecificThan(typeA));
+    expect(typeC.isMoreSpecificThan(typeA), isTrue);
   }
 
   void test_isMoreSpecificThan_typeParameterType() {
@@ -3024,8 +2819,8 @@ class InterfaceTypeImplTest extends EngineTestCase {
     InterfaceType typeA = classA.type;
     TypeParameterType parameterType = classA.typeParameters[0].type;
     DartType objectType = _typeProvider.objectType;
-    JUnitTestCase.assertTrue(parameterType.isMoreSpecificThan(objectType));
-    JUnitTestCase.assertFalse(parameterType.isMoreSpecificThan(typeA));
+    expect(parameterType.isMoreSpecificThan(objectType), isTrue);
+    expect(parameterType.isMoreSpecificThan(typeA), isFalse);
   }
 
   void test_isMoreSpecificThan_typeParameterType_withBound() {
@@ -3033,32 +2828,33 @@ class InterfaceTypeImplTest extends EngineTestCase {
     // class A {}
     // class B<E extends A> {}
     //
-    ClassElement classA = ElementFactory.classElement2("A", []);
+    ClassElement classA = ElementFactory.classElement2("A");
     InterfaceType typeA = classA.type;
-    ClassElementImpl classB = ElementFactory.classElement2("B", []);
-    TypeParameterElementImpl parameterEA = new TypeParameterElementImpl.forNode(AstFactory.identifier3("E"));
+    ClassElementImpl classB = ElementFactory.classElement2("B");
+    TypeParameterElementImpl parameterEA =
+        new TypeParameterElementImpl.forNode(AstFactory.identifier3("E"));
     TypeParameterType parameterAEType = new TypeParameterTypeImpl(parameterEA);
     parameterEA.bound = typeA;
     parameterEA.type = parameterAEType;
-    classB.typeParameters = <TypeParameterElementImpl> [parameterEA];
-    JUnitTestCase.assertTrue(parameterAEType.isMoreSpecificThan(typeA));
+    classB.typeParameters = <TypeParameterElementImpl>[parameterEA];
+    expect(parameterAEType.isMoreSpecificThan(typeA), isTrue);
   }
 
   void test_isSubtypeOf_directSubtype() {
-    ClassElement classA = ElementFactory.classElement2("A", []);
-    ClassElement classB = ElementFactory.classElement("B", classA.type, []);
+    ClassElement classA = ElementFactory.classElement2("A");
+    ClassElement classB = ElementFactory.classElement("B", classA.type);
     InterfaceType typeA = classA.type;
     InterfaceType typeB = classB.type;
-    JUnitTestCase.assertTrue(typeB.isSubtypeOf(typeA));
-    JUnitTestCase.assertFalse(typeA.isSubtypeOf(typeB));
+    expect(typeB.isSubtypeOf(typeA), isTrue);
+    expect(typeA.isSubtypeOf(typeB), isFalse);
   }
 
   void test_isSubtypeOf_dynamic() {
-    ClassElement classA = ElementFactory.classElement2("A", []);
+    ClassElement classA = ElementFactory.classElement2("A");
     InterfaceType typeA = classA.type;
     DartType dynamicType = DynamicTypeImpl.instance;
-    JUnitTestCase.assertTrue(dynamicType.isSubtypeOf(typeA));
-    JUnitTestCase.assertTrue(typeA.isSubtypeOf(dynamicType));
+    expect(dynamicType.isSubtypeOf(typeA), isTrue);
+    expect(typeA.isSubtypeOf(dynamicType), isTrue);
   }
 
   void test_isSubtypeOf_function() {
@@ -3069,35 +2865,38 @@ class InterfaceTypeImplTest extends EngineTestCase {
     // }
     //
     InterfaceType stringType = _typeProvider.stringType;
-    ClassElementImpl classA = ElementFactory.classElement2("A", []);
-    classA.methods = <MethodElement> [ElementFactory.methodElement("call", VoidTypeImpl.instance, [stringType])];
-    FunctionType functionType = ElementFactory.functionElement5("f", <ClassElement> [stringType.element]).type;
-    JUnitTestCase.assertTrue(classA.type.isSubtypeOf(functionType));
+    ClassElementImpl classA = ElementFactory.classElement2("A");
+    classA.methods = <MethodElement>[
+        ElementFactory.methodElement("call", VoidTypeImpl.instance, [stringType])];
+    FunctionType functionType =
+        ElementFactory.functionElement5("f", <ClassElement>[stringType.element]).type;
+    expect(classA.type.isSubtypeOf(functionType), isTrue);
   }
 
   void test_isSubtypeOf_generic() {
     ClassElement classA = ElementFactory.classElement2("A", ["E"]);
-    ClassElement classB = ElementFactory.classElement2("B", []);
+    ClassElement classB = ElementFactory.classElement2("B");
     DartType dynamicType = DynamicTypeImpl.instance;
-    InterfaceType typeAOfDynamic = classA.type.substitute4(<DartType> [dynamicType]);
-    InterfaceType typeAOfB = classA.type.substitute4(<DartType> [classB.type]);
-    JUnitTestCase.assertTrue(typeAOfDynamic.isSubtypeOf(typeAOfB));
-    JUnitTestCase.assertTrue(typeAOfB.isSubtypeOf(typeAOfDynamic));
+    InterfaceType typeAOfDynamic =
+        classA.type.substitute4(<DartType>[dynamicType]);
+    InterfaceType typeAOfB = classA.type.substitute4(<DartType>[classB.type]);
+    expect(typeAOfDynamic.isSubtypeOf(typeAOfB), isTrue);
+    expect(typeAOfB.isSubtypeOf(typeAOfDynamic), isTrue);
   }
 
   void test_isSubtypeOf_interface() {
-    ClassElement classA = ElementFactory.classElement2("A", []);
-    ClassElement classB = ElementFactory.classElement("B", classA.type, []);
-    ClassElementImpl classC = ElementFactory.classElement2("C", []);
+    ClassElement classA = ElementFactory.classElement2("A");
+    ClassElement classB = ElementFactory.classElement("B", classA.type);
+    ClassElementImpl classC = ElementFactory.classElement2("C");
     InterfaceType typeObject = classA.supertype;
     InterfaceType typeA = classA.type;
     InterfaceType typeB = classB.type;
     InterfaceType typeC = classC.type;
-    classC.interfaces = <InterfaceType> [typeB];
-    JUnitTestCase.assertTrue(typeC.isSubtypeOf(typeB));
-    JUnitTestCase.assertTrue(typeC.isSubtypeOf(typeObject));
-    JUnitTestCase.assertTrue(typeC.isSubtypeOf(typeA));
-    JUnitTestCase.assertFalse(typeA.isSubtypeOf(typeC));
+    classC.interfaces = <InterfaceType>[typeB];
+    expect(typeC.isSubtypeOf(typeB), isTrue);
+    expect(typeC.isSubtypeOf(typeObject), isTrue);
+    expect(typeC.isSubtypeOf(typeA), isTrue);
+    expect(typeA.isSubtypeOf(typeC), isFalse);
   }
 
   void test_isSubtypeOf_mixins() {
@@ -3106,32 +2905,32 @@ class InterfaceTypeImplTest extends EngineTestCase {
     // class B extends A {}
     // class C with B {}
     //
-    ClassElement classA = ElementFactory.classElement2("A", []);
-    ClassElement classB = ElementFactory.classElement("B", classA.type, []);
-    ClassElementImpl classC = ElementFactory.classElement2("C", []);
+    ClassElement classA = ElementFactory.classElement2("A");
+    ClassElement classB = ElementFactory.classElement("B", classA.type);
+    ClassElementImpl classC = ElementFactory.classElement2("C");
     InterfaceType typeObject = classA.supertype;
     InterfaceType typeA = classA.type;
     InterfaceType typeB = classB.type;
     InterfaceType typeC = classC.type;
-    classC.mixins = <InterfaceType> [typeB];
-    JUnitTestCase.assertTrue(typeC.isSubtypeOf(typeB));
-    JUnitTestCase.assertTrue(typeC.isSubtypeOf(typeObject));
-    JUnitTestCase.assertTrue(typeC.isSubtypeOf(typeA));
-    JUnitTestCase.assertFalse(typeA.isSubtypeOf(typeC));
+    classC.mixins = <InterfaceType>[typeB];
+    expect(typeC.isSubtypeOf(typeB), isTrue);
+    expect(typeC.isSubtypeOf(typeObject), isTrue);
+    expect(typeC.isSubtypeOf(typeA), isTrue);
+    expect(typeA.isSubtypeOf(typeC), isFalse);
   }
 
   void test_isSubtypeOf_object() {
-    ClassElement classA = ElementFactory.classElement2("A", []);
+    ClassElement classA = ElementFactory.classElement2("A");
     InterfaceType typeA = classA.type;
     InterfaceType typeObject = classA.supertype;
-    JUnitTestCase.assertTrue(typeA.isSubtypeOf(typeObject));
-    JUnitTestCase.assertFalse(typeObject.isSubtypeOf(typeA));
+    expect(typeA.isSubtypeOf(typeObject), isTrue);
+    expect(typeObject.isSubtypeOf(typeA), isFalse);
   }
 
   void test_isSubtypeOf_self() {
-    ClassElement classA = ElementFactory.classElement2("A", []);
+    ClassElement classA = ElementFactory.classElement2("A");
     InterfaceType typeA = classA.type;
-    JUnitTestCase.assertTrue(typeA.isSubtypeOf(typeA));
+    expect(typeA.isSubtypeOf(typeA), isTrue);
   }
 
   void test_isSubtypeOf_transitive_recursive() {
@@ -3140,53 +2939,53 @@ class InterfaceTypeImplTest extends EngineTestCase {
     //  class B extends A {}
     //  class C {}
     //
-    ClassElementImpl classA = ElementFactory.classElement2("A", []);
-    ClassElementImpl classB = ElementFactory.classElement("B", classA.type, []);
-    ClassElementImpl classC = ElementFactory.classElement2("C", []);
+    ClassElementImpl classA = ElementFactory.classElement2("A");
+    ClassElementImpl classB = ElementFactory.classElement("B", classA.type);
+    ClassElementImpl classC = ElementFactory.classElement2("C");
     InterfaceType typeA = classA.type;
     InterfaceType typeC = classC.type;
     classA.supertype = classB.type;
-    JUnitTestCase.assertFalse(typeA.isSubtypeOf(typeC));
+    expect(typeA.isSubtypeOf(typeC), isFalse);
   }
 
   void test_isSubtypeOf_transitive_superclass() {
-    ClassElement classA = ElementFactory.classElement2("A", []);
-    ClassElement classB = ElementFactory.classElement("B", classA.type, []);
-    ClassElement classC = ElementFactory.classElement("C", classB.type, []);
+    ClassElement classA = ElementFactory.classElement2("A");
+    ClassElement classB = ElementFactory.classElement("B", classA.type);
+    ClassElement classC = ElementFactory.classElement("C", classB.type);
     InterfaceType typeA = classA.type;
     InterfaceType typeC = classC.type;
-    JUnitTestCase.assertTrue(typeC.isSubtypeOf(typeA));
-    JUnitTestCase.assertFalse(typeA.isSubtypeOf(typeC));
+    expect(typeC.isSubtypeOf(typeA), isTrue);
+    expect(typeA.isSubtypeOf(typeC), isFalse);
   }
 
   void test_isSubtypeOf_typeArguments() {
     DartType dynamicType = DynamicTypeImpl.instance;
     ClassElement classA = ElementFactory.classElement2("A", ["E"]);
-    ClassElement classI = ElementFactory.classElement2("I", []);
-    ClassElement classJ = ElementFactory.classElement("J", classI.type, []);
-    ClassElement classK = ElementFactory.classElement2("K", []);
+    ClassElement classI = ElementFactory.classElement2("I");
+    ClassElement classJ = ElementFactory.classElement("J", classI.type);
+    ClassElement classK = ElementFactory.classElement2("K");
     InterfaceType typeA = classA.type;
-    InterfaceType typeA_dynamic = typeA.substitute4(<DartType> [dynamicType]);
+    InterfaceType typeA_dynamic = typeA.substitute4(<DartType>[dynamicType]);
     InterfaceTypeImpl typeAI = new InterfaceTypeImpl.con1(classA);
     InterfaceTypeImpl typeAJ = new InterfaceTypeImpl.con1(classA);
     InterfaceTypeImpl typeAK = new InterfaceTypeImpl.con1(classA);
-    typeAI.typeArguments = <DartType> [classI.type];
-    typeAJ.typeArguments = <DartType> [classJ.type];
-    typeAK.typeArguments = <DartType> [classK.type];
+    typeAI.typeArguments = <DartType>[classI.type];
+    typeAJ.typeArguments = <DartType>[classJ.type];
+    typeAK.typeArguments = <DartType>[classK.type];
     // A<J> <: A<I> since J <: I
-    JUnitTestCase.assertTrue(typeAJ.isSubtypeOf(typeAI));
-    JUnitTestCase.assertFalse(typeAI.isSubtypeOf(typeAJ));
+    expect(typeAJ.isSubtypeOf(typeAI), isTrue);
+    expect(typeAI.isSubtypeOf(typeAJ), isFalse);
     // A<I> <: A<I> since I <: I
-    JUnitTestCase.assertTrue(typeAI.isSubtypeOf(typeAI));
+    expect(typeAI.isSubtypeOf(typeAI), isTrue);
     // A <: A<I> and A <: A<J>
-    JUnitTestCase.assertTrue(typeA_dynamic.isSubtypeOf(typeAI));
-    JUnitTestCase.assertTrue(typeA_dynamic.isSubtypeOf(typeAJ));
+    expect(typeA_dynamic.isSubtypeOf(typeAI), isTrue);
+    expect(typeA_dynamic.isSubtypeOf(typeAJ), isTrue);
     // A<I> <: A and A<J> <: A
-    JUnitTestCase.assertTrue(typeAI.isSubtypeOf(typeA_dynamic));
-    JUnitTestCase.assertTrue(typeAJ.isSubtypeOf(typeA_dynamic));
+    expect(typeAI.isSubtypeOf(typeA_dynamic), isTrue);
+    expect(typeAJ.isSubtypeOf(typeA_dynamic), isTrue);
     // A<I> !<: A<K> and A<K> !<: A<I>
-    JUnitTestCase.assertFalse(typeAI.isSubtypeOf(typeAK));
-    JUnitTestCase.assertFalse(typeAK.isSubtypeOf(typeAI));
+    expect(typeAI.isSubtypeOf(typeAK), isFalse);
+    expect(typeAK.isSubtypeOf(typeAI), isFalse);
   }
 
   void test_isSubtypeOf_typeParameter() {
@@ -3196,49 +2995,49 @@ class InterfaceTypeImplTest extends EngineTestCase {
     ClassElement classA = ElementFactory.classElement2("A", ["E"]);
     InterfaceType typeA = classA.type;
     TypeParameterType parameterType = classA.typeParameters[0].type;
-    JUnitTestCase.assertFalse(typeA.isSubtypeOf(parameterType));
+    expect(typeA.isSubtypeOf(parameterType), isFalse);
   }
 
   void test_isSupertypeOf_directSupertype() {
-    ClassElement classA = ElementFactory.classElement2("A", []);
-    ClassElement classB = ElementFactory.classElement("B", classA.type, []);
+    ClassElement classA = ElementFactory.classElement2("A");
+    ClassElement classB = ElementFactory.classElement("B", classA.type);
     InterfaceType typeA = classA.type;
     InterfaceType typeB = classB.type;
-    JUnitTestCase.assertFalse(typeB.isSupertypeOf(typeA));
-    JUnitTestCase.assertTrue(typeA.isSupertypeOf(typeB));
+    expect(typeB.isSupertypeOf(typeA), isFalse);
+    expect(typeA.isSupertypeOf(typeB), isTrue);
   }
 
   void test_isSupertypeOf_dynamic() {
-    ClassElement classA = ElementFactory.classElement2("A", []);
+    ClassElement classA = ElementFactory.classElement2("A");
     InterfaceType typeA = classA.type;
     DartType dynamicType = DynamicTypeImpl.instance;
-    JUnitTestCase.assertTrue(dynamicType.isSupertypeOf(typeA));
-    JUnitTestCase.assertTrue(typeA.isSupertypeOf(dynamicType));
+    expect(dynamicType.isSupertypeOf(typeA), isTrue);
+    expect(typeA.isSupertypeOf(dynamicType), isTrue);
   }
 
   void test_isSupertypeOf_indirectSupertype() {
-    ClassElement classA = ElementFactory.classElement2("A", []);
-    ClassElement classB = ElementFactory.classElement("B", classA.type, []);
-    ClassElement classC = ElementFactory.classElement("C", classB.type, []);
+    ClassElement classA = ElementFactory.classElement2("A");
+    ClassElement classB = ElementFactory.classElement("B", classA.type);
+    ClassElement classC = ElementFactory.classElement("C", classB.type);
     InterfaceType typeA = classA.type;
     InterfaceType typeC = classC.type;
-    JUnitTestCase.assertFalse(typeC.isSupertypeOf(typeA));
-    JUnitTestCase.assertTrue(typeA.isSupertypeOf(typeC));
+    expect(typeC.isSupertypeOf(typeA), isFalse);
+    expect(typeA.isSupertypeOf(typeC), isTrue);
   }
 
   void test_isSupertypeOf_interface() {
-    ClassElement classA = ElementFactory.classElement2("A", []);
-    ClassElement classB = ElementFactory.classElement("B", classA.type, []);
-    ClassElementImpl classC = ElementFactory.classElement2("C", []);
+    ClassElement classA = ElementFactory.classElement2("A");
+    ClassElement classB = ElementFactory.classElement("B", classA.type);
+    ClassElementImpl classC = ElementFactory.classElement2("C");
     InterfaceType typeObject = classA.supertype;
     InterfaceType typeA = classA.type;
     InterfaceType typeB = classB.type;
     InterfaceType typeC = classC.type;
-    classC.interfaces = <InterfaceType> [typeB];
-    JUnitTestCase.assertTrue(typeB.isSupertypeOf(typeC));
-    JUnitTestCase.assertTrue(typeObject.isSupertypeOf(typeC));
-    JUnitTestCase.assertTrue(typeA.isSupertypeOf(typeC));
-    JUnitTestCase.assertFalse(typeC.isSupertypeOf(typeA));
+    classC.interfaces = <InterfaceType>[typeB];
+    expect(typeB.isSupertypeOf(typeC), isTrue);
+    expect(typeObject.isSupertypeOf(typeC), isTrue);
+    expect(typeA.isSupertypeOf(typeC), isTrue);
+    expect(typeC.isSupertypeOf(typeA), isFalse);
   }
 
   void test_isSupertypeOf_mixins() {
@@ -3247,47 +3046,49 @@ class InterfaceTypeImplTest extends EngineTestCase {
     // class B extends A {}
     // class C with B {}
     //
-    ClassElement classA = ElementFactory.classElement2("A", []);
-    ClassElement classB = ElementFactory.classElement("B", classA.type, []);
-    ClassElementImpl classC = ElementFactory.classElement2("C", []);
+    ClassElement classA = ElementFactory.classElement2("A");
+    ClassElement classB = ElementFactory.classElement("B", classA.type);
+    ClassElementImpl classC = ElementFactory.classElement2("C");
     InterfaceType typeObject = classA.supertype;
     InterfaceType typeA = classA.type;
     InterfaceType typeB = classB.type;
     InterfaceType typeC = classC.type;
-    classC.mixins = <InterfaceType> [typeB];
-    JUnitTestCase.assertTrue(typeB.isSupertypeOf(typeC));
-    JUnitTestCase.assertTrue(typeObject.isSupertypeOf(typeC));
-    JUnitTestCase.assertTrue(typeA.isSupertypeOf(typeC));
-    JUnitTestCase.assertFalse(typeC.isSupertypeOf(typeA));
+    classC.mixins = <InterfaceType>[typeB];
+    expect(typeB.isSupertypeOf(typeC), isTrue);
+    expect(typeObject.isSupertypeOf(typeC), isTrue);
+    expect(typeA.isSupertypeOf(typeC), isTrue);
+    expect(typeC.isSupertypeOf(typeA), isFalse);
   }
 
   void test_isSupertypeOf_object() {
-    ClassElement classA = ElementFactory.classElement2("A", []);
+    ClassElement classA = ElementFactory.classElement2("A");
     InterfaceType typeA = classA.type;
     InterfaceType typeObject = classA.supertype;
-    JUnitTestCase.assertFalse(typeA.isSupertypeOf(typeObject));
-    JUnitTestCase.assertTrue(typeObject.isSupertypeOf(typeA));
+    expect(typeA.isSupertypeOf(typeObject), isFalse);
+    expect(typeObject.isSupertypeOf(typeA), isTrue);
   }
 
   void test_isSupertypeOf_self() {
-    ClassElement classA = ElementFactory.classElement2("A", []);
+    ClassElement classA = ElementFactory.classElement2("A");
     InterfaceType typeA = classA.type;
-    JUnitTestCase.assertTrue(typeA.isSupertypeOf(typeA));
+    expect(typeA.isSupertypeOf(typeA), isTrue);
   }
 
   void test_lookUpGetter_implemented() {
     //
     // class A { g {} }
     //
-    ClassElementImpl classA = ElementFactory.classElement2("A", []);
+    ClassElementImpl classA = ElementFactory.classElement2("A");
     String getterName = "g";
-    PropertyAccessorElement getterG = ElementFactory.getterElement(getterName, false, null);
-    classA.accessors = <PropertyAccessorElement> [getterG];
+    PropertyAccessorElement getterG =
+        ElementFactory.getterElement(getterName, false, null);
+    classA.accessors = <PropertyAccessorElement>[getterG];
     InterfaceType typeA = classA.type;
-    LibraryElementImpl library = ElementFactory.library(createAnalysisContext(), "lib");
+    LibraryElementImpl library =
+        ElementFactory.library(createAnalysisContext(), "lib");
     CompilationUnitElement unit = library.definingCompilationUnit;
-    (unit as CompilationUnitElementImpl).types = <ClassElement> [classA];
-    JUnitTestCase.assertSame(getterG, typeA.lookUpGetter(getterName, library));
+    (unit as CompilationUnitElementImpl).types = <ClassElement>[classA];
+    expect(typeA.lookUpGetter(getterName, library), same(getterG));
   }
 
   void test_lookUpGetter_inherited() {
@@ -3295,16 +3096,45 @@ class InterfaceTypeImplTest extends EngineTestCase {
     // class A { g {} }
     // class B extends A {}
     //
-    ClassElementImpl classA = ElementFactory.classElement2("A", []);
+    ClassElementImpl classA = ElementFactory.classElement2("A");
     String getterName = "g";
-    PropertyAccessorElement getterG = ElementFactory.getterElement(getterName, false, null);
-    classA.accessors = <PropertyAccessorElement> [getterG];
-    ClassElementImpl classB = ElementFactory.classElement("B", classA.type, []);
+    PropertyAccessorElement getterG =
+        ElementFactory.getterElement(getterName, false, null);
+    classA.accessors = <PropertyAccessorElement>[getterG];
+    ClassElementImpl classB = ElementFactory.classElement("B", classA.type);
     InterfaceType typeB = classB.type;
-    LibraryElementImpl library = ElementFactory.library(createAnalysisContext(), "lib");
+    LibraryElementImpl library =
+        ElementFactory.library(createAnalysisContext(), "lib");
     CompilationUnitElement unit = library.definingCompilationUnit;
-    (unit as CompilationUnitElementImpl).types = <ClassElement> [classA, classB];
-    JUnitTestCase.assertSame(getterG, typeB.lookUpGetter(getterName, library));
+    (unit as CompilationUnitElementImpl).types = <ClassElement>[classA, classB];
+    expect(typeB.lookUpGetter(getterName, library), same(getterG));
+  }
+
+  void test_lookUpGetter_mixin_shadowing() {
+    //
+    // class B {}
+    // class M1 { get g {} }
+    // class M2 { get g {} }
+    // class C extends B with M1, M2 {}
+    //
+    TestTypeProvider typeProvider = new TestTypeProvider();
+    String getterName = 'g';
+    ClassElementImpl classB = ElementFactory.classElement2('B');
+    ClassElementImpl classM1 = ElementFactory.classElement2('M1');
+    PropertyAccessorElementImpl getterM1g =
+        ElementFactory.getterElement(getterName, false, typeProvider.dynamicType);
+    classM1.accessors = <PropertyAccessorElement>[getterM1g];
+    ClassElementImpl classM2 = ElementFactory.classElement2('M2');
+    PropertyAccessorElementImpl getterM2g =
+        ElementFactory.getterElement(getterName, false, typeProvider.dynamicType);
+    classM2.accessors = <PropertyAccessorElement>[getterM2g];
+    ClassElementImpl classC = ElementFactory.classElement('C', classB.type);
+    classC.mixins = <InterfaceType>[classM1.type, classM2.type];
+    LibraryElementImpl library =
+        ElementFactory.library(createAnalysisContext(), "lib");
+    CompilationUnitElementImpl unit = library.definingCompilationUnit;
+    unit.types = <ClassElement>[classB, classM1, classM2, classC];
+    expect(classC.type.lookUpGetter(getterName, library), getterM2g);
   }
 
   void test_lookUpGetter_recursive() {
@@ -3312,41 +3142,44 @@ class InterfaceTypeImplTest extends EngineTestCase {
     // class A extends B {}
     // class B extends A {}
     //
-    ClassElementImpl classA = ElementFactory.classElement2("A", []);
+    ClassElementImpl classA = ElementFactory.classElement2("A");
     InterfaceType typeA = classA.type;
-    ClassElementImpl classB = ElementFactory.classElement("B", typeA, []);
+    ClassElementImpl classB = ElementFactory.classElement("B", typeA);
     classA.supertype = classB.type;
-    LibraryElementImpl library = ElementFactory.library(createAnalysisContext(), "lib");
+    LibraryElementImpl library =
+        ElementFactory.library(createAnalysisContext(), "lib");
     CompilationUnitElement unit = library.definingCompilationUnit;
-    (unit as CompilationUnitElementImpl).types = <ClassElement> [classA, classB];
-    JUnitTestCase.assertNull(typeA.lookUpGetter("g", library));
+    (unit as CompilationUnitElementImpl).types = <ClassElement>[classA, classB];
+    expect(typeA.lookUpGetter("g", library), isNull);
   }
 
   void test_lookUpGetter_unimplemented() {
     //
     // class A {}
     //
-    ClassElementImpl classA = ElementFactory.classElement2("A", []);
+    ClassElementImpl classA = ElementFactory.classElement2("A");
     InterfaceType typeA = classA.type;
-    LibraryElementImpl library = ElementFactory.library(createAnalysisContext(), "lib");
+    LibraryElementImpl library =
+        ElementFactory.library(createAnalysisContext(), "lib");
     CompilationUnitElement unit = library.definingCompilationUnit;
-    (unit as CompilationUnitElementImpl).types = <ClassElement> [classA];
-    JUnitTestCase.assertNull(typeA.lookUpGetter("g", library));
+    (unit as CompilationUnitElementImpl).types = <ClassElement>[classA];
+    expect(typeA.lookUpGetter("g", library), isNull);
   }
 
   void test_lookUpMethod_implemented() {
     //
     // class A { m() {} }
     //
-    ClassElementImpl classA = ElementFactory.classElement2("A", []);
+    ClassElementImpl classA = ElementFactory.classElement2("A");
     String methodName = "m";
-    MethodElementImpl methodM = ElementFactory.methodElement(methodName, null, []);
-    classA.methods = <MethodElement> [methodM];
+    MethodElementImpl methodM = ElementFactory.methodElement(methodName, null);
+    classA.methods = <MethodElement>[methodM];
     InterfaceType typeA = classA.type;
-    LibraryElementImpl library = ElementFactory.library(createAnalysisContext(), "lib");
+    LibraryElementImpl library =
+        ElementFactory.library(createAnalysisContext(), "lib");
     CompilationUnitElement unit = library.definingCompilationUnit;
-    (unit as CompilationUnitElementImpl).types = <ClassElement> [classA];
-    JUnitTestCase.assertSame(methodM, typeA.lookUpMethod(methodName, library));
+    (unit as CompilationUnitElementImpl).types = <ClassElement>[classA];
+    expect(typeA.lookUpMethod(methodName, library), same(methodM));
   }
 
   void test_lookUpMethod_inherited() {
@@ -3354,16 +3187,43 @@ class InterfaceTypeImplTest extends EngineTestCase {
     // class A { m() {} }
     // class B extends A {}
     //
-    ClassElementImpl classA = ElementFactory.classElement2("A", []);
+    ClassElementImpl classA = ElementFactory.classElement2("A");
     String methodName = "m";
-    MethodElementImpl methodM = ElementFactory.methodElement(methodName, null, []);
-    classA.methods = <MethodElement> [methodM];
-    ClassElementImpl classB = ElementFactory.classElement("B", classA.type, []);
+    MethodElementImpl methodM = ElementFactory.methodElement(methodName, null);
+    classA.methods = <MethodElement>[methodM];
+    ClassElementImpl classB = ElementFactory.classElement("B", classA.type);
     InterfaceType typeB = classB.type;
-    LibraryElementImpl library = ElementFactory.library(createAnalysisContext(), "lib");
+    LibraryElementImpl library =
+        ElementFactory.library(createAnalysisContext(), "lib");
     CompilationUnitElement unit = library.definingCompilationUnit;
-    (unit as CompilationUnitElementImpl).types = <ClassElement> [classA, classB];
-    JUnitTestCase.assertSame(methodM, typeB.lookUpMethod(methodName, library));
+    (unit as CompilationUnitElementImpl).types = <ClassElement>[classA, classB];
+    expect(typeB.lookUpMethod(methodName, library), same(methodM));
+  }
+
+  void test_lookUpMethod_mixin_shadowing() {
+    //
+    // class B {}
+    // class M1 { m() {} }
+    // class M2 { m() {} }
+    // class C extends B with M1, M2 {}
+    //
+    String methodName = 'm';
+    ClassElementImpl classB = ElementFactory.classElement2('B');
+    ClassElementImpl classM1 = ElementFactory.classElement2('M1');
+    MethodElementImpl methodM1m =
+        ElementFactory.methodElement(methodName, null);
+    classM1.methods = <MethodElement>[methodM1m];
+    ClassElementImpl classM2 = ElementFactory.classElement2('M2');
+    MethodElementImpl methodM2m =
+        ElementFactory.methodElement(methodName, null);
+    classM2.methods = <MethodElement>[methodM2m];
+    ClassElementImpl classC = ElementFactory.classElement('C', classB.type);
+    classC.mixins = <InterfaceType>[classM1.type, classM2.type];
+    LibraryElementImpl library =
+        ElementFactory.library(createAnalysisContext(), "lib");
+    CompilationUnitElementImpl unit = library.definingCompilationUnit;
+    unit.types = <ClassElement>[classB, classM1, classM2, classC];
+    expect(classC.type.lookUpMethod(methodName, library), methodM2m);
   }
 
   void test_lookUpMethod_parameterized() {
@@ -3374,30 +3234,33 @@ class InterfaceTypeImplTest extends EngineTestCase {
     ClassElementImpl classA = ElementFactory.classElement2("A", ["E"]);
     DartType typeE = classA.type.typeArguments[0];
     String methodName = "m";
-    MethodElementImpl methodM = ElementFactory.methodElement(methodName, typeE, [typeE]);
-    classA.methods = <MethodElement> [methodM];
-    (methodM.type as FunctionTypeImpl).typeArguments = classA.type.typeArguments;
+    MethodElementImpl methodM =
+        ElementFactory.methodElement(methodName, typeE, [typeE]);
+    classA.methods = <MethodElement>[methodM];
+    (methodM.type as FunctionTypeImpl).typeArguments =
+        classA.type.typeArguments;
     ClassElementImpl classB = ElementFactory.classElement2("B", ["F"]);
     InterfaceType typeB = classB.type;
     InterfaceTypeImpl typeAF = new InterfaceTypeImpl.con1(classA);
-    typeAF.typeArguments = <DartType> [typeB.typeArguments[0]];
+    typeAF.typeArguments = <DartType>[typeB.typeArguments[0]];
     classB.supertype = typeAF;
-    LibraryElementImpl library = ElementFactory.library(createAnalysisContext(), "lib");
+    LibraryElementImpl library =
+        ElementFactory.library(createAnalysisContext(), "lib");
     CompilationUnitElement unit = library.definingCompilationUnit;
-    (unit as CompilationUnitElementImpl).types = <ClassElement> [classA];
+    (unit as CompilationUnitElementImpl).types = <ClassElement>[classA];
     //
     // B<I>
     //
-    InterfaceType typeI = ElementFactory.classElement2("I", []).type;
+    InterfaceType typeI = ElementFactory.classElement2("I").type;
     InterfaceTypeImpl typeBI = new InterfaceTypeImpl.con1(classB);
-    typeBI.typeArguments = <DartType> [typeI];
+    typeBI.typeArguments = <DartType>[typeI];
     MethodElement method = typeBI.lookUpMethod(methodName, library);
-    JUnitTestCase.assertNotNull(method);
+    expect(method, isNotNull);
     FunctionType methodType = method.type;
-    JUnitTestCase.assertSame(typeI, methodType.returnType);
+    expect(methodType.returnType, same(typeI));
     List<DartType> parameterTypes = methodType.normalParameterTypes;
-    EngineTestCase.assertLength(1, parameterTypes);
-    JUnitTestCase.assertSame(typeI, parameterTypes[0]);
+    expect(parameterTypes, hasLength(1));
+    expect(parameterTypes[0], same(typeI));
   }
 
   void test_lookUpMethod_recursive() {
@@ -3405,41 +3268,45 @@ class InterfaceTypeImplTest extends EngineTestCase {
     // class A extends B {}
     // class B extends A {}
     //
-    ClassElementImpl classA = ElementFactory.classElement2("A", []);
+    ClassElementImpl classA = ElementFactory.classElement2("A");
     InterfaceType typeA = classA.type;
-    ClassElementImpl classB = ElementFactory.classElement("B", typeA, []);
+    ClassElementImpl classB = ElementFactory.classElement("B", typeA);
     classA.supertype = classB.type;
-    LibraryElementImpl library = ElementFactory.library(createAnalysisContext(), "lib");
+    LibraryElementImpl library =
+        ElementFactory.library(createAnalysisContext(), "lib");
     CompilationUnitElement unit = library.definingCompilationUnit;
-    (unit as CompilationUnitElementImpl).types = <ClassElement> [classA, classB];
-    JUnitTestCase.assertNull(typeA.lookUpMethod("m", library));
+    (unit as CompilationUnitElementImpl).types = <ClassElement>[classA, classB];
+    expect(typeA.lookUpMethod("m", library), isNull);
   }
 
   void test_lookUpMethod_unimplemented() {
     //
     // class A {}
     //
-    ClassElementImpl classA = ElementFactory.classElement2("A", []);
+    ClassElementImpl classA = ElementFactory.classElement2("A");
     InterfaceType typeA = classA.type;
-    LibraryElementImpl library = ElementFactory.library(createAnalysisContext(), "lib");
+    LibraryElementImpl library =
+        ElementFactory.library(createAnalysisContext(), "lib");
     CompilationUnitElement unit = library.definingCompilationUnit;
-    (unit as CompilationUnitElementImpl).types = <ClassElement> [classA];
-    JUnitTestCase.assertNull(typeA.lookUpMethod("m", library));
+    (unit as CompilationUnitElementImpl).types = <ClassElement>[classA];
+    expect(typeA.lookUpMethod("m", library), isNull);
   }
 
   void test_lookUpSetter_implemented() {
     //
     // class A { s(x) {} }
     //
-    ClassElementImpl classA = ElementFactory.classElement2("A", []);
+    ClassElementImpl classA = ElementFactory.classElement2("A");
     String setterName = "s";
-    PropertyAccessorElement setterS = ElementFactory.setterElement(setterName, false, null);
-    classA.accessors = <PropertyAccessorElement> [setterS];
+    PropertyAccessorElement setterS =
+        ElementFactory.setterElement(setterName, false, null);
+    classA.accessors = <PropertyAccessorElement>[setterS];
     InterfaceType typeA = classA.type;
-    LibraryElementImpl library = ElementFactory.library(createAnalysisContext(), "lib");
+    LibraryElementImpl library =
+        ElementFactory.library(createAnalysisContext(), "lib");
     CompilationUnitElement unit = library.definingCompilationUnit;
-    (unit as CompilationUnitElementImpl).types = <ClassElement> [classA];
-    JUnitTestCase.assertSame(setterS, typeA.lookUpSetter(setterName, library));
+    (unit as CompilationUnitElementImpl).types = <ClassElement>[classA];
+    expect(typeA.lookUpSetter(setterName, library), same(setterS));
   }
 
   void test_lookUpSetter_inherited() {
@@ -3447,16 +3314,45 @@ class InterfaceTypeImplTest extends EngineTestCase {
     // class A { s(x) {} }
     // class B extends A {}
     //
-    ClassElementImpl classA = ElementFactory.classElement2("A", []);
+    ClassElementImpl classA = ElementFactory.classElement2("A");
     String setterName = "g";
-    PropertyAccessorElement setterS = ElementFactory.setterElement(setterName, false, null);
-    classA.accessors = <PropertyAccessorElement> [setterS];
-    ClassElementImpl classB = ElementFactory.classElement("B", classA.type, []);
+    PropertyAccessorElement setterS =
+        ElementFactory.setterElement(setterName, false, null);
+    classA.accessors = <PropertyAccessorElement>[setterS];
+    ClassElementImpl classB = ElementFactory.classElement("B", classA.type);
     InterfaceType typeB = classB.type;
-    LibraryElementImpl library = ElementFactory.library(createAnalysisContext(), "lib");
+    LibraryElementImpl library =
+        ElementFactory.library(createAnalysisContext(), "lib");
     CompilationUnitElement unit = library.definingCompilationUnit;
-    (unit as CompilationUnitElementImpl).types = <ClassElement> [classA, classB];
-    JUnitTestCase.assertSame(setterS, typeB.lookUpSetter(setterName, library));
+    (unit as CompilationUnitElementImpl).types = <ClassElement>[classA, classB];
+    expect(typeB.lookUpSetter(setterName, library), same(setterS));
+  }
+
+  void test_lookUpSetter_mixin_shadowing() {
+    //
+    // class B {}
+    // class M1 { set s() {} }
+    // class M2 { set s() {} }
+    // class C extends B with M1, M2 {}
+    //
+    TestTypeProvider typeProvider = new TestTypeProvider();
+    String setterName = 's';
+    ClassElementImpl classB = ElementFactory.classElement2('B');
+    ClassElementImpl classM1 = ElementFactory.classElement2('M1');
+    PropertyAccessorElementImpl setterM1g =
+        ElementFactory.setterElement(setterName, false, typeProvider.dynamicType);
+    classM1.accessors = <PropertyAccessorElement>[setterM1g];
+    ClassElementImpl classM2 = ElementFactory.classElement2('M2');
+    PropertyAccessorElementImpl setterM2g =
+        ElementFactory.getterElement(setterName, false, typeProvider.dynamicType);
+    classM2.accessors = <PropertyAccessorElement>[setterM2g];
+    ClassElementImpl classC = ElementFactory.classElement('C', classB.type);
+    classC.mixins = <InterfaceType>[classM1.type, classM2.type];
+    LibraryElementImpl library =
+        ElementFactory.library(createAnalysisContext(), "lib");
+    CompilationUnitElementImpl unit = library.definingCompilationUnit;
+    unit.types = <ClassElement>[classB, classM1, classM2, classC];
+    expect(classC.type.lookUpGetter(setterName, library), setterM2g);
   }
 
   void test_lookUpSetter_recursive() {
@@ -3464,525 +3360,96 @@ class InterfaceTypeImplTest extends EngineTestCase {
     // class A extends B {}
     // class B extends A {}
     //
-    ClassElementImpl classA = ElementFactory.classElement2("A", []);
+    ClassElementImpl classA = ElementFactory.classElement2("A");
     InterfaceType typeA = classA.type;
-    ClassElementImpl classB = ElementFactory.classElement("B", typeA, []);
+    ClassElementImpl classB = ElementFactory.classElement("B", typeA);
     classA.supertype = classB.type;
-    LibraryElementImpl library = ElementFactory.library(createAnalysisContext(), "lib");
+    LibraryElementImpl library =
+        ElementFactory.library(createAnalysisContext(), "lib");
     CompilationUnitElement unit = library.definingCompilationUnit;
-    (unit as CompilationUnitElementImpl).types = <ClassElement> [classA, classB];
-    JUnitTestCase.assertNull(typeA.lookUpSetter("s", library));
+    (unit as CompilationUnitElementImpl).types = <ClassElement>[classA, classB];
+    expect(typeA.lookUpSetter("s", library), isNull);
   }
 
   void test_lookUpSetter_unimplemented() {
     //
     // class A {}
     //
-    ClassElementImpl classA = ElementFactory.classElement2("A", []);
+    ClassElementImpl classA = ElementFactory.classElement2("A");
     InterfaceType typeA = classA.type;
-    LibraryElementImpl library = ElementFactory.library(createAnalysisContext(), "lib");
+    LibraryElementImpl library =
+        ElementFactory.library(createAnalysisContext(), "lib");
     CompilationUnitElement unit = library.definingCompilationUnit;
-    (unit as CompilationUnitElementImpl).types = <ClassElement> [classA];
-    JUnitTestCase.assertNull(typeA.lookUpSetter("s", library));
+    (unit as CompilationUnitElementImpl).types = <ClassElement>[classA];
+    expect(typeA.lookUpSetter("s", library), isNull);
   }
 
   void test_setTypeArguments() {
-    InterfaceTypeImpl type = ElementFactory.classElement2("A", []).type as InterfaceTypeImpl;
-    List<DartType> typeArguments = <DartType> [
-        ElementFactory.classElement2("B", []).type,
-        ElementFactory.classElement2("C", []).type];
+    InterfaceTypeImpl type =
+        ElementFactory.classElement2("A").type as InterfaceTypeImpl;
+    List<DartType> typeArguments = <DartType>[
+        ElementFactory.classElement2("B").type,
+        ElementFactory.classElement2("C").type];
     type.typeArguments = typeArguments;
-    JUnitTestCase.assertEquals(typeArguments, type.typeArguments);
+    expect(type.typeArguments, typeArguments);
   }
 
   void test_substitute_equal() {
     ClassElement classAE = ElementFactory.classElement2("A", ["E"]);
     InterfaceType typeAE = classAE.type;
-    InterfaceType argumentType = ElementFactory.classElement2("B", []).type;
+    InterfaceType argumentType = ElementFactory.classElement2("B").type;
     List<DartType> args = [argumentType];
     List<DartType> params = [classAE.typeParameters[0].type];
     InterfaceType typeAESubbed = typeAE.substitute2(args, params);
-    JUnitTestCase.assertEquals(classAE, typeAESubbed.element);
+    expect(typeAESubbed.element, classAE);
     List<DartType> resultArguments = typeAESubbed.typeArguments;
-    EngineTestCase.assertLength(1, resultArguments);
-    JUnitTestCase.assertEquals(argumentType, resultArguments[0]);
+    expect(resultArguments, hasLength(1));
+    expect(resultArguments[0], argumentType);
   }
 
   void test_substitute_exception() {
     try {
-      ClassElementImpl classA = ElementFactory.classElement2("A", []);
+      ClassElementImpl classA = ElementFactory.classElement2("A");
       InterfaceTypeImpl type = new InterfaceTypeImpl.con1(classA);
-      InterfaceType argumentType = ElementFactory.classElement2("B", []).type;
-      type.substitute2(<DartType> [argumentType], <DartType> []);
-      JUnitTestCase.fail("Expected to encounter exception, argument and parameter type array lengths not equal.");
+      InterfaceType argumentType = ElementFactory.classElement2("B").type;
+      type.substitute2(<DartType>[argumentType], <DartType>[]);
+      fail(
+          "Expected to encounter exception, argument and parameter type array lengths not equal.");
     } catch (e) {
+      // Expected result
     }
   }
 
   void test_substitute_notEqual() {
-    // The [test_substitute_equals] above has a slightly higher level implementation.
-    ClassElementImpl classA = ElementFactory.classElement2("A", []);
-    TypeParameterElementImpl parameterElement = new TypeParameterElementImpl.forNode(AstFactory.identifier3("E"));
+    // The [test_substitute_equals] above has a slightly higher level
+    // implementation.
+    ClassElementImpl classA = ElementFactory.classElement2("A");
+    TypeParameterElementImpl parameterElement =
+        new TypeParameterElementImpl.forNode(AstFactory.identifier3("E"));
     InterfaceTypeImpl type = new InterfaceTypeImpl.con1(classA);
-    TypeParameterTypeImpl parameter = new TypeParameterTypeImpl(parameterElement);
-    type.typeArguments = <DartType> [parameter];
-    InterfaceType argumentType = ElementFactory.classElement2("B", []).type;
-    TypeParameterTypeImpl parameterType = new TypeParameterTypeImpl(new TypeParameterElementImpl.forNode(AstFactory.identifier3("F")));
-    InterfaceType result = type.substitute2(<DartType> [argumentType], <DartType> [parameterType]);
-    JUnitTestCase.assertEquals(classA, result.element);
+    TypeParameterTypeImpl parameter =
+        new TypeParameterTypeImpl(parameterElement);
+    type.typeArguments = <DartType>[parameter];
+    InterfaceType argumentType = ElementFactory.classElement2("B").type;
+    TypeParameterTypeImpl parameterType = new TypeParameterTypeImpl(
+        new TypeParameterElementImpl.forNode(AstFactory.identifier3("F")));
+    InterfaceType result =
+        type.substitute2(<DartType>[argumentType], <DartType>[parameterType]);
+    expect(result.element, classA);
     List<DartType> resultArguments = result.typeArguments;
-    EngineTestCase.assertLength(1, resultArguments);
-    JUnitTestCase.assertEquals(parameter, resultArguments[0]);
-  }
-
-  static dartSuite() {
-    _ut.group('InterfaceTypeImplTest', () {
-      _ut.test('test_computeLongestInheritancePathToObject_multipleInterfacePaths', () {
-        final __test = new InterfaceTypeImplTest();
-        runJUnitTest(__test, __test.test_computeLongestInheritancePathToObject_multipleInterfacePaths);
-      });
-      _ut.test('test_computeLongestInheritancePathToObject_multipleSuperclassPaths', () {
-        final __test = new InterfaceTypeImplTest();
-        runJUnitTest(__test, __test.test_computeLongestInheritancePathToObject_multipleSuperclassPaths);
-      });
-      _ut.test('test_computeLongestInheritancePathToObject_object', () {
-        final __test = new InterfaceTypeImplTest();
-        runJUnitTest(__test, __test.test_computeLongestInheritancePathToObject_object);
-      });
-      _ut.test('test_computeLongestInheritancePathToObject_recursion', () {
-        final __test = new InterfaceTypeImplTest();
-        runJUnitTest(__test, __test.test_computeLongestInheritancePathToObject_recursion);
-      });
-      _ut.test('test_computeLongestInheritancePathToObject_singleInterfacePath', () {
-        final __test = new InterfaceTypeImplTest();
-        runJUnitTest(__test, __test.test_computeLongestInheritancePathToObject_singleInterfacePath);
-      });
-      _ut.test('test_computeLongestInheritancePathToObject_singleSuperclassPath', () {
-        final __test = new InterfaceTypeImplTest();
-        runJUnitTest(__test, __test.test_computeLongestInheritancePathToObject_singleSuperclassPath);
-      });
-      _ut.test('test_computeSuperinterfaceSet_genericInterfacePath', () {
-        final __test = new InterfaceTypeImplTest();
-        runJUnitTest(__test, __test.test_computeSuperinterfaceSet_genericInterfacePath);
-      });
-      _ut.test('test_computeSuperinterfaceSet_genericSuperclassPath', () {
-        final __test = new InterfaceTypeImplTest();
-        runJUnitTest(__test, __test.test_computeSuperinterfaceSet_genericSuperclassPath);
-      });
-      _ut.test('test_computeSuperinterfaceSet_multipleInterfacePaths', () {
-        final __test = new InterfaceTypeImplTest();
-        runJUnitTest(__test, __test.test_computeSuperinterfaceSet_multipleInterfacePaths);
-      });
-      _ut.test('test_computeSuperinterfaceSet_multipleSuperclassPaths', () {
-        final __test = new InterfaceTypeImplTest();
-        runJUnitTest(__test, __test.test_computeSuperinterfaceSet_multipleSuperclassPaths);
-      });
-      _ut.test('test_computeSuperinterfaceSet_recursion', () {
-        final __test = new InterfaceTypeImplTest();
-        runJUnitTest(__test, __test.test_computeSuperinterfaceSet_recursion);
-      });
-      _ut.test('test_computeSuperinterfaceSet_singleInterfacePath', () {
-        final __test = new InterfaceTypeImplTest();
-        runJUnitTest(__test, __test.test_computeSuperinterfaceSet_singleInterfacePath);
-      });
-      _ut.test('test_computeSuperinterfaceSet_singleSuperclassPath', () {
-        final __test = new InterfaceTypeImplTest();
-        runJUnitTest(__test, __test.test_computeSuperinterfaceSet_singleSuperclassPath);
-      });
-      _ut.test('test_creation', () {
-        final __test = new InterfaceTypeImplTest();
-        runJUnitTest(__test, __test.test_creation);
-      });
-      _ut.test('test_getAccessors', () {
-        final __test = new InterfaceTypeImplTest();
-        runJUnitTest(__test, __test.test_getAccessors);
-      });
-      _ut.test('test_getAccessors_empty', () {
-        final __test = new InterfaceTypeImplTest();
-        runJUnitTest(__test, __test.test_getAccessors_empty);
-      });
-      _ut.test('test_getElement', () {
-        final __test = new InterfaceTypeImplTest();
-        runJUnitTest(__test, __test.test_getElement);
-      });
-      _ut.test('test_getGetter_implemented', () {
-        final __test = new InterfaceTypeImplTest();
-        runJUnitTest(__test, __test.test_getGetter_implemented);
-      });
-      _ut.test('test_getGetter_parameterized', () {
-        final __test = new InterfaceTypeImplTest();
-        runJUnitTest(__test, __test.test_getGetter_parameterized);
-      });
-      _ut.test('test_getGetter_unimplemented', () {
-        final __test = new InterfaceTypeImplTest();
-        runJUnitTest(__test, __test.test_getGetter_unimplemented);
-      });
-      _ut.test('test_getInterfaces_nonParameterized', () {
-        final __test = new InterfaceTypeImplTest();
-        runJUnitTest(__test, __test.test_getInterfaces_nonParameterized);
-      });
-      _ut.test('test_getInterfaces_parameterized', () {
-        final __test = new InterfaceTypeImplTest();
-        runJUnitTest(__test, __test.test_getInterfaces_parameterized);
-      });
-      _ut.test('test_getLeastUpperBound_directInterfaceCase', () {
-        final __test = new InterfaceTypeImplTest();
-        runJUnitTest(__test, __test.test_getLeastUpperBound_directInterfaceCase);
-      });
-      _ut.test('test_getLeastUpperBound_directSubclassCase', () {
-        final __test = new InterfaceTypeImplTest();
-        runJUnitTest(__test, __test.test_getLeastUpperBound_directSubclassCase);
-      });
-      _ut.test('test_getLeastUpperBound_functionType', () {
-        final __test = new InterfaceTypeImplTest();
-        runJUnitTest(__test, __test.test_getLeastUpperBound_functionType);
-      });
-      _ut.test('test_getLeastUpperBound_mixinCase', () {
-        final __test = new InterfaceTypeImplTest();
-        runJUnitTest(__test, __test.test_getLeastUpperBound_mixinCase);
-      });
-      _ut.test('test_getLeastUpperBound_null', () {
-        final __test = new InterfaceTypeImplTest();
-        runJUnitTest(__test, __test.test_getLeastUpperBound_null);
-      });
-      _ut.test('test_getLeastUpperBound_object', () {
-        final __test = new InterfaceTypeImplTest();
-        runJUnitTest(__test, __test.test_getLeastUpperBound_object);
-      });
-      _ut.test('test_getLeastUpperBound_self', () {
-        final __test = new InterfaceTypeImplTest();
-        runJUnitTest(__test, __test.test_getLeastUpperBound_self);
-      });
-      _ut.test('test_getLeastUpperBound_sharedSuperclass1', () {
-        final __test = new InterfaceTypeImplTest();
-        runJUnitTest(__test, __test.test_getLeastUpperBound_sharedSuperclass1);
-      });
-      _ut.test('test_getLeastUpperBound_sharedSuperclass2', () {
-        final __test = new InterfaceTypeImplTest();
-        runJUnitTest(__test, __test.test_getLeastUpperBound_sharedSuperclass2);
-      });
-      _ut.test('test_getLeastUpperBound_sharedSuperclass3', () {
-        final __test = new InterfaceTypeImplTest();
-        runJUnitTest(__test, __test.test_getLeastUpperBound_sharedSuperclass3);
-      });
-      _ut.test('test_getLeastUpperBound_sharedSuperclass4', () {
-        final __test = new InterfaceTypeImplTest();
-        runJUnitTest(__test, __test.test_getLeastUpperBound_sharedSuperclass4);
-      });
-      _ut.test('test_getLeastUpperBound_sharedSuperinterface1', () {
-        final __test = new InterfaceTypeImplTest();
-        runJUnitTest(__test, __test.test_getLeastUpperBound_sharedSuperinterface1);
-      });
-      _ut.test('test_getLeastUpperBound_sharedSuperinterface2', () {
-        final __test = new InterfaceTypeImplTest();
-        runJUnitTest(__test, __test.test_getLeastUpperBound_sharedSuperinterface2);
-      });
-      _ut.test('test_getLeastUpperBound_sharedSuperinterface3', () {
-        final __test = new InterfaceTypeImplTest();
-        runJUnitTest(__test, __test.test_getLeastUpperBound_sharedSuperinterface3);
-      });
-      _ut.test('test_getLeastUpperBound_sharedSuperinterface4', () {
-        final __test = new InterfaceTypeImplTest();
-        runJUnitTest(__test, __test.test_getLeastUpperBound_sharedSuperinterface4);
-      });
-      _ut.test('test_getLeastUpperBound_twoComparables', () {
-        final __test = new InterfaceTypeImplTest();
-        runJUnitTest(__test, __test.test_getLeastUpperBound_twoComparables);
-      });
-      _ut.test('test_getLeastUpperBound_typeParameters_different', () {
-        final __test = new InterfaceTypeImplTest();
-        runJUnitTest(__test, __test.test_getLeastUpperBound_typeParameters_different);
-      });
-      _ut.test('test_getLeastUpperBound_typeParameters_same', () {
-        final __test = new InterfaceTypeImplTest();
-        runJUnitTest(__test, __test.test_getLeastUpperBound_typeParameters_same);
-      });
-      _ut.test('test_getMethod_implemented', () {
-        final __test = new InterfaceTypeImplTest();
-        runJUnitTest(__test, __test.test_getMethod_implemented);
-      });
-      _ut.test('test_getMethod_parameterized', () {
-        final __test = new InterfaceTypeImplTest();
-        runJUnitTest(__test, __test.test_getMethod_parameterized);
-      });
-      _ut.test('test_getMethod_unimplemented', () {
-        final __test = new InterfaceTypeImplTest();
-        runJUnitTest(__test, __test.test_getMethod_unimplemented);
-      });
-      _ut.test('test_getMethods', () {
-        final __test = new InterfaceTypeImplTest();
-        runJUnitTest(__test, __test.test_getMethods);
-      });
-      _ut.test('test_getMethods_empty', () {
-        final __test = new InterfaceTypeImplTest();
-        runJUnitTest(__test, __test.test_getMethods_empty);
-      });
-      _ut.test('test_getMixins_nonParameterized', () {
-        final __test = new InterfaceTypeImplTest();
-        runJUnitTest(__test, __test.test_getMixins_nonParameterized);
-      });
-      _ut.test('test_getMixins_parameterized', () {
-        final __test = new InterfaceTypeImplTest();
-        runJUnitTest(__test, __test.test_getMixins_parameterized);
-      });
-      _ut.test('test_getSetter_implemented', () {
-        final __test = new InterfaceTypeImplTest();
-        runJUnitTest(__test, __test.test_getSetter_implemented);
-      });
-      _ut.test('test_getSetter_parameterized', () {
-        final __test = new InterfaceTypeImplTest();
-        runJUnitTest(__test, __test.test_getSetter_parameterized);
-      });
-      _ut.test('test_getSetter_unimplemented', () {
-        final __test = new InterfaceTypeImplTest();
-        runJUnitTest(__test, __test.test_getSetter_unimplemented);
-      });
-      _ut.test('test_getSuperclass_nonParameterized', () {
-        final __test = new InterfaceTypeImplTest();
-        runJUnitTest(__test, __test.test_getSuperclass_nonParameterized);
-      });
-      _ut.test('test_getSuperclass_parameterized', () {
-        final __test = new InterfaceTypeImplTest();
-        runJUnitTest(__test, __test.test_getSuperclass_parameterized);
-      });
-      _ut.test('test_getTypeArguments_empty', () {
-        final __test = new InterfaceTypeImplTest();
-        runJUnitTest(__test, __test.test_getTypeArguments_empty);
-      });
-      _ut.test('test_hashCode', () {
-        final __test = new InterfaceTypeImplTest();
-        runJUnitTest(__test, __test.test_hashCode);
-      });
-      _ut.test('test_isAssignableTo_typeVariables', () {
-        final __test = new InterfaceTypeImplTest();
-        runJUnitTest(__test, __test.test_isAssignableTo_typeVariables);
-      });
-      _ut.test('test_isAssignableTo_void', () {
-        final __test = new InterfaceTypeImplTest();
-        runJUnitTest(__test, __test.test_isAssignableTo_void);
-      });
-      _ut.test('test_isDirectSupertypeOf_extends', () {
-        final __test = new InterfaceTypeImplTest();
-        runJUnitTest(__test, __test.test_isDirectSupertypeOf_extends);
-      });
-      _ut.test('test_isDirectSupertypeOf_false', () {
-        final __test = new InterfaceTypeImplTest();
-        runJUnitTest(__test, __test.test_isDirectSupertypeOf_false);
-      });
-      _ut.test('test_isDirectSupertypeOf_implements', () {
-        final __test = new InterfaceTypeImplTest();
-        runJUnitTest(__test, __test.test_isDirectSupertypeOf_implements);
-      });
-      _ut.test('test_isDirectSupertypeOf_with', () {
-        final __test = new InterfaceTypeImplTest();
-        runJUnitTest(__test, __test.test_isDirectSupertypeOf_with);
-      });
-      _ut.test('test_isMoreSpecificThan_bottom', () {
-        final __test = new InterfaceTypeImplTest();
-        runJUnitTest(__test, __test.test_isMoreSpecificThan_bottom);
-      });
-      _ut.test('test_isMoreSpecificThan_covariance', () {
-        final __test = new InterfaceTypeImplTest();
-        runJUnitTest(__test, __test.test_isMoreSpecificThan_covariance);
-      });
-      _ut.test('test_isMoreSpecificThan_directSupertype', () {
-        final __test = new InterfaceTypeImplTest();
-        runJUnitTest(__test, __test.test_isMoreSpecificThan_directSupertype);
-      });
-      _ut.test('test_isMoreSpecificThan_dynamic', () {
-        final __test = new InterfaceTypeImplTest();
-        runJUnitTest(__test, __test.test_isMoreSpecificThan_dynamic);
-      });
-      _ut.test('test_isMoreSpecificThan_generic', () {
-        final __test = new InterfaceTypeImplTest();
-        runJUnitTest(__test, __test.test_isMoreSpecificThan_generic);
-      });
-      _ut.test('test_isMoreSpecificThan_self', () {
-        final __test = new InterfaceTypeImplTest();
-        runJUnitTest(__test, __test.test_isMoreSpecificThan_self);
-      });
-      _ut.test('test_isMoreSpecificThan_transitive_interface', () {
-        final __test = new InterfaceTypeImplTest();
-        runJUnitTest(__test, __test.test_isMoreSpecificThan_transitive_interface);
-      });
-      _ut.test('test_isMoreSpecificThan_transitive_mixin', () {
-        final __test = new InterfaceTypeImplTest();
-        runJUnitTest(__test, __test.test_isMoreSpecificThan_transitive_mixin);
-      });
-      _ut.test('test_isMoreSpecificThan_transitive_recursive', () {
-        final __test = new InterfaceTypeImplTest();
-        runJUnitTest(__test, __test.test_isMoreSpecificThan_transitive_recursive);
-      });
-      _ut.test('test_isMoreSpecificThan_transitive_superclass', () {
-        final __test = new InterfaceTypeImplTest();
-        runJUnitTest(__test, __test.test_isMoreSpecificThan_transitive_superclass);
-      });
-      _ut.test('test_isMoreSpecificThan_typeParameterType', () {
-        final __test = new InterfaceTypeImplTest();
-        runJUnitTest(__test, __test.test_isMoreSpecificThan_typeParameterType);
-      });
-      _ut.test('test_isMoreSpecificThan_typeParameterType_withBound', () {
-        final __test = new InterfaceTypeImplTest();
-        runJUnitTest(__test, __test.test_isMoreSpecificThan_typeParameterType_withBound);
-      });
-      _ut.test('test_isSubtypeOf_directSubtype', () {
-        final __test = new InterfaceTypeImplTest();
-        runJUnitTest(__test, __test.test_isSubtypeOf_directSubtype);
-      });
-      _ut.test('test_isSubtypeOf_dynamic', () {
-        final __test = new InterfaceTypeImplTest();
-        runJUnitTest(__test, __test.test_isSubtypeOf_dynamic);
-      });
-      _ut.test('test_isSubtypeOf_function', () {
-        final __test = new InterfaceTypeImplTest();
-        runJUnitTest(__test, __test.test_isSubtypeOf_function);
-      });
-      _ut.test('test_isSubtypeOf_generic', () {
-        final __test = new InterfaceTypeImplTest();
-        runJUnitTest(__test, __test.test_isSubtypeOf_generic);
-      });
-      _ut.test('test_isSubtypeOf_interface', () {
-        final __test = new InterfaceTypeImplTest();
-        runJUnitTest(__test, __test.test_isSubtypeOf_interface);
-      });
-      _ut.test('test_isSubtypeOf_mixins', () {
-        final __test = new InterfaceTypeImplTest();
-        runJUnitTest(__test, __test.test_isSubtypeOf_mixins);
-      });
-      _ut.test('test_isSubtypeOf_object', () {
-        final __test = new InterfaceTypeImplTest();
-        runJUnitTest(__test, __test.test_isSubtypeOf_object);
-      });
-      _ut.test('test_isSubtypeOf_self', () {
-        final __test = new InterfaceTypeImplTest();
-        runJUnitTest(__test, __test.test_isSubtypeOf_self);
-      });
-      _ut.test('test_isSubtypeOf_transitive_recursive', () {
-        final __test = new InterfaceTypeImplTest();
-        runJUnitTest(__test, __test.test_isSubtypeOf_transitive_recursive);
-      });
-      _ut.test('test_isSubtypeOf_transitive_superclass', () {
-        final __test = new InterfaceTypeImplTest();
-        runJUnitTest(__test, __test.test_isSubtypeOf_transitive_superclass);
-      });
-      _ut.test('test_isSubtypeOf_typeArguments', () {
-        final __test = new InterfaceTypeImplTest();
-        runJUnitTest(__test, __test.test_isSubtypeOf_typeArguments);
-      });
-      _ut.test('test_isSubtypeOf_typeParameter', () {
-        final __test = new InterfaceTypeImplTest();
-        runJUnitTest(__test, __test.test_isSubtypeOf_typeParameter);
-      });
-      _ut.test('test_isSupertypeOf_directSupertype', () {
-        final __test = new InterfaceTypeImplTest();
-        runJUnitTest(__test, __test.test_isSupertypeOf_directSupertype);
-      });
-      _ut.test('test_isSupertypeOf_dynamic', () {
-        final __test = new InterfaceTypeImplTest();
-        runJUnitTest(__test, __test.test_isSupertypeOf_dynamic);
-      });
-      _ut.test('test_isSupertypeOf_indirectSupertype', () {
-        final __test = new InterfaceTypeImplTest();
-        runJUnitTest(__test, __test.test_isSupertypeOf_indirectSupertype);
-      });
-      _ut.test('test_isSupertypeOf_interface', () {
-        final __test = new InterfaceTypeImplTest();
-        runJUnitTest(__test, __test.test_isSupertypeOf_interface);
-      });
-      _ut.test('test_isSupertypeOf_mixins', () {
-        final __test = new InterfaceTypeImplTest();
-        runJUnitTest(__test, __test.test_isSupertypeOf_mixins);
-      });
-      _ut.test('test_isSupertypeOf_object', () {
-        final __test = new InterfaceTypeImplTest();
-        runJUnitTest(__test, __test.test_isSupertypeOf_object);
-      });
-      _ut.test('test_isSupertypeOf_self', () {
-        final __test = new InterfaceTypeImplTest();
-        runJUnitTest(__test, __test.test_isSupertypeOf_self);
-      });
-      _ut.test('test_lookUpGetter_implemented', () {
-        final __test = new InterfaceTypeImplTest();
-        runJUnitTest(__test, __test.test_lookUpGetter_implemented);
-      });
-      _ut.test('test_lookUpGetter_inherited', () {
-        final __test = new InterfaceTypeImplTest();
-        runJUnitTest(__test, __test.test_lookUpGetter_inherited);
-      });
-      _ut.test('test_lookUpGetter_recursive', () {
-        final __test = new InterfaceTypeImplTest();
-        runJUnitTest(__test, __test.test_lookUpGetter_recursive);
-      });
-      _ut.test('test_lookUpGetter_unimplemented', () {
-        final __test = new InterfaceTypeImplTest();
-        runJUnitTest(__test, __test.test_lookUpGetter_unimplemented);
-      });
-      _ut.test('test_lookUpMethod_implemented', () {
-        final __test = new InterfaceTypeImplTest();
-        runJUnitTest(__test, __test.test_lookUpMethod_implemented);
-      });
-      _ut.test('test_lookUpMethod_inherited', () {
-        final __test = new InterfaceTypeImplTest();
-        runJUnitTest(__test, __test.test_lookUpMethod_inherited);
-      });
-      _ut.test('test_lookUpMethod_parameterized', () {
-        final __test = new InterfaceTypeImplTest();
-        runJUnitTest(__test, __test.test_lookUpMethod_parameterized);
-      });
-      _ut.test('test_lookUpMethod_recursive', () {
-        final __test = new InterfaceTypeImplTest();
-        runJUnitTest(__test, __test.test_lookUpMethod_recursive);
-      });
-      _ut.test('test_lookUpMethod_unimplemented', () {
-        final __test = new InterfaceTypeImplTest();
-        runJUnitTest(__test, __test.test_lookUpMethod_unimplemented);
-      });
-      _ut.test('test_lookUpSetter_implemented', () {
-        final __test = new InterfaceTypeImplTest();
-        runJUnitTest(__test, __test.test_lookUpSetter_implemented);
-      });
-      _ut.test('test_lookUpSetter_inherited', () {
-        final __test = new InterfaceTypeImplTest();
-        runJUnitTest(__test, __test.test_lookUpSetter_inherited);
-      });
-      _ut.test('test_lookUpSetter_recursive', () {
-        final __test = new InterfaceTypeImplTest();
-        runJUnitTest(__test, __test.test_lookUpSetter_recursive);
-      });
-      _ut.test('test_lookUpSetter_unimplemented', () {
-        final __test = new InterfaceTypeImplTest();
-        runJUnitTest(__test, __test.test_lookUpSetter_unimplemented);
-      });
-      _ut.test('test_setTypeArguments', () {
-        final __test = new InterfaceTypeImplTest();
-        runJUnitTest(__test, __test.test_setTypeArguments);
-      });
-      _ut.test('test_substitute_equal', () {
-        final __test = new InterfaceTypeImplTest();
-        runJUnitTest(__test, __test.test_substitute_equal);
-      });
-      _ut.test('test_substitute_exception', () {
-        final __test = new InterfaceTypeImplTest();
-        runJUnitTest(__test, __test.test_substitute_exception);
-      });
-      _ut.test('test_substitute_notEqual', () {
-        final __test = new InterfaceTypeImplTest();
-        runJUnitTest(__test, __test.test_substitute_notEqual);
-      });
-    });
+    expect(resultArguments, hasLength(1));
+    expect(resultArguments[0], parameter);
   }
 }
 
-class InterfaceTypeImpl_FunctionTypeImplTest_test_isSubtypeOf_baseCase_classFunction extends InterfaceTypeImpl {
-  InterfaceTypeImpl_FunctionTypeImplTest_test_isSubtypeOf_baseCase_classFunction(ClassElement arg0) : super.con1(arg0);
-
-  @override
-  bool get isDartCoreFunction => true;
-}
-
+@reflectiveTest
 class LibraryElementImplTest extends EngineTestCase {
   void test_creation() {
-    JUnitTestCase.assertNotNull(new LibraryElementImpl.forNode(createAnalysisContext(), AstFactory.libraryIdentifier2(["l"])));
+    expect(
+        new LibraryElementImpl.forNode(
+            createAnalysisContext(),
+            AstFactory.libraryIdentifier2(["l"])),
+        isNotNull);
   }
 
   void test_getImportedLibraries() {
@@ -3991,39 +3458,45 @@ class LibraryElementImplTest extends EngineTestCase {
     LibraryElementImpl library2 = ElementFactory.library(context, "l2");
     LibraryElementImpl library3 = ElementFactory.library(context, "l3");
     LibraryElementImpl library4 = ElementFactory.library(context, "l4");
-    PrefixElement prefixA = new PrefixElementImpl.forNode(AstFactory.identifier3("a"));
-    PrefixElement prefixB = new PrefixElementImpl.forNode(AstFactory.identifier3("b"));
+    PrefixElement prefixA =
+        new PrefixElementImpl.forNode(AstFactory.identifier3("a"));
+    PrefixElement prefixB =
+        new PrefixElementImpl.forNode(AstFactory.identifier3("b"));
     List<ImportElementImpl> imports = [
-        ElementFactory.importFor(library2, null, []),
-        ElementFactory.importFor(library2, prefixB, []),
-        ElementFactory.importFor(library3, null, []),
-        ElementFactory.importFor(library3, prefixA, []),
-        ElementFactory.importFor(library3, prefixB, []),
-        ElementFactory.importFor(library4, prefixA, [])];
+        ElementFactory.importFor(library2, null),
+        ElementFactory.importFor(library2, prefixB),
+        ElementFactory.importFor(library3, null),
+        ElementFactory.importFor(library3, prefixA),
+        ElementFactory.importFor(library3, prefixB),
+        ElementFactory.importFor(library4, prefixA)];
     library1.imports = imports;
     List<LibraryElement> libraries = library1.importedLibraries;
-    EngineTestCase.assertEqualsIgnoreOrder(<LibraryElement> [library2, library3, library4], libraries);
+    expect(
+        libraries,
+        unorderedEquals(<LibraryElement>[library2, library3, library4]));
   }
 
   void test_getPrefixes() {
     AnalysisContext context = createAnalysisContext();
     LibraryElementImpl library = ElementFactory.library(context, "l1");
-    PrefixElement prefixA = new PrefixElementImpl.forNode(AstFactory.identifier3("a"));
-    PrefixElement prefixB = new PrefixElementImpl.forNode(AstFactory.identifier3("b"));
+    PrefixElement prefixA =
+        new PrefixElementImpl.forNode(AstFactory.identifier3("a"));
+    PrefixElement prefixB =
+        new PrefixElementImpl.forNode(AstFactory.identifier3("b"));
     List<ImportElementImpl> imports = [
-        ElementFactory.importFor(ElementFactory.library(context, "l2"), null, []),
-        ElementFactory.importFor(ElementFactory.library(context, "l3"), null, []),
-        ElementFactory.importFor(ElementFactory.library(context, "l4"), prefixA, []),
-        ElementFactory.importFor(ElementFactory.library(context, "l5"), prefixA, []),
-        ElementFactory.importFor(ElementFactory.library(context, "l6"), prefixB, [])];
+        ElementFactory.importFor(ElementFactory.library(context, "l2"), null),
+        ElementFactory.importFor(ElementFactory.library(context, "l3"), null),
+        ElementFactory.importFor(ElementFactory.library(context, "l4"), prefixA),
+        ElementFactory.importFor(ElementFactory.library(context, "l5"), prefixA),
+        ElementFactory.importFor(ElementFactory.library(context, "l6"), prefixB)];
     library.imports = imports;
     List<PrefixElement> prefixes = library.prefixes;
-    EngineTestCase.assertLength(2, prefixes);
+    expect(prefixes, hasLength(2));
     if (identical(prefixA, prefixes[0])) {
-      JUnitTestCase.assertSame(prefixB, prefixes[1]);
+      expect(prefixes[1], same(prefixB));
     } else {
-      JUnitTestCase.assertSame(prefixB, prefixes[0]);
-      JUnitTestCase.assertSame(prefixA, prefixes[1]);
+      expect(prefixes[0], same(prefixB));
+      expect(prefixes[1], same(prefixA));
     }
   }
 
@@ -4031,38 +3504,45 @@ class LibraryElementImplTest extends EngineTestCase {
     AnalysisContext context = createAnalysisContext();
     LibraryElementImpl library = ElementFactory.library(context, "test");
     CompilationUnitElement unitLib = library.definingCompilationUnit;
-    CompilationUnitElementImpl unitA = ElementFactory.compilationUnit("unit_a.dart");
-    CompilationUnitElementImpl unitB = ElementFactory.compilationUnit("unit_b.dart");
-    library.parts = <CompilationUnitElement> [unitA, unitB];
-    EngineTestCase.assertEqualsIgnoreOrder(<CompilationUnitElement> [unitLib, unitA, unitB], library.units);
+    CompilationUnitElementImpl unitA =
+        ElementFactory.compilationUnit("unit_a.dart");
+    CompilationUnitElementImpl unitB =
+        ElementFactory.compilationUnit("unit_b.dart");
+    library.parts = <CompilationUnitElement>[unitA, unitB];
+    expect(
+        library.units,
+        unorderedEquals(<CompilationUnitElement>[unitLib, unitA, unitB]));
   }
 
   void test_getVisibleLibraries_cycle() {
     AnalysisContext context = createAnalysisContext();
     LibraryElementImpl library = ElementFactory.library(context, "app");
     LibraryElementImpl libraryA = ElementFactory.library(context, "A");
-    libraryA.imports = <ImportElementImpl> [ElementFactory.importFor(library, null, [])];
-    library.imports = <ImportElementImpl> [ElementFactory.importFor(libraryA, null, [])];
+    libraryA.imports =
+        <ImportElementImpl>[ElementFactory.importFor(library, null)];
+    library.imports =
+        <ImportElementImpl>[ElementFactory.importFor(libraryA, null)];
     List<LibraryElement> libraries = library.visibleLibraries;
-    EngineTestCase.assertEqualsIgnoreOrder(<LibraryElement> [library, libraryA], libraries);
+    expect(libraries, unorderedEquals(<LibraryElement>[library, libraryA]));
   }
 
   void test_getVisibleLibraries_directExports() {
     AnalysisContext context = createAnalysisContext();
     LibraryElementImpl library = ElementFactory.library(context, "app");
     LibraryElementImpl libraryA = ElementFactory.library(context, "A");
-    library.exports = <ExportElementImpl> [ElementFactory.exportFor(libraryA, [])];
+    library.exports = <ExportElementImpl>[ElementFactory.exportFor(libraryA)];
     List<LibraryElement> libraries = library.visibleLibraries;
-    EngineTestCase.assertEqualsIgnoreOrder(<LibraryElement> [library], libraries);
+    expect(libraries, unorderedEquals(<LibraryElement>[library]));
   }
 
   void test_getVisibleLibraries_directImports() {
     AnalysisContext context = createAnalysisContext();
     LibraryElementImpl library = ElementFactory.library(context, "app");
     LibraryElementImpl libraryA = ElementFactory.library(context, "A");
-    library.imports = <ImportElementImpl> [ElementFactory.importFor(libraryA, null, [])];
+    library.imports =
+        <ImportElementImpl>[ElementFactory.importFor(libraryA, null)];
     List<LibraryElement> libraries = library.visibleLibraries;
-    EngineTestCase.assertEqualsIgnoreOrder(<LibraryElement> [library, libraryA], libraries);
+    expect(libraries, unorderedEquals(<LibraryElement>[library, libraryA]));
   }
 
   void test_getVisibleLibraries_indirectExports() {
@@ -4070,10 +3550,13 @@ class LibraryElementImplTest extends EngineTestCase {
     LibraryElementImpl library = ElementFactory.library(context, "app");
     LibraryElementImpl libraryA = ElementFactory.library(context, "A");
     LibraryElementImpl libraryAA = ElementFactory.library(context, "AA");
-    libraryA.exports = <ExportElementImpl> [ElementFactory.exportFor(libraryAA, [])];
-    library.imports = <ImportElementImpl> [ElementFactory.importFor(libraryA, null, [])];
+    libraryA.exports = <ExportElementImpl>[ElementFactory.exportFor(libraryAA)];
+    library.imports =
+        <ImportElementImpl>[ElementFactory.importFor(libraryA, null)];
     List<LibraryElement> libraries = library.visibleLibraries;
-    EngineTestCase.assertEqualsIgnoreOrder(<LibraryElement> [library, libraryA, libraryAA], libraries);
+    expect(
+        libraries,
+        unorderedEquals(<LibraryElement>[library, libraryA, libraryAA]));
   }
 
   void test_getVisibleLibraries_indirectImports() {
@@ -4082,18 +3565,23 @@ class LibraryElementImplTest extends EngineTestCase {
     LibraryElementImpl libraryA = ElementFactory.library(context, "A");
     LibraryElementImpl libraryAA = ElementFactory.library(context, "AA");
     LibraryElementImpl libraryB = ElementFactory.library(context, "B");
-    libraryA.imports = <ImportElementImpl> [ElementFactory.importFor(libraryAA, null, [])];
-    library.imports = <ImportElementImpl> [
-        ElementFactory.importFor(libraryA, null, []),
-        ElementFactory.importFor(libraryB, null, [])];
+    libraryA.imports =
+        <ImportElementImpl>[ElementFactory.importFor(libraryAA, null)];
+    library.imports = <ImportElementImpl>[
+        ElementFactory.importFor(libraryA, null),
+        ElementFactory.importFor(libraryB, null)];
     List<LibraryElement> libraries = library.visibleLibraries;
-    EngineTestCase.assertEqualsIgnoreOrder(<LibraryElement> [library, libraryA, libraryAA, libraryB], libraries);
+    expect(
+        libraries,
+        unorderedEquals(<LibraryElement>[library, libraryA, libraryAA, libraryB]));
   }
 
   void test_getVisibleLibraries_noImports() {
     AnalysisContext context = createAnalysisContext();
     LibraryElementImpl library = ElementFactory.library(context, "app");
-    EngineTestCase.assertEqualsIgnoreOrder(<LibraryElement> [library], library.visibleLibraries);
+    expect(
+        library.visibleLibraries,
+        unorderedEquals(<LibraryElement>[library]));
   }
 
   void test_isUpToDate() {
@@ -4102,89 +3590,47 @@ class LibraryElementImplTest extends EngineTestCase {
     LibraryElement library = ElementFactory.library(context, "foo");
     context.setContents(library.definingCompilationUnit.source, "sdfsdff");
     // Assert that we are not up to date if the target has an old time stamp.
-    JUnitTestCase.assertFalse(library.isUpToDate(0));
-    // Assert that we are up to date with a target modification time in the future.
-    JUnitTestCase.assertTrue(library.isUpToDate(JavaSystem.currentTimeMillis() + 1000));
+    expect(library.isUpToDate(0), isFalse);
+    // Assert that we are up to date with a target modification time in the
+    // future.
+    expect(library.isUpToDate(JavaSystem.currentTimeMillis() + 1000), isTrue);
   }
 
   void test_setImports() {
     AnalysisContext context = createAnalysisContext();
-    LibraryElementImpl library = new LibraryElementImpl.forNode(context, AstFactory.libraryIdentifier2(["l1"]));
+    LibraryElementImpl library =
+        new LibraryElementImpl.forNode(context, AstFactory.libraryIdentifier2(["l1"]));
     List<ImportElementImpl> expectedImports = [
-        ElementFactory.importFor(ElementFactory.library(context, "l2"), null, []),
-        ElementFactory.importFor(ElementFactory.library(context, "l3"), null, [])];
+        ElementFactory.importFor(ElementFactory.library(context, "l2"), null),
+        ElementFactory.importFor(ElementFactory.library(context, "l3"), null)];
     library.imports = expectedImports;
     List<ImportElement> actualImports = library.imports;
-    EngineTestCase.assertLength(expectedImports.length, actualImports);
+    expect(actualImports, hasLength(expectedImports.length));
     for (int i = 0; i < actualImports.length; i++) {
-      JUnitTestCase.assertSame(expectedImports[i], actualImports[i]);
+      expect(actualImports[i], same(expectedImports[i]));
     }
-  }
-
-  static dartSuite() {
-    _ut.group('LibraryElementImplTest', () {
-      _ut.test('test_creation', () {
-        final __test = new LibraryElementImplTest();
-        runJUnitTest(__test, __test.test_creation);
-      });
-      _ut.test('test_getImportedLibraries', () {
-        final __test = new LibraryElementImplTest();
-        runJUnitTest(__test, __test.test_getImportedLibraries);
-      });
-      _ut.test('test_getPrefixes', () {
-        final __test = new LibraryElementImplTest();
-        runJUnitTest(__test, __test.test_getPrefixes);
-      });
-      _ut.test('test_getUnits', () {
-        final __test = new LibraryElementImplTest();
-        runJUnitTest(__test, __test.test_getUnits);
-      });
-      _ut.test('test_getVisibleLibraries_cycle', () {
-        final __test = new LibraryElementImplTest();
-        runJUnitTest(__test, __test.test_getVisibleLibraries_cycle);
-      });
-      _ut.test('test_getVisibleLibraries_directExports', () {
-        final __test = new LibraryElementImplTest();
-        runJUnitTest(__test, __test.test_getVisibleLibraries_directExports);
-      });
-      _ut.test('test_getVisibleLibraries_directImports', () {
-        final __test = new LibraryElementImplTest();
-        runJUnitTest(__test, __test.test_getVisibleLibraries_directImports);
-      });
-      _ut.test('test_getVisibleLibraries_indirectExports', () {
-        final __test = new LibraryElementImplTest();
-        runJUnitTest(__test, __test.test_getVisibleLibraries_indirectExports);
-      });
-      _ut.test('test_getVisibleLibraries_indirectImports', () {
-        final __test = new LibraryElementImplTest();
-        runJUnitTest(__test, __test.test_getVisibleLibraries_indirectImports);
-      });
-      _ut.test('test_getVisibleLibraries_noImports', () {
-        final __test = new LibraryElementImplTest();
-        runJUnitTest(__test, __test.test_getVisibleLibraries_noImports);
-      });
-      _ut.test('test_isUpToDate', () {
-        final __test = new LibraryElementImplTest();
-        runJUnitTest(__test, __test.test_isUpToDate);
-      });
-      _ut.test('test_setImports', () {
-        final __test = new LibraryElementImplTest();
-        runJUnitTest(__test, __test.test_setImports);
-      });
-    });
   }
 }
 
+@reflectiveTest
 class MultiplyDefinedElementImplTest extends EngineTestCase {
   void test_fromElements_conflicting() {
     Element firstElement = ElementFactory.localVariableElement2("xx");
     Element secondElement = ElementFactory.localVariableElement2("yy");
-    Element result = MultiplyDefinedElementImpl.fromElements(null, firstElement, secondElement);
-    EngineTestCase.assertInstanceOf((obj) => obj is MultiplyDefinedElement, MultiplyDefinedElement, result);
-    List<Element> elements = (result as MultiplyDefinedElement).conflictingElements;
-    EngineTestCase.assertLength(2, elements);
+    Element result =
+        MultiplyDefinedElementImpl.fromElements(null, firstElement, secondElement);
+    EngineTestCase.assertInstanceOf(
+        (obj) => obj is MultiplyDefinedElement,
+        MultiplyDefinedElement,
+        result);
+    List<Element> elements =
+        (result as MultiplyDefinedElement).conflictingElements;
+    expect(elements, hasLength(2));
     for (int i = 0; i < elements.length; i++) {
-      EngineTestCase.assertInstanceOf((obj) => obj is LocalVariableElement, LocalVariableElement, elements[i]);
+      EngineTestCase.assertInstanceOf(
+          (obj) => obj is LocalVariableElement,
+          LocalVariableElement,
+          elements[i]);
     }
   }
 
@@ -4192,187 +3638,163 @@ class MultiplyDefinedElementImplTest extends EngineTestCase {
     Element firstElement = ElementFactory.localVariableElement2("xx");
     Element secondElement = ElementFactory.localVariableElement2("yy");
     Element thirdElement = ElementFactory.localVariableElement2("zz");
-    Element result = MultiplyDefinedElementImpl.fromElements(null, MultiplyDefinedElementImpl.fromElements(null, firstElement, secondElement), thirdElement);
-    EngineTestCase.assertInstanceOf((obj) => obj is MultiplyDefinedElement, MultiplyDefinedElement, result);
-    List<Element> elements = (result as MultiplyDefinedElement).conflictingElements;
-    EngineTestCase.assertLength(3, elements);
+    Element result = MultiplyDefinedElementImpl.fromElements(
+        null,
+        MultiplyDefinedElementImpl.fromElements(null, firstElement, secondElement),
+        thirdElement);
+    EngineTestCase.assertInstanceOf(
+        (obj) => obj is MultiplyDefinedElement,
+        MultiplyDefinedElement,
+        result);
+    List<Element> elements =
+        (result as MultiplyDefinedElement).conflictingElements;
+    expect(elements, hasLength(3));
     for (int i = 0; i < elements.length; i++) {
-      EngineTestCase.assertInstanceOf((obj) => obj is LocalVariableElement, LocalVariableElement, elements[i]);
+      EngineTestCase.assertInstanceOf(
+          (obj) => obj is LocalVariableElement,
+          LocalVariableElement,
+          elements[i]);
     }
   }
 
   void test_fromElements_nonConflicting() {
     Element element = ElementFactory.localVariableElement2("xx");
-    JUnitTestCase.assertSame(element, MultiplyDefinedElementImpl.fromElements(null, element, element));
-  }
-
-  static dartSuite() {
-    _ut.group('MultiplyDefinedElementImplTest', () {
-      _ut.test('test_fromElements_conflicting', () {
-        final __test = new MultiplyDefinedElementImplTest();
-        runJUnitTest(__test, __test.test_fromElements_conflicting);
-      });
-      _ut.test('test_fromElements_multiple', () {
-        final __test = new MultiplyDefinedElementImplTest();
-        runJUnitTest(__test, __test.test_fromElements_multiple);
-      });
-      _ut.test('test_fromElements_nonConflicting', () {
-        final __test = new MultiplyDefinedElementImplTest();
-        runJUnitTest(__test, __test.test_fromElements_nonConflicting);
-      });
-    });
+    expect(
+        MultiplyDefinedElementImpl.fromElements(null, element, element),
+        same(element));
   }
 }
 
+@reflectiveTest
 class TypeParameterTypeImplTest extends EngineTestCase {
   void test_creation() {
-    JUnitTestCase.assertNotNull(new TypeParameterTypeImpl(new TypeParameterElementImpl.forNode(AstFactory.identifier3("E"))));
+    expect(
+        new TypeParameterTypeImpl(
+            new TypeParameterElementImpl.forNode(AstFactory.identifier3("E"))),
+        isNotNull);
   }
 
   void test_getElement() {
-    TypeParameterElementImpl element = new TypeParameterElementImpl.forNode(AstFactory.identifier3("E"));
+    TypeParameterElementImpl element =
+        new TypeParameterElementImpl.forNode(AstFactory.identifier3("E"));
     TypeParameterTypeImpl type = new TypeParameterTypeImpl(element);
-    JUnitTestCase.assertEquals(element, type.element);
+    expect(type.element, element);
   }
 
   void test_isMoreSpecificThan_typeArguments_dynamic() {
-    TypeParameterElementImpl element = new TypeParameterElementImpl.forNode(AstFactory.identifier3("E"));
+    TypeParameterElementImpl element =
+        new TypeParameterElementImpl.forNode(AstFactory.identifier3("E"));
     TypeParameterTypeImpl type = new TypeParameterTypeImpl(element);
     // E << dynamic
-    JUnitTestCase.assertTrue(type.isMoreSpecificThan(DynamicTypeImpl.instance));
+    expect(type.isMoreSpecificThan(DynamicTypeImpl.instance), isTrue);
   }
 
   void test_isMoreSpecificThan_typeArguments_object() {
-    TypeParameterElementImpl element = new TypeParameterElementImpl.forNode(AstFactory.identifier3("E"));
+    TypeParameterElementImpl element =
+        new TypeParameterElementImpl.forNode(AstFactory.identifier3("E"));
     TypeParameterTypeImpl type = new TypeParameterTypeImpl(element);
     // E << Object
-    JUnitTestCase.assertTrue(type.isMoreSpecificThan(ElementFactory.object.type));
+    expect(type.isMoreSpecificThan(ElementFactory.object.type), isTrue);
   }
 
   void test_isMoreSpecificThan_typeArguments_resursive() {
-    ClassElementImpl classS = ElementFactory.classElement2("A", []);
-    TypeParameterElementImpl typeParameterU = new TypeParameterElementImpl.forNode(AstFactory.identifier3("U"));
-    TypeParameterTypeImpl typeParameterTypeU = new TypeParameterTypeImpl(typeParameterU);
-    TypeParameterElementImpl typeParameterT = new TypeParameterElementImpl.forNode(AstFactory.identifier3("T"));
-    TypeParameterTypeImpl typeParameterTypeT = new TypeParameterTypeImpl(typeParameterT);
+    ClassElementImpl classS = ElementFactory.classElement2("A");
+    TypeParameterElementImpl typeParameterU =
+        new TypeParameterElementImpl.forNode(AstFactory.identifier3("U"));
+    TypeParameterTypeImpl typeParameterTypeU =
+        new TypeParameterTypeImpl(typeParameterU);
+    TypeParameterElementImpl typeParameterT =
+        new TypeParameterElementImpl.forNode(AstFactory.identifier3("T"));
+    TypeParameterTypeImpl typeParameterTypeT =
+        new TypeParameterTypeImpl(typeParameterT);
     typeParameterT.bound = typeParameterTypeU;
     typeParameterU.bound = typeParameterTypeU;
     // <T extends U> and <U extends T>
     // T << S
-    JUnitTestCase.assertFalse(typeParameterTypeT.isMoreSpecificThan(classS.type));
+    expect(typeParameterTypeT.isMoreSpecificThan(classS.type), isFalse);
   }
 
   void test_isMoreSpecificThan_typeArguments_self() {
-    TypeParameterElementImpl element = new TypeParameterElementImpl.forNode(AstFactory.identifier3("E"));
+    TypeParameterElementImpl element =
+        new TypeParameterElementImpl.forNode(AstFactory.identifier3("E"));
     TypeParameterTypeImpl type = new TypeParameterTypeImpl(element);
     // E << E
-    JUnitTestCase.assertTrue(type.isMoreSpecificThan(type));
+    expect(type.isMoreSpecificThan(type), isTrue);
   }
 
   void test_isMoreSpecificThan_typeArguments_transitivity_interfaceTypes() {
     //  class A {}
     //  class B extends A {}
     //
-    ClassElement classA = ElementFactory.classElement2("A", []);
-    ClassElement classB = ElementFactory.classElement("B", classA.type, []);
+    ClassElement classA = ElementFactory.classElement2("A");
+    ClassElement classB = ElementFactory.classElement("B", classA.type);
     InterfaceType typeA = classA.type;
     InterfaceType typeB = classB.type;
-    TypeParameterElementImpl typeParameterT = new TypeParameterElementImpl.forNode(AstFactory.identifier3("T"));
+    TypeParameterElementImpl typeParameterT =
+        new TypeParameterElementImpl.forNode(AstFactory.identifier3("T"));
     typeParameterT.bound = typeB;
-    TypeParameterTypeImpl typeParameterTypeT = new TypeParameterTypeImpl(typeParameterT);
+    TypeParameterTypeImpl typeParameterTypeT =
+        new TypeParameterTypeImpl(typeParameterT);
     // <T extends B>
     // T << A
-    JUnitTestCase.assertTrue(typeParameterTypeT.isMoreSpecificThan(typeA));
+    expect(typeParameterTypeT.isMoreSpecificThan(typeA), isTrue);
   }
 
   void test_isMoreSpecificThan_typeArguments_transitivity_typeParameters() {
-    ClassElementImpl classS = ElementFactory.classElement2("A", []);
-    TypeParameterElementImpl typeParameterU = new TypeParameterElementImpl.forNode(AstFactory.identifier3("U"));
+    ClassElementImpl classS = ElementFactory.classElement2("A");
+    TypeParameterElementImpl typeParameterU =
+        new TypeParameterElementImpl.forNode(AstFactory.identifier3("U"));
     typeParameterU.bound = classS.type;
-    TypeParameterTypeImpl typeParameterTypeU = new TypeParameterTypeImpl(typeParameterU);
-    TypeParameterElementImpl typeParameterT = new TypeParameterElementImpl.forNode(AstFactory.identifier3("T"));
+    TypeParameterTypeImpl typeParameterTypeU =
+        new TypeParameterTypeImpl(typeParameterU);
+    TypeParameterElementImpl typeParameterT =
+        new TypeParameterElementImpl.forNode(AstFactory.identifier3("T"));
     typeParameterT.bound = typeParameterTypeU;
-    TypeParameterTypeImpl typeParameterTypeT = new TypeParameterTypeImpl(typeParameterT);
+    TypeParameterTypeImpl typeParameterTypeT =
+        new TypeParameterTypeImpl(typeParameterT);
     // <T extends U> and <U extends S>
     // T << S
-    JUnitTestCase.assertTrue(typeParameterTypeT.isMoreSpecificThan(classS.type));
+    expect(typeParameterTypeT.isMoreSpecificThan(classS.type), isTrue);
   }
 
   void test_isMoreSpecificThan_typeArguments_upperBound() {
-    ClassElementImpl classS = ElementFactory.classElement2("A", []);
-    TypeParameterElementImpl typeParameterT = new TypeParameterElementImpl.forNode(AstFactory.identifier3("T"));
+    ClassElementImpl classS = ElementFactory.classElement2("A");
+    TypeParameterElementImpl typeParameterT =
+        new TypeParameterElementImpl.forNode(AstFactory.identifier3("T"));
     typeParameterT.bound = classS.type;
-    TypeParameterTypeImpl typeParameterTypeT = new TypeParameterTypeImpl(typeParameterT);
+    TypeParameterTypeImpl typeParameterTypeT =
+        new TypeParameterTypeImpl(typeParameterT);
     // <T extends S>
     // T << S
-    JUnitTestCase.assertTrue(typeParameterTypeT.isMoreSpecificThan(classS.type));
+    expect(typeParameterTypeT.isMoreSpecificThan(classS.type), isTrue);
   }
 
   void test_substitute_equal() {
-    TypeParameterElementImpl element = new TypeParameterElementImpl.forNode(AstFactory.identifier3("E"));
+    TypeParameterElementImpl element =
+        new TypeParameterElementImpl.forNode(AstFactory.identifier3("E"));
     TypeParameterTypeImpl type = new TypeParameterTypeImpl(element);
-    InterfaceTypeImpl argument = new InterfaceTypeImpl.con1(new ClassElementImpl.forNode(AstFactory.identifier3("A")));
+    InterfaceTypeImpl argument = new InterfaceTypeImpl.con1(
+        new ClassElementImpl.forNode(AstFactory.identifier3("A")));
     TypeParameterTypeImpl parameter = new TypeParameterTypeImpl(element);
-    JUnitTestCase.assertSame(argument, type.substitute2(<DartType> [argument], <DartType> [parameter]));
+    expect(
+        type.substitute2(<DartType>[argument], <DartType>[parameter]),
+        same(argument));
   }
 
   void test_substitute_notEqual() {
-    TypeParameterTypeImpl type = new TypeParameterTypeImpl(new TypeParameterElementImpl.forNode(AstFactory.identifier3("E")));
-    InterfaceTypeImpl argument = new InterfaceTypeImpl.con1(new ClassElementImpl.forNode(AstFactory.identifier3("A")));
-    TypeParameterTypeImpl parameter = new TypeParameterTypeImpl(new TypeParameterElementImpl.forNode(AstFactory.identifier3("F")));
-    JUnitTestCase.assertSame(type, type.substitute2(<DartType> [argument], <DartType> [parameter]));
-  }
-
-  static dartSuite() {
-    _ut.group('TypeParameterTypeImplTest', () {
-      _ut.test('test_creation', () {
-        final __test = new TypeParameterTypeImplTest();
-        runJUnitTest(__test, __test.test_creation);
-      });
-      _ut.test('test_getElement', () {
-        final __test = new TypeParameterTypeImplTest();
-        runJUnitTest(__test, __test.test_getElement);
-      });
-      _ut.test('test_isMoreSpecificThan_typeArguments_dynamic', () {
-        final __test = new TypeParameterTypeImplTest();
-        runJUnitTest(__test, __test.test_isMoreSpecificThan_typeArguments_dynamic);
-      });
-      _ut.test('test_isMoreSpecificThan_typeArguments_object', () {
-        final __test = new TypeParameterTypeImplTest();
-        runJUnitTest(__test, __test.test_isMoreSpecificThan_typeArguments_object);
-      });
-      _ut.test('test_isMoreSpecificThan_typeArguments_resursive', () {
-        final __test = new TypeParameterTypeImplTest();
-        runJUnitTest(__test, __test.test_isMoreSpecificThan_typeArguments_resursive);
-      });
-      _ut.test('test_isMoreSpecificThan_typeArguments_self', () {
-        final __test = new TypeParameterTypeImplTest();
-        runJUnitTest(__test, __test.test_isMoreSpecificThan_typeArguments_self);
-      });
-      _ut.test('test_isMoreSpecificThan_typeArguments_transitivity_interfaceTypes', () {
-        final __test = new TypeParameterTypeImplTest();
-        runJUnitTest(__test, __test.test_isMoreSpecificThan_typeArguments_transitivity_interfaceTypes);
-      });
-      _ut.test('test_isMoreSpecificThan_typeArguments_transitivity_typeParameters', () {
-        final __test = new TypeParameterTypeImplTest();
-        runJUnitTest(__test, __test.test_isMoreSpecificThan_typeArguments_transitivity_typeParameters);
-      });
-      _ut.test('test_isMoreSpecificThan_typeArguments_upperBound', () {
-        final __test = new TypeParameterTypeImplTest();
-        runJUnitTest(__test, __test.test_isMoreSpecificThan_typeArguments_upperBound);
-      });
-      _ut.test('test_substitute_equal', () {
-        final __test = new TypeParameterTypeImplTest();
-        runJUnitTest(__test, __test.test_substitute_equal);
-      });
-      _ut.test('test_substitute_notEqual', () {
-        final __test = new TypeParameterTypeImplTest();
-        runJUnitTest(__test, __test.test_substitute_notEqual);
-      });
-    });
+    TypeParameterTypeImpl type = new TypeParameterTypeImpl(
+        new TypeParameterElementImpl.forNode(AstFactory.identifier3("E")));
+    InterfaceTypeImpl argument = new InterfaceTypeImpl.con1(
+        new ClassElementImpl.forNode(AstFactory.identifier3("A")));
+    TypeParameterTypeImpl parameter = new TypeParameterTypeImpl(
+        new TypeParameterElementImpl.forNode(AstFactory.identifier3("F")));
+    expect(
+        type.substitute2(<DartType>[argument], <DartType>[parameter]),
+        same(type));
   }
 }
 
+@reflectiveTest
 class UnionTypeImplTest extends EngineTestCase {
   ClassElement _classA;
 
@@ -4392,120 +3814,136 @@ class UnionTypeImplTest extends EngineTestCase {
 
   List<DartType> _us;
 
+  @override
+  void setUp() {
+    super.setUp();
+    _classA = ElementFactory.classElement2("A");
+    _typeA = _classA.type;
+    _classB = ElementFactory.classElement("B", _typeA);
+    _typeB = _classB.type;
+    _uA = UnionTypeImpl.union([_typeA]);
+    _uB = UnionTypeImpl.union([_typeB]);
+    _uAB = UnionTypeImpl.union([_typeA, _typeB]);
+    _uBA = UnionTypeImpl.union([_typeB, _typeA]);
+    _us = <DartType>[_uA, _uB, _uAB, _uBA];
+  }
+
   void test_emptyUnionsNotAllowed() {
     try {
       UnionTypeImpl.union([]);
     } on IllegalArgumentException catch (e) {
       return;
     }
-    JUnitTestCase.fail("Expected illegal argument exception.");
+    fail("Expected illegal argument exception.");
   }
 
   void test_equality_beingASubtypeOfAnElementIsNotSufficient() {
     // Non-equal if some elements are different
-    JUnitTestCase.assertFalse(_uAB == _uA);
+    expect(_uAB == _uA, isFalse);
   }
 
   void test_equality_insertionOrderDoesntMatter() {
     // Insertion order doesn't matter, only sets of elements
-    JUnitTestCase.assertTrue(_uAB == _uBA);
-    JUnitTestCase.assertTrue(_uBA == _uAB);
+    expect(_uAB == _uBA, isTrue);
+    expect(_uBA == _uAB, isTrue);
   }
 
   void test_equality_reflexivity() {
     for (DartType u in _us) {
-      JUnitTestCase.assertTrue(u == u);
+      expect(u == u, isTrue);
     }
   }
 
   void test_equality_singletonsCollapse() {
-    JUnitTestCase.assertTrue(_typeA == _uA);
-    JUnitTestCase.assertTrue(_uA == _typeA);
+    expect(_typeA == _uA, isTrue);
+    expect(_uA == _typeA, isTrue);
   }
 
   void test_isMoreSpecificThan_allElementsOnLHSAreSubtypesOfSomeElementOnRHS() {
     // Unions are subtypes when all elements are subtypes
-    JUnitTestCase.assertTrue(_uAB.isMoreSpecificThan(_uA));
-    JUnitTestCase.assertTrue(_uAB.isMoreSpecificThan(_typeA));
+    expect(_uAB.isMoreSpecificThan(_uA), isTrue);
+    expect(_uAB.isMoreSpecificThan(_typeA), isTrue);
   }
 
   void test_isMoreSpecificThan_element() {
     // Elements of union are sub types
-    JUnitTestCase.assertTrue(_typeA.isMoreSpecificThan(_uAB));
-    JUnitTestCase.assertTrue(_typeB.isMoreSpecificThan(_uAB));
+    expect(_typeA.isMoreSpecificThan(_uAB), isTrue);
+    expect(_typeB.isMoreSpecificThan(_uAB), isTrue);
   }
 
   void test_isMoreSpecificThan_notSubtypeOfAnyElement() {
     // Types that are not subtypes of elements are not subtypes
-    JUnitTestCase.assertFalse(_typeA.isMoreSpecificThan(_uB));
+    expect(_typeA.isMoreSpecificThan(_uB), isFalse);
   }
 
   void test_isMoreSpecificThan_reflexivity() {
     for (DartType u in _us) {
-      JUnitTestCase.assertTrue(u.isMoreSpecificThan(u));
+      expect(u.isMoreSpecificThan(u), isTrue);
     }
   }
 
-  void test_isMoreSpecificThan_someElementOnLHSIsNotASubtypeOfAnyElementOnRHS() {
-    // Unions are not subtypes when some element is not a subtype
-    JUnitTestCase.assertFalse(_uAB.isMoreSpecificThan(_uB));
-    JUnitTestCase.assertFalse(_uAB.isMoreSpecificThan(_typeB));
+  void
+      test_isMoreSpecificThan_someElementOnLHSIsNotASubtypeOfAnyElementOnRHS() {
+    // Unions are subtypes when some element is a subtype
+    expect(_uAB.isMoreSpecificThan(_uB), isTrue);
+    expect(_uAB.isMoreSpecificThan(_typeB), isTrue);
   }
 
   void test_isMoreSpecificThan_subtypeOfSomeElement() {
     // Subtypes of elements are sub types
-    JUnitTestCase.assertTrue(_typeB.isMoreSpecificThan(_uA));
+    expect(_typeB.isMoreSpecificThan(_uA), isTrue);
   }
 
   void test_isSubtypeOf_allElementsOnLHSAreSubtypesOfSomeElementOnRHS() {
     // Unions are subtypes when all elements are subtypes
-    JUnitTestCase.assertTrue(_uAB.isSubtypeOf(_uA));
-    JUnitTestCase.assertTrue(_uAB.isSubtypeOf(_typeA));
+    expect(_uAB.isSubtypeOf(_uA), isTrue);
+    expect(_uAB.isSubtypeOf(_typeA), isTrue);
   }
 
   void test_isSubtypeOf_element() {
     // Elements of union are sub types
-    JUnitTestCase.assertTrue(_typeA.isSubtypeOf(_uAB));
-    JUnitTestCase.assertTrue(_typeB.isSubtypeOf(_uAB));
+    expect(_typeA.isSubtypeOf(_uAB), isTrue);
+    expect(_typeB.isSubtypeOf(_uAB), isTrue);
   }
 
   void test_isSubtypeOf_notSubtypeOfAnyElement() {
     // Types that are not subtypes of elements are not subtypes
-    JUnitTestCase.assertFalse(_typeA.isSubtypeOf(_uB));
+    expect(_typeA.isSubtypeOf(_uB), isFalse);
   }
 
   void test_isSubtypeOf_reflexivity() {
     for (DartType u in _us) {
-      JUnitTestCase.assertTrue(u.isSubtypeOf(u));
+      expect(u.isSubtypeOf(u), isTrue);
     }
   }
 
   void test_isSubtypeOf_someElementOnLHSIsNotASubtypeOfAnyElementOnRHS() {
-    // Unions are not subtypes when some element is not a subtype
-    JUnitTestCase.assertFalse(_uAB.isSubtypeOf(_uB));
-    JUnitTestCase.assertFalse(_uAB.isSubtypeOf(_typeB));
+    // Unions are subtypes when some element is a subtype
+    expect(_uAB.isSubtypeOf(_uB), isTrue);
+    expect(_uAB.isSubtypeOf(_typeB), isTrue);
   }
 
   void test_isSubtypeOf_subtypeOfSomeElement() {
     // Subtypes of elements are sub types
-    JUnitTestCase.assertTrue(_typeB.isSubtypeOf(_uA));
+    expect(_typeB.isSubtypeOf(_uA), isTrue);
   }
 
   void test_nestedUnionsCollapse() {
     UnionType u = UnionTypeImpl.union([_uAB, _typeA]) as UnionType;
     for (DartType t in u.elements) {
       if (t is UnionType) {
-        JUnitTestCase.fail("Expected only non-union types but found ${t}!");
+        fail("Expected only non-union types but found $t!");
       }
     }
   }
 
   void test_noLossage() {
-    UnionType u = UnionTypeImpl.union([_typeA, _typeB, _typeB, _typeA, _typeB, _typeB]) as UnionType;
+    UnionType u = UnionTypeImpl.union(
+        [_typeA, _typeB, _typeB, _typeA, _typeB, _typeB]) as UnionType;
     Set<DartType> elements = u.elements;
-    JUnitTestCase.assertTrue(elements.contains(_typeA));
-    JUnitTestCase.assertTrue(elements.contains(_typeB));
-    JUnitTestCase.assertTrue(elements.length == 2);
+    expect(elements.contains(_typeA), isTrue);
+    expect(elements.contains(_typeB), isTrue);
+    expect(elements.length == 2, isTrue);
   }
 
   void test_substitute() {
@@ -4515,155 +3953,47 @@ class UnionTypeImplTest extends EngineTestCase {
     List<DartType> args = [_typeB];
     List<DartType> params = [classAE.typeParameters[0].type];
     DartType typeAESubbed = typeAE.substitute2(args, params);
-    JUnitTestCase.assertFalse(typeAE == typeAESubbed);
-    JUnitTestCase.assertEquals(UnionTypeImpl.union([_typeA, typeAE]).substitute2(args, params), UnionTypeImpl.union([_typeA, typeAESubbed]));
+    expect(typeAE == typeAESubbed, isFalse);
+    expect(
+        UnionTypeImpl.union([_typeA, typeAESubbed]),
+        UnionTypeImpl.union([_typeA, typeAE]).substitute2(args, params));
   }
 
   void test_toString_pair() {
     String s = _uAB.toString();
-    JUnitTestCase.assertTrue(s == "{A,B}" || s == "{B,A}");
-    JUnitTestCase.assertEquals(s, _uAB.displayName);
+    expect(s == "{A,B}" || s == "{B,A}", isTrue);
+    expect(_uAB.displayName, s);
   }
 
   void test_toString_singleton() {
     // Singleton unions collapse to the the single type.
-    JUnitTestCase.assertEquals("A", _uA.toString());
+    expect(_uA.toString(), "A");
   }
 
   void test_unionTypeIsLessSpecificThan_function() {
-    // Based on [FunctionTypeImplTest.test_isAssignableTo_normalAndPositionalArgs].
-    ClassElement a = ElementFactory.classElement2("A", []);
-    FunctionType t = ElementFactory.functionElement6("t", null, <ClassElement> [a]).type;
+    // Based on
+    // [FunctionTypeImplTest.test_isAssignableTo_normalAndPositionalArgs].
+    ClassElement a = ElementFactory.classElement2("A");
+    FunctionType t =
+        ElementFactory.functionElement6("t", null, <ClassElement>[a]).type;
     DartType uAT = UnionTypeImpl.union([_uA, t]);
-    JUnitTestCase.assertTrue(t.isMoreSpecificThan(uAT));
-    JUnitTestCase.assertFalse(t.isMoreSpecificThan(_uAB));
+    expect(t.isMoreSpecificThan(uAT), isTrue);
+    expect(t.isMoreSpecificThan(_uAB), isFalse);
   }
 
   void test_unionTypeIsSuperTypeOf_function() {
-    // Based on [FunctionTypeImplTest.test_isAssignableTo_normalAndPositionalArgs].
-    ClassElement a = ElementFactory.classElement2("A", []);
-    FunctionType t = ElementFactory.functionElement6("t", null, <ClassElement> [a]).type;
+    // Based on
+    // [FunctionTypeImplTest.test_isAssignableTo_normalAndPositionalArgs].
+    ClassElement a = ElementFactory.classElement2("A");
+    FunctionType t =
+        ElementFactory.functionElement6("t", null, <ClassElement>[a]).type;
     DartType uAT = UnionTypeImpl.union([_uA, t]);
-    JUnitTestCase.assertTrue(t.isSubtypeOf(uAT));
-    JUnitTestCase.assertFalse(t.isSubtypeOf(_uAB));
-  }
-
-  @override
-  void setUp() {
-    super.setUp();
-    _classA = ElementFactory.classElement2("A", []);
-    _typeA = _classA.type;
-    _classB = ElementFactory.classElement("B", _typeA, []);
-    _typeB = _classB.type;
-    _uA = UnionTypeImpl.union([_typeA]);
-    _uB = UnionTypeImpl.union([_typeB]);
-    _uAB = UnionTypeImpl.union([_typeA, _typeB]);
-    _uBA = UnionTypeImpl.union([_typeB, _typeA]);
-    _us = <DartType> [_uA, _uB, _uAB, _uBA];
-  }
-
-  static dartSuite() {
-    _ut.group('UnionTypeImplTest', () {
-      _ut.test('test_emptyUnionsNotAllowed', () {
-        final __test = new UnionTypeImplTest();
-        runJUnitTest(__test, __test.test_emptyUnionsNotAllowed);
-      });
-      _ut.test('test_equality_beingASubtypeOfAnElementIsNotSufficient', () {
-        final __test = new UnionTypeImplTest();
-        runJUnitTest(__test, __test.test_equality_beingASubtypeOfAnElementIsNotSufficient);
-      });
-      _ut.test('test_equality_insertionOrderDoesntMatter', () {
-        final __test = new UnionTypeImplTest();
-        runJUnitTest(__test, __test.test_equality_insertionOrderDoesntMatter);
-      });
-      _ut.test('test_equality_reflexivity', () {
-        final __test = new UnionTypeImplTest();
-        runJUnitTest(__test, __test.test_equality_reflexivity);
-      });
-      _ut.test('test_equality_singletonsCollapse', () {
-        final __test = new UnionTypeImplTest();
-        runJUnitTest(__test, __test.test_equality_singletonsCollapse);
-      });
-      _ut.test('test_isMoreSpecificThan_allElementsOnLHSAreSubtypesOfSomeElementOnRHS', () {
-        final __test = new UnionTypeImplTest();
-        runJUnitTest(__test, __test.test_isMoreSpecificThan_allElementsOnLHSAreSubtypesOfSomeElementOnRHS);
-      });
-      _ut.test('test_isMoreSpecificThan_element', () {
-        final __test = new UnionTypeImplTest();
-        runJUnitTest(__test, __test.test_isMoreSpecificThan_element);
-      });
-      _ut.test('test_isMoreSpecificThan_notSubtypeOfAnyElement', () {
-        final __test = new UnionTypeImplTest();
-        runJUnitTest(__test, __test.test_isMoreSpecificThan_notSubtypeOfAnyElement);
-      });
-      _ut.test('test_isMoreSpecificThan_reflexivity', () {
-        final __test = new UnionTypeImplTest();
-        runJUnitTest(__test, __test.test_isMoreSpecificThan_reflexivity);
-      });
-      _ut.test('test_isMoreSpecificThan_someElementOnLHSIsNotASubtypeOfAnyElementOnRHS', () {
-        final __test = new UnionTypeImplTest();
-        runJUnitTest(__test, __test.test_isMoreSpecificThan_someElementOnLHSIsNotASubtypeOfAnyElementOnRHS);
-      });
-      _ut.test('test_isMoreSpecificThan_subtypeOfSomeElement', () {
-        final __test = new UnionTypeImplTest();
-        runJUnitTest(__test, __test.test_isMoreSpecificThan_subtypeOfSomeElement);
-      });
-      _ut.test('test_isSubtypeOf_allElementsOnLHSAreSubtypesOfSomeElementOnRHS', () {
-        final __test = new UnionTypeImplTest();
-        runJUnitTest(__test, __test.test_isSubtypeOf_allElementsOnLHSAreSubtypesOfSomeElementOnRHS);
-      });
-      _ut.test('test_isSubtypeOf_element', () {
-        final __test = new UnionTypeImplTest();
-        runJUnitTest(__test, __test.test_isSubtypeOf_element);
-      });
-      _ut.test('test_isSubtypeOf_notSubtypeOfAnyElement', () {
-        final __test = new UnionTypeImplTest();
-        runJUnitTest(__test, __test.test_isSubtypeOf_notSubtypeOfAnyElement);
-      });
-      _ut.test('test_isSubtypeOf_reflexivity', () {
-        final __test = new UnionTypeImplTest();
-        runJUnitTest(__test, __test.test_isSubtypeOf_reflexivity);
-      });
-      _ut.test('test_isSubtypeOf_someElementOnLHSIsNotASubtypeOfAnyElementOnRHS', () {
-        final __test = new UnionTypeImplTest();
-        runJUnitTest(__test, __test.test_isSubtypeOf_someElementOnLHSIsNotASubtypeOfAnyElementOnRHS);
-      });
-      _ut.test('test_isSubtypeOf_subtypeOfSomeElement', () {
-        final __test = new UnionTypeImplTest();
-        runJUnitTest(__test, __test.test_isSubtypeOf_subtypeOfSomeElement);
-      });
-      _ut.test('test_nestedUnionsCollapse', () {
-        final __test = new UnionTypeImplTest();
-        runJUnitTest(__test, __test.test_nestedUnionsCollapse);
-      });
-      _ut.test('test_noLossage', () {
-        final __test = new UnionTypeImplTest();
-        runJUnitTest(__test, __test.test_noLossage);
-      });
-      _ut.test('test_substitute', () {
-        final __test = new UnionTypeImplTest();
-        runJUnitTest(__test, __test.test_substitute);
-      });
-      _ut.test('test_toString_pair', () {
-        final __test = new UnionTypeImplTest();
-        runJUnitTest(__test, __test.test_toString_pair);
-      });
-      _ut.test('test_toString_singleton', () {
-        final __test = new UnionTypeImplTest();
-        runJUnitTest(__test, __test.test_toString_singleton);
-      });
-      _ut.test('test_unionTypeIsLessSpecificThan_function', () {
-        final __test = new UnionTypeImplTest();
-        runJUnitTest(__test, __test.test_unionTypeIsLessSpecificThan_function);
-      });
-      _ut.test('test_unionTypeIsSuperTypeOf_function', () {
-        final __test = new UnionTypeImplTest();
-        runJUnitTest(__test, __test.test_unionTypeIsSuperTypeOf_function);
-      });
-    });
+    expect(t.isSubtypeOf(uAT), isTrue);
+    expect(t.isSubtypeOf(_uAB), isFalse);
   }
 }
 
+@reflectiveTest
 class VoidTypeImplTest extends EngineTestCase {
   /**
    * Reference {code VoidTypeImpl.getInstance()}.
@@ -4671,82 +4001,42 @@ class VoidTypeImplTest extends EngineTestCase {
   DartType _voidType = VoidTypeImpl.instance;
 
   void test_isMoreSpecificThan_void_A() {
-    ClassElement classA = ElementFactory.classElement2("A", []);
-    JUnitTestCase.assertFalse(_voidType.isMoreSpecificThan(classA.type));
+    ClassElement classA = ElementFactory.classElement2("A");
+    expect(_voidType.isMoreSpecificThan(classA.type), isFalse);
   }
 
   void test_isMoreSpecificThan_void_dynamic() {
-    JUnitTestCase.assertTrue(_voidType.isMoreSpecificThan(DynamicTypeImpl.instance));
+    expect(_voidType.isMoreSpecificThan(DynamicTypeImpl.instance), isTrue);
   }
 
   void test_isMoreSpecificThan_void_void() {
-    JUnitTestCase.assertTrue(_voidType.isMoreSpecificThan(_voidType));
+    expect(_voidType.isMoreSpecificThan(_voidType), isTrue);
   }
 
   void test_isSubtypeOf_void_A() {
-    ClassElement classA = ElementFactory.classElement2("A", []);
-    JUnitTestCase.assertFalse(_voidType.isSubtypeOf(classA.type));
+    ClassElement classA = ElementFactory.classElement2("A");
+    expect(_voidType.isSubtypeOf(classA.type), isFalse);
   }
 
   void test_isSubtypeOf_void_dynamic() {
-    JUnitTestCase.assertTrue(_voidType.isSubtypeOf(DynamicTypeImpl.instance));
+    expect(_voidType.isSubtypeOf(DynamicTypeImpl.instance), isTrue);
   }
 
   void test_isSubtypeOf_void_void() {
-    JUnitTestCase.assertTrue(_voidType.isSubtypeOf(_voidType));
+    expect(_voidType.isSubtypeOf(_voidType), isTrue);
   }
 
   void test_isVoid() {
-    JUnitTestCase.assertTrue(_voidType.isVoid);
-  }
-
-  static dartSuite() {
-    _ut.group('VoidTypeImplTest', () {
-      _ut.test('test_isMoreSpecificThan_void_A', () {
-        final __test = new VoidTypeImplTest();
-        runJUnitTest(__test, __test.test_isMoreSpecificThan_void_A);
-      });
-      _ut.test('test_isMoreSpecificThan_void_dynamic', () {
-        final __test = new VoidTypeImplTest();
-        runJUnitTest(__test, __test.test_isMoreSpecificThan_void_dynamic);
-      });
-      _ut.test('test_isMoreSpecificThan_void_void', () {
-        final __test = new VoidTypeImplTest();
-        runJUnitTest(__test, __test.test_isMoreSpecificThan_void_void);
-      });
-      _ut.test('test_isSubtypeOf_void_A', () {
-        final __test = new VoidTypeImplTest();
-        runJUnitTest(__test, __test.test_isSubtypeOf_void_A);
-      });
-      _ut.test('test_isSubtypeOf_void_dynamic', () {
-        final __test = new VoidTypeImplTest();
-        runJUnitTest(__test, __test.test_isSubtypeOf_void_dynamic);
-      });
-      _ut.test('test_isSubtypeOf_void_void', () {
-        final __test = new VoidTypeImplTest();
-        runJUnitTest(__test, __test.test_isSubtypeOf_void_void);
-      });
-      _ut.test('test_isVoid', () {
-        final __test = new VoidTypeImplTest();
-        runJUnitTest(__test, __test.test_isVoid);
-      });
-    });
+    expect(_voidType.isVoid, isTrue);
   }
 }
 
-main() {
-  ElementKindTest.dartSuite();
-  AngularPropertyKindTest.dartSuite();
-  FunctionTypeImplTest.dartSuite();
-  InterfaceTypeImplTest.dartSuite();
-  TypeParameterTypeImplTest.dartSuite();
-  UnionTypeImplTest.dartSuite();
-  VoidTypeImplTest.dartSuite();
-  ClassElementImplTest.dartSuite();
-  CompilationUnitElementImplTest.dartSuite();
-  ElementLocationImplTest.dartSuite();
-  ElementImplTest.dartSuite();
-  HtmlElementImplTest.dartSuite();
-  LibraryElementImplTest.dartSuite();
-  MultiplyDefinedElementImplTest.dartSuite();
+class _FunctionTypeImplTest_isSubtypeOf_baseCase_classFunction extends
+    InterfaceTypeImpl {
+
+  _FunctionTypeImplTest_isSubtypeOf_baseCase_classFunction(ClassElement arg0)
+      : super.con1(arg0);
+
+  @override
+  bool get isDartCoreFunction => true;
 }

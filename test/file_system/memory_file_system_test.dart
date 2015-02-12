@@ -6,13 +6,13 @@ library test.memory_file_system;
 
 import 'dart:async';
 
+import 'package:ddc_analyzer/file_system/file_system.dart';
+import 'package:ddc_analyzer/file_system/memory_file_system.dart';
 import 'package:ddc_analyzer/src/generated/engine.dart' show TimestampedData;
 import 'package:ddc_analyzer/src/generated/source.dart';
 import 'package:path/path.dart';
 import 'package:unittest/unittest.dart';
 import 'package:watcher/watcher.dart';
-import 'package:ddc_analyzer/file_system/memory_file_system.dart';
-import 'package:ddc_analyzer/file_system/file_system.dart';
 
 
 var _isFile = new isInstanceOf<File>();
@@ -34,7 +34,8 @@ main() {
       var exception = new MemoryResourceException('/my/path', 'my message');
       expect(exception.path, '/my/path');
       expect(exception.message, 'my message');
-      expect(exception.toString(),
+      expect(
+          exception.toString(),
           'MemoryResourceException(path=/my/path; message=my message)');
     });
 
@@ -117,6 +118,19 @@ main() {
       });
     });
 
+    group('getStateLocation', () {
+      test('uniqueness', () {
+        String idOne = 'one';
+        Folder folderOne = provider.getStateLocation(idOne);
+        expect(folderOne, isNotNull);
+        String idTwo = 'two';
+        Folder folderTwo = provider.getStateLocation(idTwo);
+        expect(folderTwo, isNotNull);
+        expect(folderTwo, isNot(equals(folderOne)));
+        expect(provider.getStateLocation(idOne), equals(folderOne));
+      });
+    });
+
     group('newFolder', () {
       test('empty path', () {
         expect(() {
@@ -138,7 +152,7 @@ main() {
         });
 
         test('as file', () {
-          File file = provider.newFile('/my/file', 'qwerty');
+          provider.newFile('/my/file', 'qwerty');
           expect(() {
             provider.newFolder('/my/file');
           }, throwsA(new isInstanceOf<ArgumentError>()));
@@ -456,7 +470,8 @@ main() {
         });
 
         test('resolveRelative', () {
-          Uri relative = source.resolveRelativeUri(new Uri.file('bar/baz.dart'));
+          Uri relative =
+              source.resolveRelativeUri(new Uri.file('bar/baz.dart'));
           expect(relative.path, '/foo/bar/baz.dart');
         });
       });
@@ -490,7 +505,8 @@ main() {
         });
 
         test('resolveRelative', () {
-          Uri relative = source.resolveRelativeUri(new Uri.file('bar/baz.dart'));
+          Uri relative =
+              source.resolveRelativeUri(new Uri.file('bar/baz.dart'));
           expect(relative.path, '/foo/bar/baz.dart');
         });
       });
