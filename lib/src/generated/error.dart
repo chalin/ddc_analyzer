@@ -3284,6 +3284,33 @@ class StaticTypeWarningCode extends ErrorCode {
           "Map literal requires exactly two type arguments or none, but {0} found");
 
   /**
+   * 9 Functions: It is a static warning if the declared return type of a
+   * function marked async* may not be assigned to Stream.
+   */
+  static const StaticTypeWarningCode ILLEGAL_ASYNC_GENERATOR_RETURN_TYPE =
+      const StaticTypeWarningCode(
+          'ILLEGAL_ASYNC_GENERATOR_RETURN_TYPE',
+          "Functions marked 'async*' must have a return type assignable to 'Stream'");
+
+  /**
+   * 9 Functions: It is a static warning if the declared return type of a
+   * function marked async may not be assigned to Future.
+   */
+  static const StaticTypeWarningCode ILLEGAL_ASYNC_RETURN_TYPE =
+      const StaticTypeWarningCode(
+          'ILLEGAL_ASYNC_RETURN_TYPE',
+          "Functions marked 'async' must have a return type assignable to 'Future'");
+
+  /**
+   * 9 Functions: It is a static warning if the declared return type of a
+   * function marked sync* may not be assigned to Iterable.
+   */
+  static const StaticTypeWarningCode ILLEGAL_SYNC_GENERATOR_RETURN_TYPE =
+      const StaticTypeWarningCode(
+          'ILLEGAL_SYNC_GENERATOR_RETURN_TYPE',
+          "Functions marked 'sync*' must have a return type assignable to 'Iterable'");
+
+  /**
    * 12.18 Assignment: Let <i>T</i> be the static type of <i>e<sub>1</sub></i>.
    * It is a static type warning if <i>T</i> does not have an accessible
    * instance setter named <i>v=</i>.
@@ -3716,6 +3743,29 @@ class StaticTypeWarningCode extends ErrorCode {
           "The type '{0}' is declared with {1} type parameters, but {2} type arguments were given");
 
   /**
+   * 17.16.1 Yield: Let T be the static type of e [the expression to the right
+   * of "yield"] and let f be the immediately enclosing function.  It is a
+   * static type warning if either:
+   *
+   * - the body of f is marked async* and the type Stream<T> may not be
+   *   assigned to the declared return type of f.
+   *
+   * - the body of f is marked sync* and the type Iterable<T> may not be
+   *   assigned to the declared return type of f.
+   *
+   * 17.16.2 Yield-Each: Let T be the static type of e [the expression to the
+   * right of "yield*"] and let f be the immediately enclosing function.  It is
+   * a static type warning if T may not be assigned to the declared return type
+   * of f.  If f is synchronous it is a static type warning if T may not be
+   * assigned to Iterable.  If f is asynchronous it is a static type warning if
+   * T may not be assigned to Stream.
+   */
+  static const StaticTypeWarningCode YIELD_OF_INVALID_TYPE =
+      const StaticTypeWarningCode(
+          'YIELD_OF_INVALID_TYPE',
+          "The type '{0}' implied by the 'yield' expression must be assignable to '{1}'");
+
+  /**
    * Initialize a newly created error code to have the given [name]. The message
    * associated with the error will be created from the given [message]
    * template. The correction associated with the error will be created from the
@@ -3756,7 +3806,9 @@ class StaticWarningCode extends ErrorCode {
    */
   static const StaticWarningCode AMBIGUOUS_IMPORT = const StaticWarningCode(
       'AMBIGUOUS_IMPORT',
-      "The name '{0}' is defined in the libraries {1}");
+      "The name '{0}' is defined in the libraries {1}",
+      "Consider using 'as prefix' for one of the import directives "
+          "or hiding the name from all but one of the imports.");
 
   /**
    * 12.11.1 New: It is a static warning if the static type of <i>a<sub>i</sub>,

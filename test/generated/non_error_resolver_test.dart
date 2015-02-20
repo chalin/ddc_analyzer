@@ -339,6 +339,22 @@ main() {
     verify([source]);
   }
 
+  void test_async_flattened() {
+    Source source = addSource('''
+import 'dart:async';
+typedef Future<int> CreatesFutureInt();
+main() {
+  CreatesFutureInt createFutureInt = () async => f();
+  Future<int> futureInt = createFutureInt();
+  futureInt.then((int i) => print(i));
+}
+Future<int> f() => null;
+''');
+    resolve(source);
+    assertNoErrors(source);
+    verify([source]);
+  }
+
   void test_async_future_dynamic_with_return() {
     Source source = addSource('''
 import 'dart:async';
@@ -487,6 +503,19 @@ Future f() async {}
     verify([source]);
   }
 
+  void test_async_return_flattens_futures() {
+    Source source = addSource('''
+import 'dart:async';
+Future<int> f() async {
+  return g();
+}
+Future<Future<int>> g() => null;
+''');
+    resolve(source);
+    assertNoErrors(source);
+    verify([source]);
+  }
+
   void test_async_with_return() {
     Source source = addSource('''
 f() async {
@@ -535,6 +564,32 @@ f(list) async* {
   await for (var e in list) {
   }
 }''');
+    resolve(source);
+    assertNoErrors(source);
+    verify([source]);
+  }
+
+  void test_await_flattened() {
+    Source source = addSource('''
+import 'dart:async';
+Future<Future<int>> ffi() => null;
+f() async {
+  int b = await ffi();
+}
+''');
+    resolve(source);
+    assertNoErrors(source);
+    verify([source]);
+  }
+
+  void test_await_simple() {
+    Source source = addSource('''
+import 'dart:async';
+Future<int> fi() => null;
+f() async {
+  int a = await fi();
+}
+''');
     resolve(source);
     assertNoErrors(source);
     verify([source]);
@@ -1112,6 +1167,16 @@ class B {
     verify([source]);
   }
 
+  void test_constEvelTypeNum_String() {
+    Source source = addSource(r'''
+const String A = 'a';
+const String B = A + 'b';
+''');
+    resolve(source);
+    assertNoErrors(source);
+    verify([source]);
+  }
+
   void test_constMapKeyExpressionTypeImplementsEquals_abstract() {
     Source source = addSource(r'''
 abstract class B {
@@ -1341,21 +1406,21 @@ export 'lib1.dart';''');
     verify([source]);
   }
 
-  void test_extraPositionalArguments_Function() {
+  void test_extraPositionalArguments_function() {
     Source source = addSource(r'''
-f(Function a) {
-  a(1, 2);
+f(p1, p2) {}
+main() {
+  f(1, 2);
 }''');
     resolve(source);
     assertNoErrors(source);
     verify([source]);
   }
 
-  void test_extraPositionalArguments_function() {
+  void test_extraPositionalArguments_Function() {
     Source source = addSource(r'''
-f(p1, p2) {}
-main() {
-  f(1, 2);
+f(Function a) {
+  a(1, 2);
 }''');
     resolve(source);
     assertNoErrors(source);
@@ -2763,6 +2828,28 @@ import 'lib1.dart' deferred as other;
 main() {
   other.loadLibrary().then((_) => other.foo());
 }'''], <ErrorCode>[]);
+  }
+
+  void test_local_generator_async() {
+    Source source = addSource('''
+f() {
+  return () async* { yield 0; };
+}
+''');
+    resolve(source);
+    assertNoErrors(source);
+    verify([source]);
+  }
+
+  void test_local_generator_sync() {
+    Source source = addSource('''
+f() {
+  return () sync* { yield 0; };
+}
+''');
+    resolve(source);
+    assertNoErrors(source);
+    verify([source]);
   }
 
   void test_mapKeyTypeNotAssignable() {
@@ -5011,21 +5098,240 @@ class A {
     verify([source]);
   }
 
-  void test_yieldEachInNonGenerator_asyncStar() {
-    Source source = addSource(r'''
-f() async* {
-  yield* 0;
-}''');
+  void test_yield_async_to_dynamic_type() {
+    Source source = addSource('''
+dynamic f() async* {
+  yield 3;
+}
+''');
     resolve(source);
     assertNoErrors(source);
     verify([source]);
   }
 
-  void test_yieldEachInNonGenerator_syncStar() {
-    Source source = addSource(r'''
+  void test_yield_async_to_generic_type() {
+    Source source = addSource('''
+import 'dart:async';
+Stream f() async* {
+  yield 3;
+}
+''');
+    resolve(source);
+    assertNoErrors(source);
+    verify([source]);
+  }
+
+  void test_yield_async_to_parameterized_type() {
+    Source source = addSource('''
+import 'dart:async';
+Stream<int> f() async* {
+  yield 3;
+}
+''');
+    resolve(source);
+    assertNoErrors(source);
+    verify([source]);
+  }
+
+  void test_yield_async_to_untyped() {
+    Source source = addSource('''
+f() async* {
+  yield 3;
+}
+''');
+    resolve(source);
+    assertNoErrors(source);
+    verify([source]);
+  }
+
+  void test_yield_each_async_dynamic_to_dynamic() {
+    Source source = addSource('''
+f() async* {
+  yield* g();
+}
+g() => null;
+''');
+    resolve(source);
+    assertNoErrors(source);
+    verify([source]);
+  }
+
+  void test_yield_each_async_dynamic_to_stream() {
+    Source source = addSource('''
+import 'dart:async';
+Stream f() async* {
+  yield* g();
+}
+g() => null;
+''');
+    resolve(source);
+    assertNoErrors(source);
+    verify([source]);
+  }
+
+  void test_yield_each_async_dynamic_to_typed_stream() {
+    Source source = addSource('''
+import 'dart:async';
+Stream<int> f() async* {
+  yield* g();
+}
+g() => null;
+''');
+    resolve(source);
+    assertNoErrors(source);
+    verify([source]);
+  }
+
+  void test_yield_each_async_stream_to_dynamic() {
+    Source source = addSource('''
+import 'dart:async';
+f() async* {
+  yield* g();
+}
+Stream g() => null;
+''');
+    resolve(source);
+    assertNoErrors(source);
+    verify([source]);
+  }
+
+  void test_yield_each_async_typed_stream_to_dynamic() {
+    Source source = addSource('''
+import 'dart:async';
+f() async* {
+  yield* g();
+}
+Stream<int> g() => null;
+''');
+    resolve(source);
+    assertNoErrors(source);
+    verify([source]);
+  }
+
+  void test_yield_each_async_typed_stream_to_typed_stream() {
+    Source source = addSource('''
+import 'dart:async';
+Stream<int> f() async* {
+  yield* g();
+}
+Stream<int> g() => null;
+''');
+    resolve(source);
+    assertNoErrors(source);
+    verify([source]);
+  }
+
+  void test_yield_each_sync_dynamic_to_dynamic() {
+    Source source = addSource('''
 f() sync* {
-  yield* 0;
-}''');
+  yield* g();
+}
+g() => null;
+''');
+    resolve(source);
+    assertNoErrors(source);
+    verify([source]);
+  }
+
+  void test_yield_each_sync_dynamic_to_iterable() {
+    Source source = addSource('''
+Iterable f() sync* {
+  yield* g();
+}
+g() => null;
+''');
+    resolve(source);
+    assertNoErrors(source);
+    verify([source]);
+  }
+
+  void test_yield_each_sync_dynamic_to_typed_iterable() {
+    Source source = addSource('''
+Iterable<int> f() sync* {
+  yield* g();
+}
+g() => null;
+''');
+    resolve(source);
+    assertNoErrors(source);
+    verify([source]);
+  }
+
+  void test_yield_each_sync_iterable_to_dynamic() {
+    Source source = addSource('''
+f() sync* {
+  yield* g();
+}
+Iterable g() => null;
+''');
+    resolve(source);
+    assertNoErrors(source);
+    verify([source]);
+  }
+
+  void test_yield_each_sync_typed_iterable_to_dynamic() {
+    Source source = addSource('''
+f() sync* {
+  yield* g();
+}
+Iterable<int> g() => null;
+''');
+    resolve(source);
+    assertNoErrors(source);
+    verify([source]);
+  }
+
+  void test_yield_each_sync_typed_iterable_to_typed_iterable() {
+    Source source = addSource('''
+Iterable<int> f() sync* {
+  yield* g();
+}
+Iterable<int> g() => null;
+''');
+    resolve(source);
+    assertNoErrors(source);
+    verify([source]);
+  }
+
+  void test_yield_sync_to_dynamic_type() {
+    Source source = addSource('''
+dynamic f() sync* {
+  yield 3;
+}
+''');
+    resolve(source);
+    assertNoErrors(source);
+    verify([source]);
+  }
+
+  void test_yield_sync_to_generic_type() {
+    Source source = addSource('''
+Iterable f() sync* {
+  yield 3;
+}
+''');
+    resolve(source);
+    assertNoErrors(source);
+    verify([source]);
+  }
+
+  void test_yield_sync_to_parameterized_type() {
+    Source source = addSource('''
+Iterable<int> f() sync* {
+  yield 3;
+}
+''');
+    resolve(source);
+    assertNoErrors(source);
+    verify([source]);
+  }
+
+  void test_yield_sync_to_untyped() {
+    Source source = addSource('''
+f() sync* {
+  yield 3;
+}
+''');
     resolve(source);
     assertNoErrors(source);
     verify([source]);

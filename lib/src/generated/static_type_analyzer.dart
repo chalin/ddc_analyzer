@@ -175,6 +175,34 @@ class StaticTypeAnalyzer extends SimpleAstVisitor<Object> {
   }
 
   /**
+   * The Dart Language Specification, 16.29 (Await Expressions):
+   *
+   *   Let flatten(T) = flatten(S) if T = Future<S>, and T otherwise.  The
+   *   static type of [the expression "await e"] is flatten(T) where T is the
+   *   static type of e.
+   */
+  @override
+  Object visitAwaitExpression(AwaitExpression node) {
+    DartType staticExpressionType = _getStaticType(node.expression);
+    if (staticExpressionType == null) {
+      // TODO(brianwilkerson) Determine whether this can still happen.
+      staticExpressionType = _dynamicType;
+    }
+    DartType staticType = flattenFutures(_typeProvider, staticExpressionType);
+    _recordStaticType(node, staticType);
+    DartType propagatedExpressionType = node.expression.propagatedType;
+    if (propagatedExpressionType != null) {
+      DartType propagatedType =
+          flattenFutures(_typeProvider, propagatedExpressionType);
+      if (propagatedType != null &&
+          propagatedType.isMoreSpecificThan(staticType)) {
+        _recordPropagatedType(node, propagatedType);
+      }
+    }
+    return null;
+  }
+
+  /**
    * The Dart Language Specification, 12.20: <blockquote>The static type of a logical boolean
    * expression is `bool`.</blockquote>
    *
@@ -1391,15 +1419,22 @@ class StaticTypeAnalyzer extends SimpleAstVisitor<Object> {
   DartType
       _computeStaticReturnTypeOfFunctionExpression(FunctionExpression node) {
     FunctionBody body = node.body;
+    if (body.isGenerator) {
+      if (body.isAsynchronous) {
+        return _typeProvider.streamDynamicType;
+      } else {
+        return _typeProvider.iterableDynamicType;
+      }
+    }
     DartType type;
     if (body is ExpressionFunctionBody) {
       type = _getStaticType(body.expression);
     } else {
       type = _dynamicType;
     }
-    // TODO(paulberry): also handle generator functions.
     if (body.isAsynchronous) {
-      return _typeProvider.futureType.substitute4(<DartType>[type]);
+      return _typeProvider.futureType.substitute4(
+          <DartType>[flattenFutures(_typeProvider, type)]);
     } else {
       return type;
     }
@@ -1763,6 +1798,19 @@ class StaticTypeAnalyzer extends SimpleAstVisitor<Object> {
     }
     // default
     return staticType;
+  }
+
+  /**
+   * Implements the function "flatten" defined in the spec: "Let flatten(T) =
+   * flatten(S) if T = Future<S>, and T otherwise."
+   */
+  static DartType flattenFutures(TypeProvider typeProvider, DartType type) {
+    if (type is InterfaceType &&
+        type.element == typeProvider.futureType.element &&
+        type.typeArguments.length > 0) {
+      return flattenFutures(typeProvider, type.typeArguments[0]);
+    }
+    return type;
   }
 
   /**

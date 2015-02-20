@@ -2506,13 +2506,14 @@ class B {
     int updateOffset = edit.offset;
     int updateEndOld = updateOffset + edit.length;
     int updateOldNew = updateOffset + edit.replacement.length;
-    IncrementalResolver resolver =
-        new IncrementalResolver(<Source, CompilationUnit>{
-      source: newUnit
-    }, unit.element, updateOffset, updateEndOld, updateOldNew);
+    IncrementalResolver resolver = new IncrementalResolver(
+        unit.element,
+        updateOffset,
+        updateEndOld,
+        updateOldNew);
     bool success = resolver.resolve(newNode);
     expect(success, isTrue);
-    List<AnalysisError> newErrors = analysisContext.getErrors(source).errors;
+    List<AnalysisError> newErrors = analysisContext.computeErrors(source);
     // resolve "newCode" from scratch
     CompilationUnit fullNewUnit;
     {
@@ -2774,6 +2775,38 @@ main() {
 /// aaa bbb
 main() {
   return 2;
+}
+''');
+  }
+
+  void test_dartDoc_elegant_updateText_insertToken() {
+    _resolveUnit(r'''
+/// A
+/// [int]
+class Test {
+}
+''');
+    _updateAndValidate(r'''
+/// A
+///
+/// [int]
+class Test {
+}
+''');
+  }
+
+  void test_dartDoc_elegant_updateText_removeToken() {
+    _resolveUnit(r'''
+/// A
+///
+/// [int]
+class Test {
+}
+''');
+    _updateAndValidate(r'''
+/// A
+/// [int]
+class Test {
 }
 ''');
   }
@@ -3211,8 +3244,13 @@ f(A a) {
 //  a._foo();
 }
 ''');
+    // no hints right now, because we delay hints computing
+    {
+      List<AnalysisError> errors = analysisContext.getErrors(source).errors;
+      expect(errors, isEmpty);
+    }
     // a new hint should be added
-    List<AnalysisError> errors = analysisContext.getErrors(source).errors;
+    List<AnalysisError> errors = analysisContext.computeErrors(source);
     expect(errors, hasLength(1));
     expect(errors[0].errorCode.type, ErrorType.HINT);
     // the same hint should be reported using a ChangeNotice
@@ -3458,7 +3496,7 @@ f3() {
     _resetWithIncremental(true);
     analysisContext2.setContents(source, newCode);
     CompilationUnit newUnit = resolveCompilationUnit(source, oldLibrary);
-    List<AnalysisError> newErrors = analysisContext.getErrors(source).errors;
+    List<AnalysisError> newErrors = analysisContext.computeErrors(source);
     // check for expected failure
     if (!expectedSuccess) {
       expect(newUnit.element, isNot(same(oldUnitElement)));

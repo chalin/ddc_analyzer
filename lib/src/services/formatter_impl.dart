@@ -507,7 +507,13 @@ class SourceVisitor implements AstVisitor {
   }
 
   visitBlockFunctionBody(BlockFunctionBody node) {
-    token(node.keyword, followedBy: nonBreakingSpace);
+    // sync[*] or async[*]
+    token(node.keyword);
+    token(node.star);
+    if (node.keyword != null) {
+      nonBreakingSpace();
+    }
+
     visit(node.block);
   }
 
@@ -770,6 +776,24 @@ class SourceVisitor implements AstVisitor {
     }
   }
 
+  visitEnumConstantDeclaration(EnumConstantDeclaration node){
+    visit(node.name);
+  }
+
+  visitEnumDeclaration(EnumDeclaration node){
+    visitMemberMetadata(node.metadata);
+    token(node.keyword);
+    space();
+    visit(node.name);
+    space();
+    token(node.leftBracket);
+    newlines();
+    indent();
+    visitCommaSeparatedNodes(node.constants);
+    newlines();
+    token(node.rightBracket, precededBy: unindent);
+  }
+
   visitExportDirective(ExportDirective node) {
     visitDirectiveMetadata(node.metadata);
     token(node.keyword);
@@ -818,6 +842,7 @@ class SourceVisitor implements AstVisitor {
   }
 
   visitForEachStatement(ForEachStatement node) {
+    token(node.awaitKeyword, followedBy: nonBreakingSpace);
     token(node.forKeyword);
     space();
     token(node.leftParenthesis);
@@ -1841,14 +1866,4 @@ class SourceVisitor implements AstVisitor {
   }
 
   String toString() => writer.toString();
-
-  @override
-  visitEnumConstantDeclaration(EnumConstantDeclaration node) {
-    // TODO: implement visitEnumConstantDeclaration
-  }
-
-  @override
-  visitEnumDeclaration(EnumDeclaration node) {
-    // TODO: implement visitEnumDeclaration
-  }
 }

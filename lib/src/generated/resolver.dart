@@ -598,7 +598,7 @@ class BestPracticesVerifier extends RecursiveAstVisitor<Object> {
     }
     // Check the block for a return statement, if not, create the hint
     BlockFunctionBody blockFunctionBody = body as BlockFunctionBody;
-    if (!blockFunctionBody.accept(new ExitDetector())) {
+    if (!ExitDetector.exits(blockFunctionBody)) {
       _errorReporter.reportErrorForNode(
           HintCode.MISSING_RETURN,
           returnType,
@@ -801,8 +801,7 @@ class CompilationUnitBuilder {
    */
   CompilationUnitElementImpl buildCompilationUnit(Source source,
       CompilationUnit unit) {
-    TimeCounter_TimeCounterHandle timeCounter =
-        PerformanceStatistics.resolve.start();
+    PerformanceTag prevTag = PerformanceStatistics.resolve.makeCurrent();
     try {
       if (unit == null) {
         return null;
@@ -823,7 +822,7 @@ class CompilationUnitBuilder {
       holder.validate();
       return element;
     } finally {
-      timeCounter.stop();
+      prevTag.makeCurrent();
     }
   }
 }
@@ -2607,9 +2606,12 @@ class ElementBuilder extends RecursiveAstVisitor<Object> {
       Identifier returnType = node.returnType;
       if (returnType != null) {
         element.nameOffset = returnType.offset;
+        element.nameEnd = returnType.end;
       }
     } else {
       constructorName.staticElement = element;
+      element.periodOffset = node.period.offset;
+      element.nameEnd = constructorName.end;
     }
     holder.validate();
     return null;
@@ -3193,7 +3195,7 @@ class ElementBuilder extends RecursiveAstVisitor<Object> {
       getter.getter = true;
       _currentHolder.addAccessor(getter);
       variable.getter = getter;
-      if (!isFinal) {
+      if (!isConst && !isFinal) {
         PropertyAccessorElementImpl setter =
             new PropertyAccessorElementImpl.forVariable(variable);
         setter.setter = true;
@@ -3907,6 +3909,10 @@ class ExitDetector extends GeneralizingAstVisitor<bool> {
       _nodeExits(node.leftHandSide) || _nodeExits(node.rightHandSide);
 
   @override
+  bool visitAwaitExpression(AwaitExpression node) =>
+      _nodeExits(node.expression);
+
+  @override
   bool visitBinaryExpression(BinaryExpression node) {
     Expression lhsExpression = node.leftOperand;
     sc.TokenType operatorType = node.operator.type;
@@ -4198,6 +4204,18 @@ class ExitDetector extends GeneralizingAstVisitor<bool> {
           return false;
         }
       }
+      // All of the members exit, determine whether there are possible cases
+      // that are not caught by the members.
+      DartType type = node.expression == null ? null : node.expression.bestType;
+      if (type is InterfaceType) {
+        ClassElement element = type.element;
+        if (element != null && element.isEnum) {
+          // If some of the enum values are not covered, then a warning will
+          // have already been generated, so there's no point in generating a
+          // hint.
+          return true;
+        }
+      }
       return hasDefault;
     } finally {
       _enclosingBlockContainsBreak = outerBreakValue;
@@ -4314,6 +4332,13 @@ class ExitDetector extends GeneralizingAstVisitor<bool> {
       }
     }
     return false;
+  }
+
+  /**
+   * Return `true` if the given [node] exits.
+   */
+  static bool exits(AstNode node) {
+    return new ExitDetector()._nodeExits(node);
   }
 }
 
@@ -4438,8 +4463,7 @@ class HintGenerator {
   }
 
   void generateForLibrary() {
-    TimeCounter_TimeCounterHandle timeCounter =
-        PerformanceStatistics.hints.start();
+    PerformanceTag prevTag = PerformanceStatistics.hints.makeCurrent();
     try {
       for (int i = 0; i < _compilationUnits.length; i++) {
         CompilationUnitElement element = _compilationUnits[i].element;
@@ -4462,7 +4486,7 @@ class HintGenerator {
       _library.accept(
           new _UnusedElementsVerifier(_errorListener, _usedElementsVisitor.usedElements));
     } finally {
-      timeCounter.stop();
+      prevTag.makeCurrent();
     }
   }
 
@@ -7890,36 +7914,18 @@ class LibraryResolver {
    */
   LibraryElement resolveLibrary(Source librarySource, bool fullAnalysis) {
     //
-    // Create the objects representing the library being resolved and the core
-    // library.
+    // Create the object representing the library being resolved and compute
+    // the dependency relationship.  Note that all libraries depend implicitly
+    // on core, and we inject an ersatz dependency on async, so once this is
+    // done the core and async library elements will have been created.
     //
     Library targetLibrary = createLibrary(librarySource);
+    _computeLibraryDependencies(targetLibrary);
     _coreLibrary = _libraryMap[_coreLibrarySource];
-    if (_coreLibrary == null) {
-      // This should only happen if the library being analyzed is the core
-      // library.
-      _coreLibrary = _createLibraryOrNull(_coreLibrarySource);
-      if (_coreLibrary == null) {
-        LibraryResolver2.missingCoreLibrary(
-            analysisContext,
-            _coreLibrarySource);
-      }
-    }
     _asyncLibrary = _libraryMap[_asyncLibrarySource];
-    if (_asyncLibrary == null) {
-      // This should only happen if the library being analyzed is the async
-      // library.
-      _asyncLibrary = _createLibraryOrNull(_asyncLibrarySource);
-      if (_asyncLibrary == null) {
-        LibraryResolver2.missingAsyncLibrary(
-            analysisContext,
-            _asyncLibrarySource);
-      }
-    }
     //
     // Compute the set of libraries that need to be resolved together.
     //
-    _computeLibraryDependencies(targetLibrary);
     _librariesInCycles = _computeLibrariesInCycles(targetLibrary);
     //
     // Build the element models representing the libraries being resolved.
@@ -7946,7 +7952,7 @@ class LibraryResolver {
     }
     LibraryElement asyncElement = _asyncLibrary.libraryElement;
     if (asyncElement == null) {
-      throw new AnalysisException("Coulb not resolve dart:async");
+      throw new AnalysisException("Could not resolve dart:async");
     }
     _buildDirectiveModels();
     _typeProvider = new TypeProviderImpl(coreElement, asyncElement);
@@ -8218,8 +8224,8 @@ class LibraryResolver {
    * @throws AnalysisException if any of the enum members could not be built
    */
   void _buildEnumMembers() {
-    TimeCounter_TimeCounterHandle timeCounter =
-        PerformanceStatistics.resolve.start();
+    PerformanceTag prevTag =
+        PerformanceStatistics.resolve.makeCurrent();
     try {
       for (Library library in _librariesInCycles) {
         for (Source source in library.compilationUnitSources) {
@@ -8228,7 +8234,7 @@ class LibraryResolver {
         }
       }
     } finally {
-      timeCounter.stop();
+      prevTag.makeCurrent();
     }
   }
 
@@ -8239,8 +8245,8 @@ class LibraryResolver {
    * @throws AnalysisException if any of the type hierarchies could not be resolved
    */
   void _buildImplicitConstructors() {
-    TimeCounter_TimeCounterHandle timeCounter =
-        PerformanceStatistics.resolve.start();
+    PerformanceTag prevTag=
+        PerformanceStatistics.resolve.makeCurrent();
     try {
       ImplicitConstructorComputer computer =
           new ImplicitConstructorComputer(_typeProvider);
@@ -8255,7 +8261,7 @@ class LibraryResolver {
       }
       computer.compute();
     } finally {
-      timeCounter.stop();
+      prevTag.makeCurrent();
     }
   }
 
@@ -8266,8 +8272,8 @@ class LibraryResolver {
    * @throws AnalysisException if any of the function type aliases could not be resolved
    */
   void _buildTypeAliases() {
-    TimeCounter_TimeCounterHandle timeCounter =
-        PerformanceStatistics.resolve.start();
+    PerformanceTag prevTag =
+        PerformanceStatistics.resolve.makeCurrent();
     try {
       List<LibraryResolver_TypeAliasInfo> typeAliases =
           new List<LibraryResolver_TypeAliasInfo>();
@@ -8290,7 +8296,7 @@ class LibraryResolver {
         info._typeAlias.accept(visitor);
       }
     } finally {
-      timeCounter.stop();
+      prevTag.makeCurrent();
     }
   }
 
@@ -8301,8 +8307,8 @@ class LibraryResolver {
    * @throws AnalysisException if any of the type hierarchies could not be resolved
    */
   void _buildTypeHierarchies() {
-    TimeCounter_TimeCounterHandle timeCounter =
-        PerformanceStatistics.resolve.start();
+    PerformanceTag prevTag =
+        PerformanceStatistics.resolve.makeCurrent();
     try {
       for (Library library in _librariesInCycles) {
         for (Source source in library.compilationUnitSources) {
@@ -8315,7 +8321,7 @@ class LibraryResolver {
         }
       }
     } finally {
-      timeCounter.stop();
+      prevTag.makeCurrent();
     }
   }
 
@@ -8521,8 +8527,8 @@ class LibraryResolver {
    * Compute a value for all of the constants in the libraries being analyzed.
    */
   void _performConstantEvaluation() {
-    TimeCounter_TimeCounterHandle timeCounter =
-        PerformanceStatistics.resolve.start();
+    PerformanceTag prevTag =
+        PerformanceStatistics.resolve.makeCurrent();
     try {
       ConstantValueComputer computer =
           new ConstantValueComputer(_typeProvider, analysisContext.declaredVariables);
@@ -8561,7 +8567,7 @@ class LibraryResolver {
         }
       }
     } finally {
-      timeCounter.stop();
+      prevTag.makeCurrent();
     }
   }
 
@@ -8585,8 +8591,8 @@ class LibraryResolver {
    *           the library cannot be analyzed
    */
   void _resolveReferencesAndTypesInLibrary(Library library) {
-    TimeCounter_TimeCounterHandle timeCounter =
-        PerformanceStatistics.resolve.start();
+    PerformanceTag prevTag =
+        PerformanceStatistics.resolve.makeCurrent();
     try {
       for (Source source in library.compilationUnitSources) {
         CompilationUnit ast = library.getAST(source);
@@ -8600,7 +8606,7 @@ class LibraryResolver {
         ast.accept(visitor);
       }
     } finally {
-      timeCounter.stop();
+      prevTag.makeCurrent();
     }
   }
 
@@ -8959,8 +8965,8 @@ class LibraryResolver2 {
    * @throws AnalysisException if any of the enum members could not be built
    */
   void _buildEnumMembers() {
-    TimeCounter_TimeCounterHandle timeCounter =
-        PerformanceStatistics.resolve.start();
+    PerformanceTag prevTag =
+        PerformanceStatistics.resolve.makeCurrent();
     try {
       for (ResolvableLibrary library in _librariesInCycle) {
         for (Source source in library.compilationUnitSources) {
@@ -8969,7 +8975,7 @@ class LibraryResolver2 {
         }
       }
     } finally {
-      timeCounter.stop();
+      prevTag.makeCurrent();
     }
   }
 
@@ -8980,8 +8986,8 @@ class LibraryResolver2 {
    * @throws AnalysisException if any of the type hierarchies could not be resolved
    */
   void _buildImplicitConstructors() {
-    TimeCounter_TimeCounterHandle timeCounter =
-        PerformanceStatistics.resolve.start();
+    PerformanceTag prevTag =
+        PerformanceStatistics.resolve.makeCurrent();
     try {
       ImplicitConstructorComputer computer =
           new ImplicitConstructorComputer(_typeProvider);
@@ -8999,7 +9005,7 @@ class LibraryResolver2 {
       }
       computer.compute();
     } finally {
-      timeCounter.stop();
+      prevTag.makeCurrent();
     }
   }
 
@@ -9029,8 +9035,8 @@ class LibraryResolver2 {
    * @throws AnalysisException if any of the function type aliases could not be resolved
    */
   void _buildTypeAliases() {
-    TimeCounter_TimeCounterHandle timeCounter =
-        PerformanceStatistics.resolve.start();
+    PerformanceTag prevTag =
+        PerformanceStatistics.resolve.makeCurrent();
     try {
       List<LibraryResolver2_TypeAliasInfo> typeAliases =
           new List<LibraryResolver2_TypeAliasInfo>();
@@ -9054,7 +9060,7 @@ class LibraryResolver2 {
         info._typeAlias.accept(visitor);
       }
     } finally {
-      timeCounter.stop();
+      prevTag.makeCurrent();
     }
   }
 
@@ -9065,8 +9071,8 @@ class LibraryResolver2 {
    * @throws AnalysisException if any of the type hierarchies could not be resolved
    */
   void _buildTypeHierarchies() {
-    TimeCounter_TimeCounterHandle timeCounter =
-        PerformanceStatistics.resolve.start();
+    PerformanceTag prevTag =
+        PerformanceStatistics.resolve.makeCurrent();
     try {
       for (ResolvableLibrary library in _librariesInCycle) {
         for (ResolvableCompilationUnit unit in
@@ -9079,7 +9085,7 @@ class LibraryResolver2 {
         }
       }
     } finally {
-      timeCounter.stop();
+      prevTag.makeCurrent();
     }
   }
 
@@ -9102,8 +9108,8 @@ class LibraryResolver2 {
    * Compute a value for all of the constants in the libraries being analyzed.
    */
   void _performConstantEvaluation() {
-    TimeCounter_TimeCounterHandle timeCounter =
-        PerformanceStatistics.resolve.start();
+    PerformanceTag prevTag =
+        PerformanceStatistics.resolve.makeCurrent();
     try {
       ConstantValueComputer computer =
           new ConstantValueComputer(_typeProvider, analysisContext.declaredVariables);
@@ -9131,7 +9137,7 @@ class LibraryResolver2 {
         }
       }
     } finally {
-      timeCounter.stop();
+      prevTag.makeCurrent();
     }
   }
 
@@ -9155,8 +9161,8 @@ class LibraryResolver2 {
    *           the library cannot be analyzed
    */
   void _resolveReferencesAndTypesInLibrary(ResolvableLibrary library) {
-    TimeCounter_TimeCounterHandle timeCounter =
-        PerformanceStatistics.resolve.start();
+    PerformanceTag prevTag =
+        PerformanceStatistics.resolve.makeCurrent();
     try {
       for (ResolvableCompilationUnit unit in library.resolvableCompilationUnits)
           {
@@ -9169,7 +9175,7 @@ class LibraryResolver2 {
         ast.accept(visitor);
       }
     } finally {
-      timeCounter.stop();
+      prevTag.makeCurrent();
     }
   }
 
@@ -10081,6 +10087,16 @@ class ResolvableLibrary {
   static List<ResolvableLibrary> _EMPTY_ARRAY = new List<ResolvableLibrary>(0);
 
   /**
+   * The next artificial hash code.
+   */
+  static int _NEXT_HASH_CODE = 0;
+
+  /**
+   * The artifitial hash code for this object.
+   */
+  final int _hashCode = _nextHashCode();
+
+  /**
    * The source specifying the defining compilation unit of this library.
    */
   final Source librarySource;
@@ -10200,6 +10216,9 @@ class ResolvableLibrary {
    */
   List<ResolvableLibrary> get exports => _exportedLibraries;
 
+  @override
+  int get hashCode => _hashCode;
+
   /**
    * Set the libraries that are imported into this library to be those in the given array.
    *
@@ -10315,6 +10334,12 @@ class ResolvableLibrary {
 
   @override
   String toString() => librarySource.shortName;
+
+  static int _nextHashCode() {
+    int next = (_NEXT_HASH_CODE + 1) & 0xFFFFFF;
+    _NEXT_HASH_CODE = next;
+    return next;
+  }
 }
 
 /**
@@ -13430,6 +13455,11 @@ abstract class TypeProvider {
   InterfaceType get functionType;
 
   /**
+   * Return the type representing 'Future<dynamic>'.
+   */
+  InterfaceType get futureDynamicType;
+
+  /**
    * Return the type representing 'Future<Null>'.
    */
   InterfaceType get futureNullType;
@@ -13445,6 +13475,16 @@ abstract class TypeProvider {
    * @return the type representing the built-in type 'int'
    */
   InterfaceType get intType;
+
+  /**
+   * Return the type representing the type 'Iterable<dynamic>'.
+   */
+  InterfaceType get iterableDynamicType;
+
+  /**
+   * Return the type representing the built-in type 'Iterable'.
+   */
+  InterfaceType get iterableType;
 
   /**
    * Return the type representing the built-in type 'List'.
@@ -13487,6 +13527,16 @@ abstract class TypeProvider {
    * @return the type representing the built-in type 'StackTrace'
    */
   InterfaceType get stackTraceType;
+
+  /**
+   * Return the type representing 'Stream<dynamic>'.
+   */
+  InterfaceType get streamDynamicType;
+
+  /**
+   * Return the type representing the built-in type 'Stream'.
+   */
+  InterfaceType get streamType;
 
   /**
    * Return the type representing the built-in type 'String'.
@@ -13551,6 +13601,11 @@ class TypeProviderImpl implements TypeProvider {
   InterfaceType _functionType;
 
   /**
+   * The type representing 'Future<dynamic>'.
+   */
+  InterfaceType _futureDynamicType;
+
+  /**
    * The type representing 'Future<Null>'.
    */
   InterfaceType _futureNullType;
@@ -13564,6 +13619,16 @@ class TypeProviderImpl implements TypeProvider {
    * The type representing the built-in type 'int'.
    */
   InterfaceType _intType;
+
+  /**
+   * The type representing 'Iterable<dynamic>'.
+   */
+  InterfaceType _iterableDynamicType;
+
+  /**
+   * The type representing the built-in type 'Iterable'.
+   */
+  InterfaceType _iterableType;
 
   /**
    * The type representing the built-in type 'List'.
@@ -13594,6 +13659,16 @@ class TypeProviderImpl implements TypeProvider {
    * The type representing the built-in type 'StackTrace'.
    */
   InterfaceType _stackTraceType;
+
+  /**
+   * The type representing 'Stream<dynamic>'.
+   */
+  InterfaceType _streamDynamicType;
+
+  /**
+   * The type representing the built-in type 'Stream'.
+   */
+  InterfaceType _streamType;
 
   /**
    * The type representing the built-in type 'String'.
@@ -13643,6 +13718,9 @@ class TypeProviderImpl implements TypeProvider {
   InterfaceType get functionType => _functionType;
 
   @override
+  InterfaceType get futureDynamicType => _futureDynamicType;
+
+  @override
   InterfaceType get futureNullType => _futureNullType;
 
   @override
@@ -13650,6 +13728,12 @@ class TypeProviderImpl implements TypeProvider {
 
   @override
   InterfaceType get intType => _intType;
+
+  @override
+  InterfaceType get iterableDynamicType => _iterableDynamicType;
+
+  @override
+  InterfaceType get iterableType => _iterableType;
 
   @override
   InterfaceType get listType => _listType;
@@ -13668,6 +13752,12 @@ class TypeProviderImpl implements TypeProvider {
 
   @override
   InterfaceType get stackTraceType => _stackTraceType;
+
+  @override
+  InterfaceType get streamDynamicType => _streamDynamicType;
+
+  @override
+  InterfaceType get streamType => _streamType;
 
   @override
   InterfaceType get stringType => _stringType;
@@ -13718,17 +13808,22 @@ class TypeProviderImpl implements TypeProvider {
     _functionType = _getType(coreNamespace, "Function");
     _futureType = _getType(asyncNamespace, "Future");
     _intType = _getType(coreNamespace, "int");
+    _iterableType = _getType(coreNamespace, "Iterable");
     _listType = _getType(coreNamespace, "List");
     _mapType = _getType(coreNamespace, "Map");
     _nullType = _getType(coreNamespace, "Null");
     _numType = _getType(coreNamespace, "num");
     _objectType = _getType(coreNamespace, "Object");
     _stackTraceType = _getType(coreNamespace, "StackTrace");
+    _streamType = _getType(asyncNamespace, "Stream");
     _stringType = _getType(coreNamespace, "String");
     _symbolType = _getType(coreNamespace, "Symbol");
     _typeType = _getType(coreNamespace, "Type");
     _undefinedType = UndefinedTypeImpl.instance;
+    _futureDynamicType = _futureType.substitute4(<DartType>[_dynamicType]);
     _futureNullType = _futureType.substitute4(<DartType>[_nullType]);
+    _iterableDynamicType = _iterableType.substitute4(<DartType>[_dynamicType]);
+    _streamDynamicType = _streamType.substitute4(<DartType>[_dynamicType]);
   }
 }
 

@@ -65,11 +65,16 @@ class CommandLineOptions {
   /** Whether to treat warnings as fatal */
   final bool warningsAreFatal;
 
+  /** A table mapping library URIs to the file system path where the library
+   *  source is located.
+   */
+  final Map<String, String> customUrlMappings;
+
   /**
    * Initialize options from the given parsed [args].
    */
   CommandLineOptions._fromArgs(ArgResults args, Map<String,
-      String> definedVariables)
+      String> definedVariables, Map<String, String> customUrlMappings)
       : dartSdkPath = args['dart-sdk'],
         this.definedVariables = definedVariables,
         disableHints = args['no-hints'],
@@ -86,7 +91,8 @@ class CommandLineOptions {
         showSdkWarnings = args['show-sdk-warnings'] || args['warnings'],
         sourceFiles = args.rest,
         warmPerf = args['warm-perf'],
-        warningsAreFatal = args['fatal-warnings'];
+        warningsAreFatal = args['fatal-warnings'],
+        this.customUrlMappings = customUrlMappings;
 
   /**
    * Parse [args] into [CommandLineOptions] describing the specified
@@ -127,7 +133,7 @@ class CommandLineOptions {
 
   static CommandLineOptions _parse(List<String> args) {
     args = args.expand((String arg) => arg.split('=')).toList();
-    var parser = new _CommandLineParser()
+    var parser = new CommandLineParser()
         ..addFlag(
             'batch',
             abbr: 'b',
@@ -199,6 +205,11 @@ class CommandLineOptions {
             help: 'Display this help message',
             defaultsTo: false,
             negatable: false)
+        ..addOption(
+            'url-mapping',
+            help: '--url-mapping=libraryUri,/path/to/library.dart directs the '
+                'analyzer to use "library.dart" as the source for an import ' 'of "libraryUri"',
+            allowMultiple: true)
         //
         // Hidden flags.
         //
@@ -260,7 +271,19 @@ class CommandLineOptions {
           exit(15);
         }
       }
-      return new CommandLineOptions._fromArgs(results, definedVariables);
+      Map<String, String> customUrlMappings = <String, String>{};
+      for (String mapping in results['url-mapping']) {
+        List<String> splitMapping = mapping.split(',');
+        if (splitMapping.length != 2) {
+          _showUsage(parser);
+          exit(15);
+        }
+        customUrlMappings[splitMapping[0]] = splitMapping[1];
+      }
+      return new CommandLineOptions._fromArgs(
+          results,
+          definedVariables,
+          customUrlMappings);
     } on FormatException catch (e) {
       print(e.message);
       _showUsage(parser);
@@ -283,16 +306,20 @@ class CommandLineOptions {
  * TODO(pquitslund): when the args package supports ignoring unrecognized
  * options/flags, this class can be replaced with a simple [ArgParser] instance.
  */
-class _CommandLineParser {
+class CommandLineParser {
 
   final List<String> _knownFlags;
+  final bool _alwaysIgnoreUnrecognized;
   final ArgParser _parser;
 
   /** Creates a new command line parser */
-  _CommandLineParser()
+  CommandLineParser({bool alwaysIgnoreUnrecognized: false})
       : _knownFlags = <String>[],
+        _alwaysIgnoreUnrecognized = alwaysIgnoreUnrecognized,
         _parser = new ArgParser(allowTrailingOptions: true);
 
+
+  ArgParser get parser => _parser;
 
   /**
    * Defines a flag.
@@ -369,35 +396,46 @@ class _CommandLineParser {
     return remainingArgs;
   }
 
-  List<String> _filterUnknowns(args) {
+  List<String> _filterUnknowns(List<String> args) {
 
-    // Only filter args if the ignore flag is specified.
-    if (!args.contains('--ignore-unrecognized-flags')) {
-      return args;
-    }
-    //TODO(pquitslund): replace w/ the following once library skew issues are
-    // sorted out
-    //return args.where((arg) => !arg.startsWith('--') ||
-    //  _knownFlags.contains(arg.substring(2)));
+    // Only filter args if the ignore flag is specified, or if
+    // _alwaysIgnoreUnrecognized was set to true
+    if (_alwaysIgnoreUnrecognized ||
+        args.contains('--ignore-unrecognized-flags')) {
 
-    // Filter all unrecognized flags and options.
-    var filtered = <String>[];
-    for (var i = 0; i < args.length; ++i) {
-      var arg = args[i];
-      if (arg.startsWith('--') && arg.length > 2) {
-        if (!_knownFlags.contains(arg.substring(2))) {
-          print('remove: $arg');
-          //"eat" params by advancing to the next flag/option
-          i = _getNextFlagIndex(args, i);
+      //TODO(pquitslund): replace w/ the following once library skew issues are
+      // sorted out
+      //return args.where((arg) => !arg.startsWith('--') ||
+      //  _knownFlags.contains(arg.substring(2)));
+
+      // Filter all unrecognized flags and options.
+      List<String> filtered = <String>[];
+      for (int i = 0; i < args.length; ++i) {
+        String arg = args[i];
+        if (arg.startsWith('--') && arg.length > 2) {
+          String option = arg.substring(2);
+          // strip the last '=value'
+          int equalsOffset = option.lastIndexOf('=');
+          if (equalsOffset != -1) {
+            option = option.substring(0, equalsOffset);
+          }
+          // check the option
+          if (!_knownFlags.contains(option)) {
+            //print('remove: $arg');
+            //"eat" params by advancing to the next flag/option
+            i = _getNextFlagIndex(args, i);
+          } else {
+            filtered.add(arg);
+          }
         } else {
           filtered.add(arg);
         }
-      } else {
-        filtered.add(arg);
       }
-    }
 
-    return filtered;
+      return filtered;
+    } else {
+      return args;
+    }
   }
 
   _getNextFlagIndex(args, i) {
