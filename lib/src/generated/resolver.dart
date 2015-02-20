@@ -8306,7 +8306,7 @@ class LibraryResolver {
     try {
       for (Library library in _librariesInCycles) {
         for (Source source in library.compilationUnitSources) {
-          var typeResolverVisitorFactory =
+          TypeResolverVisitorFactory typeResolverVisitorFactory =
               analysisContext.typeResolverVisitorFactory;
           TypeResolverVisitor visitor = (typeResolverVisitorFactory == null)
               ? new TypeResolverVisitor.con1(library, source, _typeProvider)
@@ -8592,7 +8592,8 @@ class LibraryResolver {
         CompilationUnit ast = library.getAST(source);
         ast.accept(
             new VariableResolverVisitor.con1(library, source, _typeProvider));
-        var visitorFactory =  analysisContext.resolverVisitorFactory;
+        ResolverVisitorFactory visitorFactory =
+            analysisContext.resolverVisitorFactory;
         ResolverVisitor visitor = visitorFactory != null
             ? visitorFactory(library, source, _typeProvider)
             : new ResolverVisitor.con1(library, source, _typeProvider);
@@ -10361,6 +10362,8 @@ typedef ResolverVisitor ResolverVisitorFactory(
 typedef TypeResolverVisitor TypeResolverVisitorFactory(
     Library library, Source source, TypeProvider typeProvider);
 
+typedef StaticTypeAnalyzer StaticTypeAnalyzerFactory(ResolverVisitor visitor);
+
 /**
  * Instances of the class `ResolverVisitor` are used to resolve the nodes within a single
  * compilation unit.
@@ -10376,16 +10379,10 @@ class ResolverVisitor extends ScopedVisitor {
    */
   ElementResolver _elementResolver;
 
-  /// DDC: hacky way to make it visible in subclasses.
-  ElementResolver get elementResolver => _elementResolver;
-
   /**
    * The object used to compute the type associated with the current node.
    */
   StaticTypeAnalyzer _typeAnalyzer;
-
-  /// DDC: hacky way to make it visible in subclasses.
-  StaticTypeAnalyzer get typeAnalyzer => _typeAnalyzer;
 
   /**
    * The class element representing the class containing the current node,
@@ -10445,8 +10442,8 @@ class ResolverVisitor extends ScopedVisitor {
    * @param typeProvider the object used to access the types from the core library
    */
   ResolverVisitor.con1(Library library, Source source,
-      TypeProvider typeProvider,
-      {StaticTypeAnalyzer typeAnalyzer, typeAnalyzerFactory})
+      TypeProvider typeProvider, {StaticTypeAnalyzer typeAnalyzer,
+      StaticTypeAnalyzerFactory typeAnalyzerFactory})
       : super.con1(library, source, typeProvider) {
     this._inheritanceManager = library.inheritanceManager;
     this._elementResolver = new ElementResolver(this);
@@ -11717,8 +11714,7 @@ class ResolverVisitor extends ScopedVisitor {
   /**
    * Promotes type information using given condition.
    */
-  // DDC Note: made public so we can override it.
-  void promoteTypes(Expression condition) {
+  void _promoteTypes(Expression condition) {
     if (condition is BinaryExpression) {
       BinaryExpression binary = condition;
       if (binary.operator.type == sc.TokenType.AMPERSAND_AMPERSAND) {
@@ -11737,10 +11733,6 @@ class ResolverVisitor extends ScopedVisitor {
       _promoteTypes(condition.expression);
     }
   }
-
-  // TODO(sigmund): delete, just for convenience to avoid renaming all uses of
-  // this function in this file.
-  void _promoteTypes(Expression condition) => promoteTypes(condition);
 
   /**
    * Propagate any type information that results from knowing that the given condition will have
@@ -13892,13 +13884,11 @@ class TypeResolverVisitor extends ScopedVisitor {
     return null;
   }
 
-  // DDC: split so we can change what to do at the member level after super
-  // classes and interfaces have been resolved.
   @override
   Object visitClassDeclaration(ClassDeclaration node) {
     _hasReferenceToSuper = false;
     super.visitClassDeclaration(node);
-    ClassElement classElement = _getClassElement(node.name);
+    ClassElementImpl classElement = _getClassElement(node.name);
     if (classElement != null)  {
       classElement.hasReferenceToSuper = _hasReferenceToSuper;
     }

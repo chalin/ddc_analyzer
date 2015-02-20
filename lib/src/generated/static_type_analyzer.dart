@@ -44,9 +44,6 @@ class StaticTypeAnalyzer extends SimpleAstVisitor<Object> {
    */
   DartType _dynamicType;
 
-  // DDC: exposed for subclasses.
-  DartType get dynamicType => _dynamicType;
-
   /**
    * The type representing the class containing the nodes being analyzed,
    * or `null` if the nodes are not within a class.
@@ -1551,9 +1548,6 @@ class StaticTypeAnalyzer extends SimpleAstVisitor<Object> {
     return type;
   }
 
-  /// DDC Note: added to make it visible in subclass
-  DartType getStaticType(Expression expression) => _getStaticType(expression);
-
   /**
    * Return the type represented by the given type name.
    *
@@ -1719,20 +1713,13 @@ class StaticTypeAnalyzer extends SimpleAstVisitor<Object> {
    * @param expression the node whose type is to be recorded
    * @param type the static type of the node
    */
-  // DDC Note: made public so we can override it.
-  void recordStaticType(Expression expression, DartType type) {
+  void _recordStaticType(Expression expression, DartType type) {
     if (type == null) {
       expression.staticType = _dynamicType;
     } else {
       expression.staticType = type;
     }
   }
-
-  // TODO(sigmund): delete, just for convenience to avoid renaming all uses of
-  // this function in this file.
-  void _recordStaticType(Expression expression, DartType type) =>
-      recordStaticType(expression, type);
-
 
   /**
    * Attempts to make a better guess for the static type of the given binary expression.

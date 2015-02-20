@@ -1067,6 +1067,12 @@ class AnalysisContextImpl implements InternalAnalysisContext {
    */
   CompilationUnit incrementalResolutionValidation_lastUnit;
 
+  /** A factory to override how [ResolverVisitor] is created. */
+  ResolverVisitorFactory resolverVisitorFactory;
+
+  /** A factory to override how [TypeResolverVisitor] is created. */
+  TypeResolverVisitorFactory typeResolverVisitorFactory;
+
   /**
    * Initialize a newly created analysis context.
    */
@@ -1493,9 +1499,6 @@ class AnalysisContextImpl implements InternalAnalysisContext {
     }
     return new TypeProviderImpl(coreElement, asyncElement);
   }
-
-  ResolverVisitorFactory resolverVisitorFactory;
-  TypeResolverVisitorFactory typeResolverVisitorFactory;
 
   @override
   void addListener(AnalysisListener listener) {
@@ -9662,8 +9665,11 @@ abstract class InternalAnalysisContext implements AnalysisContext {
    */
   TypeProvider get typeProvider;
 
-  ResolverVisitorFactory resolverVisitorFactory;
-  TypeResolverVisitorFactory typeResolverVisitorFactory;
+  /** A factory to override how [ResolverVisitor] is created. */
+  ResolverVisitorFactory get resolverVisitorFactory;
+
+  /** A factory to override how [TypeResolverVisitor] is created. */
+  TypeResolverVisitorFactory get typeResolverVisitorFactory;
 
   /**
    * Add the given source with the given information to this context.
