@@ -17,7 +17,9 @@ import 'package:analyzer/task/model.dart';
 import 'engine.dart';
 import 'java_core.dart';
 import 'java_engine.dart';
+import 'java_io.dart' show JavaFile;
 import 'sdk.dart' show DartSdk;
+import 'source_io.dart' show FileBasedSource;
 
 /**
  * A function that is used to handle [ContentCache] entries.
@@ -163,6 +165,24 @@ class DartUriResolver extends UriResolver {
    * @return `true` if the given URI is a `dart:` URI
    */
   static bool isDartUri(Uri uri) => DART_SCHEME == uri.scheme;
+}
+
+class CustomUriResolver extends UriResolver {
+  final Map<String, String> _urlMappings;
+
+  CustomUriResolver(this._urlMappings);
+
+  @override
+  Source resolveAbsolute(Uri uri) {
+    String mapping = _urlMappings[uri.toString()];
+    if (mapping == null) return null;
+
+    Uri fileUri = new Uri.file(mapping);
+    if (!fileUri.isAbsolute) return null;
+
+    JavaFile javaFile = new JavaFile.fromUri(fileUri);
+    return new FileBasedSource.con1(javaFile);
+  }
 }
 
 /**
@@ -439,17 +459,16 @@ abstract class Source implements AnalysisTarget {
   bool get isInSystemLibrary;
 
   /**
-   * Return the modification stamp for this source. A modification stamp is a non-negative integer
-   * with the property that if the contents of the source have not been modified since the last time
-   * the modification stamp was accessed then the same value will be returned, but if the contents
-   * of the source have been modified one or more times (even if the net change is zero) the stamps
-   * will be different.
+   * Return the modification stamp for this source, or a negative value if the
+   * source does not exist. A modification stamp is a non-negative integer with
+   * the property that if the contents of the source have not been modified
+   * since the last time the modification stamp was accessed then the same value
+   * will be returned, but if the contents of the source have been modified one
+   * or more times (even if the net change is zero) the stamps will be different.
    *
    * Clients should consider using the the method
-   * [AnalysisContext.getModificationStamp] because contexts can have local overrides
-   * of the content of a source that the source is not aware of.
-   *
-   * @return the modification stamp for this source
+   * [AnalysisContext.getModificationStamp] because contexts can have local
+   * overrides of the content of a source that the source is not aware of.
    */
   int get modificationStamp;
 
@@ -662,7 +681,7 @@ class SourceFactory {
   Source fromEncoding(String encoding) {
     Source source = forUri(encoding);
     if (source == null) {
-      throw new IllegalArgumentException("Invalid source encoding: $encoding");
+      throw new IllegalArgumentException("Invalid source encoding: '$encoding'");
     }
     return source;
   }

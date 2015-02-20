@@ -47,6 +47,11 @@ class TestTypeProvider implements TypeProvider {
   InterfaceType _functionType;
 
   /**
+   * The type representing 'Future<dynamic>'
+   */
+  InterfaceType _futureDynamicType;
+
+  /**
    * The type representing 'Future<Null>'
    */
   InterfaceType _futureNullType;
@@ -60,6 +65,11 @@ class TestTypeProvider implements TypeProvider {
    * The type representing the built-in type 'int'.
    */
   InterfaceType _intType;
+
+  /**
+   * The type representing 'Iterable<dynamic>'
+   */
+  InterfaceType _iterableDynamicType;
 
   /**
    * The type representing the built-in type 'Iterable'.
@@ -100,6 +110,16 @@ class TestTypeProvider implements TypeProvider {
    * The type representing the built-in type 'StackTrace'.
    */
   InterfaceType _stackTraceType;
+
+  /**
+   * The type representing 'Stream<dynamic>'.
+   */
+  InterfaceType _streamDynamicType;
+
+  /**
+   * The type representing the built-in type 'Stream'.
+   */
+  InterfaceType _streamType;
 
   /**
    * The type representing the built-in type 'String'.
@@ -182,6 +202,14 @@ class TestTypeProvider implements TypeProvider {
   }
 
   @override
+  InterfaceType get futureDynamicType {
+    if (_futureDynamicType == null) {
+      _futureDynamicType = futureType.substitute4(<DartType>[dynamicType]);
+    }
+    return _futureDynamicType;
+  }
+
+  @override
   InterfaceType get futureNullType {
     if (_futureNullType == null) {
       _futureNullType = futureType.substitute4(<DartType>[nullType]);
@@ -205,6 +233,15 @@ class TestTypeProvider implements TypeProvider {
     return _intType;
   }
 
+  @override
+  InterfaceType get iterableDynamicType {
+    if (_iterableDynamicType == null) {
+      _iterableDynamicType = iterableType.substitute4(<DartType>[dynamicType]);
+    }
+    return _iterableDynamicType;
+  }
+
+  @override
   InterfaceType get iterableType {
     if (_iterableType == null) {
       ClassElementImpl iterableElement =
@@ -326,6 +363,22 @@ class TestTypeProvider implements TypeProvider {
       _stackTraceType = ElementFactory.classElement2("StackTrace").type;
     }
     return _stackTraceType;
+  }
+
+  @override
+  InterfaceType get streamDynamicType {
+    if (_streamDynamicType == null) {
+      _streamDynamicType = streamType.substitute4(<DartType>[dynamicType]);
+    }
+    return _streamDynamicType;
+  }
+
+  @override
+  InterfaceType get streamType {
+    if (_streamType == null) {
+      _streamType = ElementFactory.classElement2("Stream", ["T"]).type;
+    }
+    return _streamType;
   }
 
   @override

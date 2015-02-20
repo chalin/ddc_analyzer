@@ -54,6 +54,32 @@ f() {}''');
     assertErrors(source, [StaticWarningCode.AMBIGUOUS_IMPORT]);
   }
 
+  void test_await_flattened() {
+    Source source = addSource('''
+import 'dart:async';
+Future<Future<int>> ffi() => null;
+f() async {
+  Future<int> b = await ffi(); // Warning: int not assignable to Future<int>
+}
+''');
+    resolve(source);
+    assertErrors(source, [StaticTypeWarningCode.INVALID_ASSIGNMENT]);
+    verify([source]);
+  }
+
+  void test_await_simple() {
+    Source source = addSource('''
+import 'dart:async';
+Future<int> fi() => null;
+f() async {
+  String a = await fi(); // Warning: int not assignable to String
+}
+''');
+    resolve(source);
+    assertErrors(source, [StaticTypeWarningCode.INVALID_ASSIGNMENT]);
+    verify([source]);
+  }
+
   void test_expectedOneListTypeArgument() {
     Source source = addSource(r'''
 main() {
@@ -87,6 +113,78 @@ main() {
     assertErrors(
         source,
         [StaticTypeWarningCode.EXPECTED_TWO_MAP_TYPE_ARGUMENTS]);
+    verify([source]);
+  }
+
+  void test_illegal_return_type_async_function() {
+    Source source = addSource('''
+int f() async {}
+''');
+    resolve(source);
+    assertErrors(
+        source,
+        [StaticTypeWarningCode.ILLEGAL_ASYNC_RETURN_TYPE, HintCode.MISSING_RETURN]);
+    verify([source]);
+  }
+
+  void test_illegal_return_type_async_generator_function() {
+    Source source = addSource('''
+int f() async* {}
+''');
+    resolve(source);
+    assertErrors(
+        source,
+        [StaticTypeWarningCode.ILLEGAL_ASYNC_GENERATOR_RETURN_TYPE]);
+    verify([source]);
+  }
+
+  void test_illegal_return_type_async_generator_method() {
+    Source source = addSource('''
+class C {
+  int f() async* {}
+}
+''');
+    resolve(source);
+    assertErrors(
+        source,
+        [StaticTypeWarningCode.ILLEGAL_ASYNC_GENERATOR_RETURN_TYPE]);
+    verify([source]);
+  }
+
+  void test_illegal_return_type_async_method() {
+    Source source = addSource('''
+class C {
+  int f() async {}
+}
+''');
+    resolve(source);
+    assertErrors(
+        source,
+        [StaticTypeWarningCode.ILLEGAL_ASYNC_RETURN_TYPE, HintCode.MISSING_RETURN]);
+    verify([source]);
+  }
+
+  void test_illegal_return_type_sync_generator_function() {
+    Source source = addSource('''
+int f() sync* {}
+''');
+    resolve(source);
+    assertErrors(
+        source,
+        [StaticTypeWarningCode.ILLEGAL_SYNC_GENERATOR_RETURN_TYPE]);
+    verify([source]);
+  }
+
+  void test_illegal_return_type_sync_generator_method() {
+    Source source = addSource('''
+class C {
+  int f() sync* {}
+}
+''');
+    resolve(source);
+    assertErrors(
+        source,
+        [StaticTypeWarningCode.ILLEGAL_SYNC_GENERATOR_RETURN_TYPE]);
     verify([source]);
   }
 
@@ -598,7 +696,11 @@ int f() async {
 }
 ''');
     resolve(source);
-    assertErrors(source, [StaticTypeWarningCode.RETURN_OF_INVALID_TYPE]);
+    assertErrors(
+        source,
+        [
+            StaticTypeWarningCode.RETURN_OF_INVALID_TYPE,
+            StaticTypeWarningCode.ILLEGAL_ASYNC_RETURN_TYPE]);
     verify([source]);
   }
 
@@ -1651,6 +1753,137 @@ f(p) {
     assertErrors(
         source,
         [StaticTypeWarningCode.WRONG_NUMBER_OF_TYPE_ARGUMENTS]);
+    verify([source]);
+  }
+
+  void test_yield_async_to_basic_type() {
+    Source source = addSource('''
+int f() async* {
+  yield 3;
+}
+''');
+    resolve(source);
+    assertErrors(
+        source,
+        [
+            StaticTypeWarningCode.YIELD_OF_INVALID_TYPE,
+            StaticTypeWarningCode.ILLEGAL_ASYNC_GENERATOR_RETURN_TYPE]);
+    verify([source]);
+  }
+
+  void test_yield_async_to_iterable() {
+    Source source = addSource('''
+Iterable<int> f() async* {
+  yield 3;
+}
+''');
+    resolve(source);
+    assertErrors(
+        source,
+        [
+            StaticTypeWarningCode.YIELD_OF_INVALID_TYPE,
+            StaticTypeWarningCode.ILLEGAL_ASYNC_GENERATOR_RETURN_TYPE]);
+    verify([source]);
+  }
+
+  void test_yield_async_to_mistyped_stream() {
+    Source source = addSource('''
+import 'dart:async';
+Stream<int> f() async* {
+  yield "foo";
+}
+''');
+    resolve(source);
+    assertErrors(source, [StaticTypeWarningCode.YIELD_OF_INVALID_TYPE]);
+    verify([source]);
+  }
+
+  void test_yield_each_async_non_stream() {
+    Source source = addSource('''
+f() async* {
+  yield* 0;
+}
+''');
+    resolve(source);
+    assertErrors(source, [StaticTypeWarningCode.YIELD_OF_INVALID_TYPE]);
+    verify([source]);
+  }
+
+  void test_yield_each_async_to_mistyped_stream() {
+    Source source = addSource('''
+import 'dart:async';
+Stream<int> f() async* {
+  yield* g();
+}
+Stream<String> g() => null;
+''');
+    resolve(source);
+    assertErrors(source, [StaticTypeWarningCode.YIELD_OF_INVALID_TYPE]);
+    verify([source]);
+  }
+
+  void test_yield_each_sync_non_iterable() {
+    Source source = addSource('''
+f() sync* {
+  yield* 0;
+}
+''');
+    resolve(source);
+    assertErrors(source, [StaticTypeWarningCode.YIELD_OF_INVALID_TYPE]);
+    verify([source]);
+  }
+
+  void test_yield_each_sync_to_mistyped_iterable() {
+    Source source = addSource('''
+Iterable<int> f() sync* {
+  yield* g();
+}
+Iterable<String> g() => null;
+''');
+    resolve(source);
+    assertErrors(source, [StaticTypeWarningCode.YIELD_OF_INVALID_TYPE]);
+    verify([source]);
+  }
+
+  void test_yield_sync_to_basic_type() {
+    Source source = addSource('''
+int f() sync* {
+  yield 3;
+}
+''');
+    resolve(source);
+    assertErrors(
+        source,
+        [
+            StaticTypeWarningCode.YIELD_OF_INVALID_TYPE,
+            StaticTypeWarningCode.ILLEGAL_SYNC_GENERATOR_RETURN_TYPE]);
+    verify([source]);
+  }
+
+  void test_yield_sync_to_mistyped_iterable() {
+    Source source = addSource('''
+Iterable<int> f() sync* {
+  yield "foo";
+}
+''');
+    resolve(source);
+    assertErrors(source, [StaticTypeWarningCode.YIELD_OF_INVALID_TYPE]);
+    verify([source]);
+  }
+
+  void test_yield_sync_to_stream() {
+    Source source = addSource('''
+import 'dart:async';
+Stream<int> f() sync* {
+  yield 3;
+}
+''');
+    resolve(source);
+    assertErrors(
+        source,
+        [
+            StaticTypeWarningCode.YIELD_OF_INVALID_TYPE,
+            StaticTypeWarningCode.ILLEGAL_SYNC_GENERATOR_RETURN_TYPE]);
     verify([source]);
   }
 }

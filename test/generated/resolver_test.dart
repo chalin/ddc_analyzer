@@ -25,6 +25,7 @@ import 'package:analyzer/src/generated/static_type_analyzer.dart';
 import 'package:analyzer/src/generated/testing/ast_factory.dart';
 import 'package:analyzer/src/generated/testing/element_factory.dart';
 import 'package:analyzer/src/generated/testing/test_type_provider.dart';
+import 'package:analyzer/src/generated/testing/token_factory.dart';
 import 'package:analyzer/src/generated/utilities_dart.dart';
 import 'package:unittest/unittest.dart';
 
@@ -1696,12 +1697,8 @@ class ElementResolverTest extends EngineTestCase {
 
   void test_visitPrefixedIdentifier_staticClassMember_method() {
     ClassElementImpl classA = ElementFactory.classElement2("A");
-    // set accessors
-    String propName = "m";
-    PropertyAccessorElement setter =
-        ElementFactory.setterElement(propName, false, _typeProvider.intType);
-    classA.accessors = <PropertyAccessorElement>[setter];
     // set methods
+    String propName = "m";
     MethodElement method =
         ElementFactory.methodElement("m", _typeProvider.intType);
     classA.methods = <MethodElement>[method];
@@ -9850,6 +9847,30 @@ class StaticTypeAnalyzerTest extends EngineTestCase {
     _listener.assertNoErrors();
   }
 
+  void test_visitAwaitExpression_flattened() {
+    // await e, where e has type Future<Future<int>>
+    InterfaceType intType = _typeProvider.intType;
+    InterfaceType futureIntType =
+        _typeProvider.futureType.substitute4(<DartType>[intType]);
+    InterfaceType futureFutureIntType =
+        _typeProvider.futureType.substitute4(<DartType>[futureIntType]);
+    Expression node =
+        AstFactory.awaitExpression(_resolvedVariable(futureFutureIntType, 'e'));
+    expect(_analyze(node), same(intType));
+    _listener.assertNoErrors();
+  }
+
+  void test_visitAwaitExpression_simple() {
+    // await e, where e has type Future<int>
+    InterfaceType intType = _typeProvider.intType;
+    InterfaceType futureIntType =
+        _typeProvider.futureType.substitute4(<DartType>[intType]);
+    Expression node =
+        AstFactory.awaitExpression(_resolvedVariable(futureIntType, 'e'));
+    expect(_analyze(node), same(intType));
+    _listener.assertNoErrors();
+  }
+
   void test_visitBinaryExpression_equals() {
     // 2 == 3
     Expression node = AstFactory.binaryExpression(
@@ -10002,6 +10023,103 @@ class StaticTypeAnalyzerTest extends EngineTestCase {
     // 4.33
     Expression node = AstFactory.doubleLiteral(4.33);
     expect(_analyze(node), same(_typeProvider.doubleType));
+    _listener.assertNoErrors();
+  }
+
+  void test_visitFunctionExpression_async_block() {
+    // () async {}
+    BlockFunctionBody body = AstFactory.blockFunctionBody2();
+    body.keyword = TokenFactory.tokenFromString('async');
+    FunctionExpression node =
+        _resolvedFunctionExpression(AstFactory.formalParameterList([]), body);
+    DartType resultType = _analyze(node);
+    _assertFunctionType(
+        _typeProvider.futureDynamicType,
+        null,
+        null,
+        null,
+        resultType);
+    _listener.assertNoErrors();
+  }
+
+  void test_visitFunctionExpression_async_expression() {
+    // () async => e, where e has type int
+    InterfaceType intType = _typeProvider.intType;
+    InterfaceType futureIntType =
+        _typeProvider.futureType.substitute4(<DartType>[intType]);
+    Expression expression = _resolvedVariable(intType, 'e');
+    ExpressionFunctionBody body = AstFactory.expressionFunctionBody(expression);
+    body.keyword = TokenFactory.tokenFromString('async');
+    FunctionExpression node =
+        _resolvedFunctionExpression(AstFactory.formalParameterList([]), body);
+    DartType resultType = _analyze(node);
+    _assertFunctionType(futureIntType, null, null, null, resultType);
+    _listener.assertNoErrors();
+  }
+
+  void test_visitFunctionExpression_async_expression_flatten() {
+    // () async => e, where e has type Future<int>
+    InterfaceType intType = _typeProvider.intType;
+    InterfaceType futureIntType =
+        _typeProvider.futureType.substitute4(<DartType>[intType]);
+    Expression expression = _resolvedVariable(futureIntType, 'e');
+    ExpressionFunctionBody body = AstFactory.expressionFunctionBody(expression);
+    body.keyword = TokenFactory.tokenFromString('async');
+    FunctionExpression node =
+        _resolvedFunctionExpression(AstFactory.formalParameterList([]), body);
+    DartType resultType = _analyze(node);
+    _assertFunctionType(futureIntType, null, null, null, resultType);
+    _listener.assertNoErrors();
+  }
+
+  void test_visitFunctionExpression_async_expression_flatten_twice() {
+    // () async => e, where e has type Future<Future<int>>
+    InterfaceType intType = _typeProvider.intType;
+    InterfaceType futureIntType =
+        _typeProvider.futureType.substitute4(<DartType>[intType]);
+    InterfaceType futureFutureIntType =
+        _typeProvider.futureType.substitute4(<DartType>[futureIntType]);
+    Expression expression = _resolvedVariable(futureFutureIntType, 'e');
+    ExpressionFunctionBody body = AstFactory.expressionFunctionBody(expression);
+    body.keyword = TokenFactory.tokenFromString('async');
+    FunctionExpression node =
+        _resolvedFunctionExpression(AstFactory.formalParameterList([]), body);
+    DartType resultType = _analyze(node);
+    _assertFunctionType(futureIntType, null, null, null, resultType);
+    _listener.assertNoErrors();
+  }
+
+  void test_visitFunctionExpression_generator_async() {
+    // () async* {}
+    BlockFunctionBody body = AstFactory.blockFunctionBody2();
+    body.keyword = TokenFactory.tokenFromString('async');
+    body.star = TokenFactory.tokenFromType(TokenType.STAR);
+    FunctionExpression node =
+        _resolvedFunctionExpression(AstFactory.formalParameterList([]), body);
+    DartType resultType = _analyze(node);
+    _assertFunctionType(
+        _typeProvider.streamDynamicType,
+        null,
+        null,
+        null,
+        resultType);
+    _listener.assertNoErrors();
+  }
+
+  void test_visitFunctionExpression_generator_sync() {
+    // () sync* {}
+    BlockFunctionBody body = AstFactory.blockFunctionBody2();
+    body.keyword = TokenFactory.tokenFromString('sync');
+    body.star = TokenFactory.tokenFromType(TokenType.STAR);
+    FunctionExpression node =
+        _resolvedFunctionExpression(AstFactory.formalParameterList([]), body);
+    DartType resultType = _analyze(node);
+    _assertFunctionType(
+        _typeProvider.iterableDynamicType,
+        null,
+        null,
+        null,
+        resultType);
     _listener.assertNoErrors();
   }
 
@@ -10805,7 +10923,7 @@ class StaticTypeAnalyzerTest extends EngineTestCase {
         expect(namedTypes[name], same(type));
       });
     }
-    expect(functionType.returnType, same(expectedReturnType));
+    expect(functionType.returnType, equals(expectedReturnType));
   }
 
   void _assertType(InterfaceTypeImpl expectedType,
@@ -12992,9 +13110,12 @@ class TypeProviderImplTest extends EngineTestCase {
     InterfaceType functionType = _classElement("Function", objectType).type;
     InterfaceType futureType = _classElement("Future", objectType, ["T"]).type;
     InterfaceType intType = _classElement("int", numType).type;
+    InterfaceType iterableType =
+        _classElement("Iterable", objectType, ["T"]).type;
     InterfaceType listType = _classElement("List", objectType, ["E"]).type;
     InterfaceType mapType = _classElement("Map", objectType, ["K", "V"]).type;
     InterfaceType stackTraceType = _classElement("StackTrace", objectType).type;
+    InterfaceType streamType = _classElement("Stream", objectType, ["T"]).type;
     InterfaceType stringType = _classElement("String", objectType).type;
     InterfaceType symbolType = _classElement("Symbol", objectType).type;
     InterfaceType typeType = _classElement("Type", objectType).type;
@@ -13005,6 +13126,7 @@ class TypeProviderImplTest extends EngineTestCase {
         doubleType.element,
         functionType.element,
         intType.element,
+        iterableType.element,
         listType.element,
         mapType.element,
         objectType.element,
@@ -13014,7 +13136,7 @@ class TypeProviderImplTest extends EngineTestCase {
         typeType.element];
     CompilationUnitElementImpl asyncUnit =
         new CompilationUnitElementImpl("async.dart");
-    asyncUnit.types = <ClassElement>[futureType.element];
+    asyncUnit.types = <ClassElement>[futureType.element, streamType.element];
     AnalysisContextImpl context = new AnalysisContextImpl();
     LibraryElementImpl coreLibrary = new LibraryElementImpl.forNode(
         context,

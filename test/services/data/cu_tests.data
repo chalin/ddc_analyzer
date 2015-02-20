@@ -308,12 +308,16 @@ class A {
       this.c0123456789012345678901234, this.d0123456789012345678901234);
 }
 >>>
-main() async {
-}
+enum Foo { BAR, BAZ }
 <<<
-main() async {
+enum Foo {
+  BAR, BAZ
 }
 >>>
-main()  async  => 0;
+get x sync* {}
 <<<
-main() async => 0;
+get x sync* {}
+>>>
+get x async* {}
+<<<
+get x async* {}

@@ -7,6 +7,8 @@ library engine.resolver.error_verifier;
 import "dart:math" as math;
 import 'dart:collection';
 
+import 'package:analyzer/src/generated/static_type_analyzer.dart';
+
 import 'ast.dart';
 import 'constant.dart';
 import 'element.dart';
@@ -677,6 +679,7 @@ class ErrorVerifier extends RecursiveAstVisitor<Object> {
             CompileTimeErrorCode.INVALID_MODIFIER_ON_SETTER);
       }
       _checkForTypeAnnotationDeferredClass(returnType);
+      _checkForIllegalReturnType(returnType);
       return super.visitFunctionDeclaration(node);
     } finally {
       _enclosingFunction = outerFunction;
@@ -862,6 +865,7 @@ class ErrorVerifier extends RecursiveAstVisitor<Object> {
       _checkForConcreteClassWithAbstractMember(node);
       _checkForAllInvalidOverrideErrorCodesForMethod(node);
       _checkForTypeAnnotationDeferredClass(returnTypeName);
+      _checkForIllegalReturnType(returnTypeName);
       return super.visitMethodDeclaration(node);
     } finally {
       _enclosingFunction = previousFunction;
@@ -1095,7 +1099,9 @@ class ErrorVerifier extends RecursiveAstVisitor<Object> {
 
   @override
   Object visitYieldStatement(YieldStatement node) {
-    if (!_inGenerator) {
+    if (_inGenerator) {
+      _checkForYieldOfInvalidType(node.expression, node.star != null);
+    } else {
       CompileTimeErrorCode errorCode;
       if (node.star != null) {
         errorCode = CompileTimeErrorCode.YIELD_EACH_IN_NON_GENERATOR;
@@ -3479,6 +3485,43 @@ class ErrorVerifier extends RecursiveAstVisitor<Object> {
   }
 
   /**
+   * If the current function is async, async*, or sync*, verify that its
+   * declared return type is assignable to Future, Stream, or Iterable,
+   * respectively.  If not, report the error using [node].
+   */
+  void _checkForIllegalReturnType(TypeName node) {
+    if (node == null) {
+      // No declared return type, so the return type must be dynamic, which is
+      // assignable to everything.
+      return;
+    }
+    if (_enclosingFunction.isAsynchronous) {
+      if (_enclosingFunction.isGenerator) {
+        if (!_enclosingFunction.returnType.isAssignableTo(
+            _typeProvider.streamDynamicType)) {
+          _errorReporter.reportErrorForNode(
+              StaticTypeWarningCode.ILLEGAL_ASYNC_GENERATOR_RETURN_TYPE,
+              node);
+        }
+      } else {
+        if (!_enclosingFunction.returnType.isAssignableTo(
+            _typeProvider.futureDynamicType)) {
+          _errorReporter.reportErrorForNode(
+              StaticTypeWarningCode.ILLEGAL_ASYNC_RETURN_TYPE,
+              node);
+        }
+      }
+    } else if (_enclosingFunction.isGenerator) {
+      if (!_enclosingFunction.returnType.isAssignableTo(
+          _typeProvider.iterableDynamicType)) {
+        _errorReporter.reportErrorForNode(
+            StaticTypeWarningCode.ILLEGAL_SYNC_GENERATOR_RETURN_TYPE,
+            node);
+      }
+    }
+  }
+
+  /**
    * This verifies that the passed implements clause does not implement classes that are deferred.
    *
    * @param node the implements clause to test
@@ -5711,6 +5754,58 @@ class ErrorVerifier extends RecursiveAstVisitor<Object> {
   }
 
   /**
+   * Check for a type mis-match between the yielded type and the declared
+   * return type of a generator function.
+   *
+   * This method should only be called in generator functions.
+   */
+  bool _checkForYieldOfInvalidType(Expression yieldExpression,
+      bool isYieldEach) {
+    assert(_inGenerator);
+    if (_enclosingFunction == null) {
+      return false;
+    }
+    DartType declaredReturnType = _enclosingFunction.returnType;
+    DartType staticYieldedType = getStaticType(yieldExpression);
+    DartType impliedReturnType;
+    if (isYieldEach) {
+      impliedReturnType = staticYieldedType;
+    } else if (_enclosingFunction.isAsynchronous) {
+      impliedReturnType =
+          _typeProvider.streamType.substitute4(<DartType>[staticYieldedType]);
+    } else {
+      impliedReturnType =
+          _typeProvider.iterableType.substitute4(<DartType>[staticYieldedType]);
+    }
+    if (!impliedReturnType.isAssignableTo(declaredReturnType)) {
+      _errorReporter.reportTypeErrorForNode(
+          StaticTypeWarningCode.YIELD_OF_INVALID_TYPE,
+          yieldExpression,
+          [impliedReturnType, declaredReturnType]);
+      return true;
+    }
+    if (isYieldEach) {
+      // Since the declared return type might have been "dynamic", we need to
+      // also check that the implied return type is assignable to generic
+      // Stream/Iterable.
+      DartType requiredReturnType;
+      if (_enclosingFunction.isAsynchronous) {
+        requiredReturnType = _typeProvider.streamDynamicType;
+      } else {
+        requiredReturnType = _typeProvider.iterableDynamicType;
+      }
+      if (!impliedReturnType.isAssignableTo(requiredReturnType)) {
+        _errorReporter.reportTypeErrorForNode(
+            StaticTypeWarningCode.YIELD_OF_INVALID_TYPE,
+            yieldExpression,
+            [impliedReturnType, requiredReturnType]);
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
    * This verifies that if the given class declaration implements the class Function that it has a
    * concrete implementation of the call method.
    *
@@ -5792,10 +5887,9 @@ class ErrorVerifier extends RecursiveAstVisitor<Object> {
       }
     }
     DartType staticReturnType = getStaticType(returnExpression);
-    if (staticReturnType != null &&
-        _enclosingFunction.isAsynchronous &&
-        staticReturnType.element != _typeProvider.futureType.element) {
-      return _typeProvider.futureType.substitute4(<DartType>[staticReturnType]);
+    if (staticReturnType != null && _enclosingFunction.isAsynchronous) {
+      return _typeProvider.futureType.substitute4(
+          <DartType>[StaticTypeAnalyzer.flattenFutures(_typeProvider, staticReturnType)]);
     }
     return staticReturnType;
   }
