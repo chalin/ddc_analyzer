@@ -4,7 +4,7 @@
 
 library error_formatter;
 
-import 'package:ddc_analyzer/src/analyzer_impl.dart';
+import 'package:analyzer/src/analyzer_impl.dart';
 
 import '../options.dart';
 import 'generated/engine.dart';

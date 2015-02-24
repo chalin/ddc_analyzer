@@ -4,7 +4,7 @@
 
 library options_test;
 
-import 'package:ddc_analyzer/options.dart';
+import 'package:analyzer/options.dart';
 import 'package:args/args.dart';
 import 'package:unittest/unittest.dart';
 

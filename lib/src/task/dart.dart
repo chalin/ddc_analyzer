@@ -6,19 +6,19 @@ library analyzer.src.task.dart;
 
 import 'dart:collection';
 
-import 'package:ddc_analyzer/src/generated/ast.dart';
-import 'package:ddc_analyzer/src/generated/element.dart';
-import 'package:ddc_analyzer/src/generated/engine.dart' hide AnalysisTask;
-import 'package:ddc_analyzer/src/generated/error.dart';
-import 'package:ddc_analyzer/src/generated/java_engine.dart';
-import 'package:ddc_analyzer/src/generated/parser.dart';
-import 'package:ddc_analyzer/src/generated/resolver.dart';
-import 'package:ddc_analyzer/src/generated/scanner.dart';
-import 'package:ddc_analyzer/src/generated/source.dart';
-import 'package:ddc_analyzer/src/task/general.dart';
-import 'package:ddc_analyzer/task/dart.dart';
-import 'package:ddc_analyzer/task/general.dart';
-import 'package:ddc_analyzer/task/model.dart';
+import 'package:analyzer/src/generated/ast.dart';
+import 'package:analyzer/src/generated/element.dart';
+import 'package:analyzer/src/generated/engine.dart' hide AnalysisTask;
+import 'package:analyzer/src/generated/error.dart';
+import 'package:analyzer/src/generated/java_engine.dart';
+import 'package:analyzer/src/generated/parser.dart';
+import 'package:analyzer/src/generated/resolver.dart';
+import 'package:analyzer/src/generated/scanner.dart';
+import 'package:analyzer/src/generated/source.dart';
+import 'package:analyzer/src/task/general.dart';
+import 'package:analyzer/task/dart.dart';
+import 'package:analyzer/task/general.dart';
+import 'package:analyzer/task/model.dart';
 
 /**
  * A task that builds a compilation unit element for a single compilation unit.

@@ -4,13 +4,13 @@
 
 library test.src.task.dart_test;
 
-import 'package:ddc_analyzer/src/generated/engine.dart' hide AnalysisTask,
+import 'package:analyzer/src/generated/engine.dart' hide AnalysisTask,
     ParseDartTask, ScanDartTask;
-import 'package:ddc_analyzer/src/generated/source.dart';
-import 'package:ddc_analyzer/src/task/dart.dart';
-import 'package:ddc_analyzer/task/dart.dart';
-import 'package:ddc_analyzer/task/general.dart';
-import 'package:ddc_analyzer/task/model.dart';
+import 'package:analyzer/src/generated/source.dart';
+import 'package:analyzer/src/task/dart.dart';
+import 'package:analyzer/task/dart.dart';
+import 'package:analyzer/task/general.dart';
+import 'package:analyzer/task/model.dart';
 import 'package:unittest/unittest.dart';
 
 import '../../generated/resolver_test.dart';

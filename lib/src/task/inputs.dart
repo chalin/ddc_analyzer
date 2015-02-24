@@ -6,7 +6,7 @@ library analyzer.src.task.inputs;
 
 import 'dart:collection';
 
-import 'package:ddc_analyzer/task/model.dart';
+import 'package:analyzer/task/model.dart';
 
 /**
  * A function that converts an arbitrary object into a [TaskInput]. This is

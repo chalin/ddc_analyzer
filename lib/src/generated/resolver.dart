@@ -7,7 +7,7 @@ library engine.resolver;
 import "dart:math" as math;
 import 'dart:collection';
 
-import 'package:ddc_analyzer/src/generated/utilities_collection.dart';
+import 'package:analyzer/src/generated/utilities_collection.dart';
 
 import 'ast.dart';
 import 'constant.dart';

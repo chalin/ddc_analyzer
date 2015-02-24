@@ -7,9 +7,9 @@
 
 library engine.testing.test_type_provider;
 
-import 'package:ddc_analyzer/src/generated/element.dart';
-import 'package:ddc_analyzer/src/generated/resolver.dart';
-import 'package:ddc_analyzer/src/generated/testing/element_factory.dart';
+import 'package:analyzer/src/generated/element.dart';
+import 'package:analyzer/src/generated/resolver.dart';
+import 'package:analyzer/src/generated/testing/element_factory.dart';
 
 /**
  * Instances of the class `TestTypeProvider` implement a type provider that can be used by

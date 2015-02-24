@@ -4,7 +4,7 @@
 
 library test.src.util.asserts;
 
-import 'package:ddc_analyzer/src/util/asserts.dart';
+import 'package:analyzer/src/util/asserts.dart';
 import 'package:unittest/unittest.dart';
 
 import '../../reflective_tests.dart';

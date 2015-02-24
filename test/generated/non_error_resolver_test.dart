@@ -4,11 +4,11 @@
 
 library engine.non_error_resolver_test;
 
-import 'package:ddc_analyzer/src/generated/ast.dart';
-import 'package:ddc_analyzer/src/generated/element.dart';
-import 'package:ddc_analyzer/src/generated/error.dart';
-import 'package:ddc_analyzer/src/generated/parser.dart' show ParserErrorCode;
-import 'package:ddc_analyzer/src/generated/source_io.dart';
+import 'package:analyzer/src/generated/ast.dart';
+import 'package:analyzer/src/generated/element.dart';
+import 'package:analyzer/src/generated/error.dart';
+import 'package:analyzer/src/generated/parser.dart' show ParserErrorCode;
+import 'package:analyzer/src/generated/source_io.dart';
 import 'package:unittest/unittest.dart' as _ut;
 
 import '../reflective_tests.dart';

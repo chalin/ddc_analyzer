@@ -7,7 +7,7 @@ library engine.resolver.error_verifier;
 import "dart:math" as math;
 import 'dart:collection';
 
-import 'package:ddc_analyzer/src/generated/static_type_analyzer.dart';
+import 'package:analyzer/src/generated/static_type_analyzer.dart';
 
 import 'ast.dart';
 import 'constant.dart';

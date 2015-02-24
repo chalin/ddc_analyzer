@@ -5,7 +5,7 @@
 
 import 'dart:io';
 
-import 'package:ddc_analyzer/src/generated/scanner.dart';
+import 'package:analyzer/src/generated/scanner.dart';
 
 main(List<String> args) {
 

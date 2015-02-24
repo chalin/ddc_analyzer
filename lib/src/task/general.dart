@@ -4,10 +4,10 @@
 
 library analyzer.src.task.general;
 
-import 'package:ddc_analyzer/src/generated/engine.dart' hide AnalysisTask;
-import 'package:ddc_analyzer/src/generated/source.dart';
-import 'package:ddc_analyzer/task/general.dart';
-import 'package:ddc_analyzer/task/model.dart';
+import 'package:analyzer/src/generated/engine.dart' hide AnalysisTask;
+import 'package:analyzer/src/generated/source.dart';
+import 'package:analyzer/task/general.dart';
+import 'package:analyzer/task/model.dart';
 
 /**
  * A task that gets the contents of the source associated with an analysis

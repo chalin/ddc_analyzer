@@ -4,13 +4,13 @@
 
 library analyzer.task.dart;
 
-import 'package:ddc_analyzer/src/generated/ast.dart';
-import 'package:ddc_analyzer/src/generated/element.dart';
-import 'package:ddc_analyzer/src/generated/error.dart';
-import 'package:ddc_analyzer/src/generated/scanner.dart';
-import 'package:ddc_analyzer/src/generated/source.dart';
-import 'package:ddc_analyzer/task/general.dart';
-import 'package:ddc_analyzer/task/model.dart';
+import 'package:analyzer/src/generated/ast.dart';
+import 'package:analyzer/src/generated/element.dart';
+import 'package:analyzer/src/generated/error.dart';
+import 'package:analyzer/src/generated/scanner.dart';
+import 'package:analyzer/src/generated/source.dart';
+import 'package:analyzer/task/general.dart';
+import 'package:analyzer/task/model.dart';
 
 /**
  * The compilation unit associated with a [Source] after it has had all

@@ -5,14 +5,14 @@
 
 import 'dart:io';
 
-import 'package:ddc_analyzer/src/generated/ast.dart';
-import 'package:ddc_analyzer/src/generated/element.dart';
-import 'package:ddc_analyzer/src/generated/engine.dart';
-import 'package:ddc_analyzer/src/generated/java_io.dart';
-import 'package:ddc_analyzer/src/generated/sdk.dart' show DartSdk;
-import 'package:ddc_analyzer/src/generated/sdk_io.dart' show DirectoryBasedDartSdk;
-import 'package:ddc_analyzer/src/generated/source.dart';
-import 'package:ddc_analyzer/src/generated/source_io.dart';
+import 'package:analyzer/src/generated/ast.dart';
+import 'package:analyzer/src/generated/element.dart';
+import 'package:analyzer/src/generated/engine.dart';
+import 'package:analyzer/src/generated/java_io.dart';
+import 'package:analyzer/src/generated/sdk.dart' show DartSdk;
+import 'package:analyzer/src/generated/sdk_io.dart' show DirectoryBasedDartSdk;
+import 'package:analyzer/src/generated/source.dart';
+import 'package:analyzer/src/generated/source_io.dart';
 
 const _usage =
     'Usage: resolve_driver <path_to_sdk> <file_to_resolve> [<packages_root>]';

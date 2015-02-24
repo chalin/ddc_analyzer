@@ -4,9 +4,9 @@
 
 library source.package_map_resolver;
 
-import 'package:ddc_analyzer/file_system/file_system.dart';
-import 'package:ddc_analyzer/src/generated/source.dart';
-import 'package:ddc_analyzer/src/util/asserts.dart' as asserts;
+import 'package:analyzer/file_system/file_system.dart';
+import 'package:analyzer/src/generated/source.dart';
+import 'package:analyzer/src/util/asserts.dart' as asserts;
 
 
 /**

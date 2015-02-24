@@ -6,10 +6,10 @@ library analyzer.task.model;
 
 import 'dart:collection';
 
-import 'package:ddc_analyzer/src/generated/engine.dart' hide AnalysisTask;
-import 'package:ddc_analyzer/src/generated/java_engine.dart';
-import 'package:ddc_analyzer/src/generated/source.dart';
-import 'package:ddc_analyzer/src/task/model.dart';
+import 'package:analyzer/src/generated/engine.dart' hide AnalysisTask;
+import 'package:analyzer/src/generated/java_engine.dart';
+import 'package:analyzer/src/generated/source.dart';
+import 'package:analyzer/src/task/model.dart';
 
 /**
  * A function that takes an analysis [context] and an analysis [target] and

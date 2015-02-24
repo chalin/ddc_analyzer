@@ -7,7 +7,7 @@
 
 library engine.testing.html_factory;
 
-import 'package:ddc_analyzer/src/generated/html.dart';
+import 'package:analyzer/src/generated/html.dart';
 
 /**
  * Utility methods to create HTML nodes.

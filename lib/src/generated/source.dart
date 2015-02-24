@@ -10,9 +10,9 @@ library engine.source;
 import "dart:math" as math;
 import 'dart:collection';
 
-import 'package:ddc_analyzer/file_system/file_system.dart';
-import 'package:ddc_analyzer/source/package_map_resolver.dart';
-import 'package:ddc_analyzer/task/model.dart';
+import 'package:analyzer/file_system/file_system.dart';
+import 'package:analyzer/source/package_map_resolver.dart';
+import 'package:analyzer/task/model.dart';
 
 import 'engine.dart';
 import 'java_core.dart';

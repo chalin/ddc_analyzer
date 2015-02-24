@@ -4,8 +4,8 @@
 
 library engine.incremental_resolution_validator;
 
-import 'package:ddc_analyzer/src/generated/ast.dart';
-import 'package:ddc_analyzer/src/generated/element.dart';
+import 'package:analyzer/src/generated/ast.dart';
+import 'package:analyzer/src/generated/element.dart';
 
 
 /**

@@ -4,11 +4,11 @@
 
 library engine.task.dart;
 
-import 'package:ddc_analyzer/src/generated/ast.dart';
-import 'package:ddc_analyzer/src/generated/element.dart';
-import 'package:ddc_analyzer/src/generated/engine.dart';
-import 'package:ddc_analyzer/src/generated/resolver.dart';
-import 'package:ddc_analyzer/src/generated/source.dart';
+import 'package:analyzer/src/generated/ast.dart';
+import 'package:analyzer/src/generated/element.dart';
+import 'package:analyzer/src/generated/engine.dart';
+import 'package:analyzer/src/generated/resolver.dart';
+import 'package:analyzer/src/generated/source.dart';
 
 /**
  * A `BuildUnitElementTask` builds a compilation unit element for a single

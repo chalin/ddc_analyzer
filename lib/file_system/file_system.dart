@@ -6,7 +6,7 @@ library file_system;
 
 import 'dart:async';
 
-import 'package:ddc_analyzer/src/generated/source.dart';
+import 'package:analyzer/src/generated/source.dart';
 import 'package:path/path.dart';
 import 'package:watcher/watcher.dart';
 

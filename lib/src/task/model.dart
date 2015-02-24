@@ -4,9 +4,9 @@
 
 library analyzer.src.task.model;
 
-import 'package:ddc_analyzer/src/generated/engine.dart' hide AnalysisTask;
-import 'package:ddc_analyzer/src/task/inputs.dart';
-import 'package:ddc_analyzer/task/model.dart';
+import 'package:analyzer/src/generated/engine.dart' hide AnalysisTask;
+import 'package:analyzer/src/task/inputs.dart';
+import 'package:analyzer/task/model.dart';
 
 /**
  * A concrete implementation of a [ContributionPoint].

@@ -4,12 +4,12 @@
 
 library test_utils;
 
-import 'package:ddc_analyzer/src/generated/ast.dart';
-import 'package:ddc_analyzer/src/generated/engine.dart';
-import 'package:ddc_analyzer/src/generated/error.dart';
-import 'package:ddc_analyzer/src/generated/parser.dart';
-import 'package:ddc_analyzer/src/generated/scanner.dart';
-import 'package:ddc_analyzer/src/generated/source.dart';
+import 'package:analyzer/src/generated/ast.dart';
+import 'package:analyzer/src/generated/engine.dart';
+import 'package:analyzer/src/generated/error.dart';
+import 'package:analyzer/src/generated/parser.dart';
+import 'package:analyzer/src/generated/scanner.dart';
+import 'package:analyzer/src/generated/source.dart';
 import 'package:unittest/unittest.dart';
 
 

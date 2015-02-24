@@ -6,14 +6,14 @@ library test.enums;
 
 import 'dart:mirrors';
 
-import 'package:ddc_analyzer/src/generated/element.dart';
-import 'package:ddc_analyzer/src/generated/engine.dart';
-import 'package:ddc_analyzer/src/generated/error.dart';
-import 'package:ddc_analyzer/src/generated/html.dart' as html;
-import 'package:ddc_analyzer/src/generated/java_core.dart';
-import 'package:ddc_analyzer/src/generated/resolver.dart';
-import 'package:ddc_analyzer/src/generated/source.dart';
-import 'package:ddc_analyzer/src/generated/utilities_dart.dart';
+import 'package:analyzer/src/generated/element.dart';
+import 'package:analyzer/src/generated/engine.dart';
+import 'package:analyzer/src/generated/error.dart';
+import 'package:analyzer/src/generated/html.dart' as html;
+import 'package:analyzer/src/generated/java_core.dart';
+import 'package:analyzer/src/generated/resolver.dart';
+import 'package:analyzer/src/generated/source.dart';
+import 'package:analyzer/src/generated/utilities_dart.dart';
 import 'package:unittest/unittest.dart';
 
 import 'generated/ast_test.dart';

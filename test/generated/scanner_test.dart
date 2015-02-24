@@ -4,9 +4,9 @@
 
 library engine.scanner_test;
 
-import 'package:ddc_analyzer/src/generated/error.dart';
-import 'package:ddc_analyzer/src/generated/scanner.dart';
-import 'package:ddc_analyzer/src/generated/source.dart';
+import 'package:analyzer/src/generated/error.dart';
+import 'package:analyzer/src/generated/scanner.dart';
+import 'package:analyzer/src/generated/source.dart';
 import 'package:unittest/unittest.dart';
 
 import '../reflective_tests.dart';

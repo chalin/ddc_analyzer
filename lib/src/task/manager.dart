@@ -6,8 +6,8 @@ library analyzer.src.task.manager;
 
 import 'dart:collection';
 
-import 'package:ddc_analyzer/src/generated/java_engine.dart';
-import 'package:ddc_analyzer/task/model.dart';
+import 'package:analyzer/src/generated/java_engine.dart';
+import 'package:analyzer/task/model.dart';
 
 /**
  * An object that manages the information about the tasks that have been

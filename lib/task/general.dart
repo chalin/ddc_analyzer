@@ -4,9 +4,9 @@
 
 library analyzer.task.general;
 
-import 'package:ddc_analyzer/src/generated/error.dart';
-import 'package:ddc_analyzer/src/generated/source.dart';
-import 'package:ddc_analyzer/task/model.dart';
+import 'package:analyzer/src/generated/error.dart';
+import 'package:analyzer/src/generated/source.dart';
+import 'package:analyzer/task/model.dart';
 
 /**
  * The analysis errors associated with a target.

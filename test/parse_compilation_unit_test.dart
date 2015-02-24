@@ -4,7 +4,7 @@
 
 library test.parse.compilation.unit;
 
-import 'package:ddc_analyzer/analyzer.dart';
+import 'package:analyzer/analyzer.dart';
 import 'package:unittest/unittest.dart';
 
 void main() {

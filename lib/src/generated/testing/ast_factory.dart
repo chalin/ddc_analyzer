@@ -7,11 +7,11 @@
 
 library engine.testing.ast_factory;
 
-import 'package:ddc_analyzer/src/generated/ast.dart';
-import 'package:ddc_analyzer/src/generated/element.dart';
-import 'package:ddc_analyzer/src/generated/scanner.dart';
-import 'package:ddc_analyzer/src/generated/testing/token_factory.dart';
-import 'package:ddc_analyzer/src/generated/utilities_dart.dart';
+import 'package:analyzer/src/generated/ast.dart';
+import 'package:analyzer/src/generated/element.dart';
+import 'package:analyzer/src/generated/scanner.dart';
+import 'package:analyzer/src/generated/testing/token_factory.dart';
+import 'package:analyzer/src/generated/utilities_dart.dart';
 
 /**
  * The class `AstFactory` defines utility methods that can be used to create AST nodes. The

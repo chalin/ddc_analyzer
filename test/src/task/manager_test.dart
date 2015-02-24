@@ -4,9 +4,9 @@
 
 library test.src.task.manager_test;
 
-import 'package:ddc_analyzer/src/generated/java_engine.dart';
-import 'package:ddc_analyzer/src/task/manager.dart';
-import 'package:ddc_analyzer/task/model.dart';
+import 'package:analyzer/src/generated/java_engine.dart';
+import 'package:analyzer/src/task/manager.dart';
+import 'package:analyzer/task/model.dart';
 import 'package:unittest/unittest.dart';
 
 import '../../generated/test_support.dart';

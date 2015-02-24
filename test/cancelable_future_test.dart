@@ -5,7 +5,7 @@
 library test.cancelable_future;
 
 import 'reflective_tests.dart';
-import 'package:ddc_analyzer/src/cancelable_future.dart';
+import 'package:analyzer/src/cancelable_future.dart';
 import 'dart:async';
 import 'package:unittest/unittest.dart';
 import 'package:watcher/src/utils.dart';

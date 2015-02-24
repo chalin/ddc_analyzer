@@ -7,13 +7,13 @@
 
 library engine.ast_test;
 
-import 'package:ddc_analyzer/src/generated/ast.dart';
-import 'package:ddc_analyzer/src/generated/java_core.dart';
-import 'package:ddc_analyzer/src/generated/java_engine.dart' show Predicate;
-import 'package:ddc_analyzer/src/generated/java_engine.dart';
-import 'package:ddc_analyzer/src/generated/scanner.dart';
-import 'package:ddc_analyzer/src/generated/testing/ast_factory.dart';
-import 'package:ddc_analyzer/src/generated/testing/token_factory.dart';
+import 'package:analyzer/src/generated/ast.dart';
+import 'package:analyzer/src/generated/java_core.dart';
+import 'package:analyzer/src/generated/java_engine.dart' show Predicate;
+import 'package:analyzer/src/generated/java_engine.dart';
+import 'package:analyzer/src/generated/scanner.dart';
+import 'package:analyzer/src/generated/testing/ast_factory.dart';
+import 'package:analyzer/src/generated/testing/token_factory.dart';
 import 'package:unittest/unittest.dart';
 
 import '../reflective_tests.dart';

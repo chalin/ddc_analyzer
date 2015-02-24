@@ -9,7 +9,7 @@ library engine.element;
 
 import 'dart:collection';
 
-import 'package:ddc_analyzer/src/generated/utilities_general.dart';
+import 'package:analyzer/src/generated/utilities_general.dart';
 
 import 'ast.dart';
 import 'constant.dart' show EvaluationResultImpl;

@@ -6,7 +6,7 @@ library file_instrumentation;
 
 import 'dart:io';
 
-import 'package:ddc_analyzer/instrumentation/instrumentation.dart';
+import 'package:analyzer/instrumentation/instrumentation.dart';
 
 
 /**

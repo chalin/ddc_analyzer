@@ -11,10 +11,10 @@ import "dart:math" as math;
 import 'dart:async';
 import 'dart:collection';
 
-import 'package:ddc_analyzer/src/cancelable_future.dart';
-import 'package:ddc_analyzer/src/generated/incremental_resolution_validator.dart';
-import 'package:ddc_analyzer/src/services/lint.dart';
-import 'package:ddc_analyzer/src/task/task_dart.dart';
+import 'package:analyzer/src/cancelable_future.dart';
+import 'package:analyzer/src/generated/incremental_resolution_validator.dart';
+import 'package:analyzer/src/services/lint.dart';
+import 'package:analyzer/src/task/task_dart.dart';
 
 import '../../instrumentation/instrumentation.dart';
 import 'ast.dart';

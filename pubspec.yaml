@@ -1,4 +1,4 @@
-name: ddc_analyzer
+name: analyzer
 #version: 0.24.0-dev.2
 author: Dart Team <misc@dartlang.org>
 description: Static analyzer for Dart.

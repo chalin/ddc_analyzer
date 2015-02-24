@@ -8,10 +8,10 @@ import 'dart:collection';
 import 'dart:convert';
 import 'dart:io' as io;
 
-import 'package:ddc_analyzer/file_system/file_system.dart';
-import 'package:ddc_analyzer/source/package_map_provider.dart';
-import 'package:ddc_analyzer/src/generated/engine.dart';
-import 'package:ddc_analyzer/src/generated/sdk_io.dart';
+import 'package:analyzer/file_system/file_system.dart';
+import 'package:analyzer/source/package_map_provider.dart';
+import 'package:analyzer/src/generated/engine.dart';
+import 'package:analyzer/src/generated/sdk_io.dart';
 import 'package:path/path.dart';
 
 /**

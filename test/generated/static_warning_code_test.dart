@@ -4,8 +4,8 @@
 
 library engine.static_warning_code_test;
 
-import 'package:ddc_analyzer/src/generated/error.dart';
-import 'package:ddc_analyzer/src/generated/source_io.dart';
+import 'package:analyzer/src/generated/error.dart';
+import 'package:analyzer/src/generated/source_io.dart';
 import 'package:unittest/unittest.dart';
 
 import '../reflective_tests.dart';

@@ -4,12 +4,12 @@
 
 library test.engine.task.dart;
 
-import 'package:ddc_analyzer/src/generated/ast.dart';
-import 'package:ddc_analyzer/src/generated/engine.dart';
-import 'package:ddc_analyzer/src/generated/java_engine.dart';
-import 'package:ddc_analyzer/src/generated/source.dart';
-import 'package:ddc_analyzer/src/generated/source_io.dart';
-import 'package:ddc_analyzer/src/task/task_dart.dart';
+import 'package:analyzer/src/generated/ast.dart';
+import 'package:analyzer/src/generated/engine.dart';
+import 'package:analyzer/src/generated/java_engine.dart';
+import 'package:analyzer/src/generated/source.dart';
+import 'package:analyzer/src/generated/source_io.dart';
+import 'package:analyzer/src/task/task_dart.dart';
 import 'package:unittest/unittest.dart';
 
 import '../generated/engine_test.dart';

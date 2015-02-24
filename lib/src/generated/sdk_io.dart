@@ -9,7 +9,7 @@ library engine.sdk.io;
 
 import 'dart:io';
 
-import 'package:ddc_analyzer/src/generated/java_engine.dart';
+import 'package:analyzer/src/generated/java_engine.dart';
 
 import 'ast.dart';
 import 'engine.dart';

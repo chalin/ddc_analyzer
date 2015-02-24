@@ -7,7 +7,7 @@
 
 library engine.java_core_test;
 
-import 'package:ddc_analyzer/src/generated/java_core.dart';
+import 'package:analyzer/src/generated/java_core.dart';
 import 'package:unittest/unittest.dart';
 
 main() {

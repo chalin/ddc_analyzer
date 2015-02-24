@@ -4,8 +4,8 @@
 
 library test.src.task.test_support;
 
-import 'package:ddc_analyzer/src/generated/engine.dart' hide AnalysisTask;
-import 'package:ddc_analyzer/task/model.dart';
+import 'package:analyzer/src/generated/engine.dart' hide AnalysisTask;
+import 'package:analyzer/task/model.dart';
 
 class TestAnalysisTask extends AnalysisTask {
   TestAnalysisTask(AnalysisContext context, AnalysisTarget target)

@@ -4,7 +4,7 @@
 
 library test.instrumentation;
 
-import 'package:ddc_analyzer/instrumentation/instrumentation.dart';
+import 'package:analyzer/instrumentation/instrumentation.dart';
 import 'package:unittest/unittest.dart';
 
 import '../reflective_tests.dart';

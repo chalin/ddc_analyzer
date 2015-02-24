@@ -7,7 +7,7 @@ library engine.incremental_resolver;
 import 'dart:collection';
 import 'dart:math' as math;
 
-import 'package:ddc_analyzer/src/services/lint.dart';
+import 'package:analyzer/src/services/lint.dart';
 
 import 'ast.dart';
 import 'element.dart';

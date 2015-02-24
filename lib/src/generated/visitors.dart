@@ -4,7 +4,7 @@
 
 library engine.ast.visitors;
 
-import 'package:ddc_analyzer/src/generated/ast.dart';
+import 'package:analyzer/src/generated/ast.dart';
 
 /// An [AstVisitor] that delegates calls to visit methods to all [delegates]
 /// before calling [visitChildren].

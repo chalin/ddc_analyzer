@@ -9,7 +9,7 @@ import 'dart:io';
 import 'package:args/args.dart';
 import 'package:path/path.dart' as path;
 
-import 'package:ddc_analyzer/src/services/formatter_impl.dart';
+import 'package:analyzer/src/services/formatter_impl.dart';
 
 
 const BINARY_NAME = 'dartfmt';
