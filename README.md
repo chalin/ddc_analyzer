@@ -1,3 +1,20 @@
+# experimental copy of analyzer
+
+This code is an experimental version of the Dart analyzer package, with
+changes needed for the
+[dart-dev-compiler](https://github.com/dart-lang/dart-dev-compiler).
+
+The code in this repo is not meant to be published as a package in
+pub.dartlang.org, and it's only meant to be temporary. Our intention is to port
+these changes back to the original analyzer package as we evolve in exploring
+our options and better understand what changes are necessary.
+
+Having this code in it's own repo makes it much easier to track what
+changes we've made. We use the `master` branch for our latest changes, and use
+`upstream` to point to a fixed version of the analyzer package.
+
+
+## original README from analyzer:
 This code is part of an experimental port of the Editor's analysis engine from
 Java to Dart. While we will continue to support the Java version of the analysis
 engine and the services built on it, we also intend to provide the same services
