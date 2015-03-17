@@ -1072,6 +1072,9 @@ class AnalysisContextImpl implements InternalAnalysisContext {
   /** A factory to override how [TypeResolverVisitor] is created. */
   TypeResolverVisitorFactory typeResolverVisitorFactory;
 
+  /** A factory to override how [LibraryResolver] is created. */
+  LibraryResolverFactory libraryResolverFactory;
+
   /**
    * Initialize a newly created analysis context.
    */
@@ -9728,6 +9731,9 @@ abstract class InternalAnalysisContext implements AnalysisContext {
   /** A factory to override how [TypeResolverVisitor] is created. */
   TypeResolverVisitorFactory get typeResolverVisitorFactory;
 
+  /** A factory to override how [LibraryResolver] is created. */
+  LibraryResolverFactory get libraryResolverFactory;
+
   /**
    * Add the given source with the given information to this context.
    *
@@ -11201,7 +11207,10 @@ class ResolveDartLibraryTask extends AnalysisTask {
 
   @override
   void internalPerform() {
-    _resolver = new LibraryResolver(context);
+    LibraryResolverFactory resolverFactory = context.libraryResolverFactory;
+    _resolver = resolverFactory == null
+        ? new LibraryResolver(context)
+        : resolverFactory(context);
     _resolver.resolveLibrary(librarySource, true);
   }
 }

@@ -7754,6 +7754,11 @@ class LibraryResolver {
   TypeProvider _typeProvider;
 
   /**
+   * The object used to access the types from the core library.
+   */
+  TypeProvider get typeProvider => _typeProvider;
+
+  /**
    * A table mapping library sources to the information being maintained for those libraries.
    */
   HashMap<Source, Library> _libraryMap = new HashMap<Source, Library>();
@@ -8578,6 +8583,15 @@ class LibraryResolver {
    *           libraries could not have their types analyzed
    */
   void _resolveReferencesAndTypes() {
+    PerformanceTag prevTag = PerformanceStatistics.resolve.makeCurrent();
+    try {
+      resolveReferencesAndTypes();
+    } finally {
+      prevTag.makeCurrent();
+    }
+  }
+
+  void resolveReferencesAndTypes() {
     for (Library library in _librariesInCycles) {
       _resolveReferencesAndTypesInLibrary(library);
     }
@@ -10380,6 +10394,8 @@ class ResolverErrorCode extends ErrorCode {
   @override
   ErrorType get type => ErrorType.COMPILE_TIME_ERROR;
 }
+
+typedef LibraryResolver LibraryResolverFactory(AnalysisContext context);
 
 typedef ResolverVisitor ResolverVisitorFactory(
     Library library, Source source, TypeProvider typeProvider);
