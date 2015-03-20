@@ -8,6 +8,7 @@ import 'package:analyzer/src/generated/engine.dart' hide AnalysisTask;
 import 'package:analyzer/src/generated/source.dart';
 import 'package:analyzer/task/general.dart';
 import 'package:analyzer/task/model.dart';
+import 'package:analyzer/src/generated/java_engine.dart';
 
 /**
  * A task that gets the contents of the source associated with an analysis
@@ -17,17 +18,14 @@ class GetContentTask extends SourceBasedAnalysisTask {
   /**
    * The task descriptor describing this kind of task.
    */
-  static final TaskDescriptor DESCRIPTOR = new TaskDescriptor(
-      'GET_CONTENT',
-      createTask,
-      buildInputs,
-      <ResultDescriptor>[CONTENT, MODIFICATION_TIME]);
+  static final TaskDescriptor DESCRIPTOR = new TaskDescriptor('GET_CONTENT',
+      createTask, buildInputs, <ResultDescriptor>[CONTENT, MODIFICATION_TIME]);
 
   /**
    * Initialize a newly created task to access the content of the source
    * associated with the given [target] in the given [context].
    */
-  GetContentTask(InternalAnalysisContext context, AnalysisTarget target)
+  GetContentTask(AnalysisContext context, AnalysisTarget target)
       : super(context, target);
 
   @override
@@ -36,10 +34,14 @@ class GetContentTask extends SourceBasedAnalysisTask {
   @override
   internalPerform() {
     Source source = getRequiredSource();
-
-    TimestampedData<String> data = context.getContents(source);
-    outputs[CONTENT] = data.data;
-    outputs[MODIFICATION_TIME] = data.modificationTime;
+    try {
+      TimestampedData<String> data = context.getContents(source);
+      outputs[CONTENT] = data.data;
+      outputs[MODIFICATION_TIME] = data.modificationTime;
+    } catch (exception, stackTrace) {
+      throw new AnalysisException('Could not get contents of $source',
+          new CaughtException(exception, stackTrace));
+    }
   }
 
   /**
@@ -54,8 +56,8 @@ class GetContentTask extends SourceBasedAnalysisTask {
    * Create a [GetContentTask] based on the given [target] in the given
    * [context].
    */
-  static GetContentTask createTask(AnalysisContext context,
-      AnalysisTarget target) {
+  static GetContentTask createTask(
+      AnalysisContext context, AnalysisTarget target) {
     return new GetContentTask(context, target);
   }
 }
@@ -74,8 +76,7 @@ abstract class SourceBasedAnalysisTask extends AnalysisTask {
   @override
   String get description {
     Source source = target.source;
-    String sourceName =
-        target.source == null ? '<unknown source>' : source.fullName;
+    String sourceName = source == null ? '<unknown source>' : source.fullName;
     return '${descriptor.name} for source $sourceName';
   }
 }
