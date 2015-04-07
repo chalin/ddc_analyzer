@@ -7843,7 +7843,7 @@ class LibraryResolver {
     // method and punt the decision to the clients.
     //
     //if (analyzeAll) {
-    _resolveReferencesAndTypes();
+    resolveReferencesAndTypes();
     //} else {
     //  resolveReferencesAndTypes(targetLibrary);
     //}
@@ -7924,7 +7924,7 @@ class LibraryResolver {
     // method and punt the decision to the clients.
     //
     //if (analyzeAll) {
-    _resolveReferencesAndTypes();
+    resolveReferencesAndTypes();
     //} else {
     //  resolveReferencesAndTypes(targetLibrary);
     //}
@@ -8492,12 +8492,6 @@ class LibraryResolver {
    * @throws AnalysisException if any of the identifiers could not be resolved or if any of the
    *           libraries could not have their types analyzed
    */
-  void _resolveReferencesAndTypes() {
-    PerformanceStatistics.resolve.makeCurrentWhile(() {
-      resolveReferencesAndTypes();
-    });
-  }
-
   void resolveReferencesAndTypes() {
     for (Library library in _librariesInCycles) {
       _resolveReferencesAndTypesInLibrary(library);
