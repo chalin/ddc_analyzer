@@ -5,12 +5,10 @@
 library lint;
 
 import 'package:analyzer/src/generated/ast.dart';
-import 'package:analyzer/src/generated/utilities_general.dart';
 import 'package:analyzer/src/generated/engine.dart';
 import 'package:analyzer/src/generated/error.dart';
 import 'package:analyzer/src/generated/source.dart';
 import 'package:analyzer/src/generated/visitors.dart';
-
 
 /// Implementers contribute lint warnings via the provided error [reporter].
 abstract class Linter {
@@ -42,16 +40,13 @@ class LintGenerator {
       : _linters = linters != null ? linters : LINTERS;
 
   void generate() {
-    PerformanceTag prevTag = PerformanceStatistics.lint.makeCurrent();
-    try {
+    PerformanceStatistics.lint.makeCurrentWhile(() {
       _compilationUnits.forEach((cu) {
         if (cu.element != null) {
           _generate(cu, cu.element.source);
         }
       });
-    } finally {
-      prevTag.makeCurrent();
-    }
+    });
   }
 
   void _generate(CompilationUnit unit, Source source) {

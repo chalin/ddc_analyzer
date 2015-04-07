@@ -7,6 +7,7 @@ library engine.incremental_resolver;
 import 'dart:collection';
 import 'dart:math' as math;
 
+import 'package:analyzer/src/generated/constant.dart';
 import 'package:analyzer/src/services/lint.dart';
 
 import 'ast.dart';
@@ -22,12 +23,10 @@ import 'scanner.dart';
 import 'source.dart';
 import 'utilities_dart.dart';
 
-
 /**
  * If `true`, an attempt to resolve API-changing modifications is made.
  */
 bool _resolveApiChanges = false;
-
 
 /**
  * This method is used to enable/disable API-changing modifications resolution.
@@ -35,7 +34,6 @@ bool _resolveApiChanges = false;
 void set test_resolveApiChanges(bool value) {
   _resolveApiChanges = value;
 }
-
 
 /**
  * Instances of the class [DeclarationMatcher] determine whether the element
@@ -106,7 +104,7 @@ class DeclarationMatcher extends RecursiveAstVisitor {
       _captureEnclosingElements(element);
       _gatherElements(element);
       node.accept(this);
-    } on _DeclarationMismatchException catch (exception) {
+    } on _DeclarationMismatchException {
       return DeclarationMatchKind.MISMATCH;
     } finally {
       logger.exit();
@@ -183,10 +181,12 @@ class DeclarationMatcher extends RecursiveAstVisitor {
   visitConstructorDeclaration(ConstructorDeclaration node) {
     _hasConstructor = true;
     SimpleIdentifier constructorName = node.name;
-    ConstructorElementImpl element = constructorName == null ?
-        _enclosingClass.unnamedConstructor :
-        _enclosingClass.getNamedConstructor(constructorName.name);
+    ConstructorElementImpl element = constructorName == null
+        ? _enclosingClass.unnamedConstructor
+        : _enclosingClass.getNamedConstructor(constructorName.name);
     _processElement(element);
+    _assertEquals(node.constKeyword != null, element.isConst);
+    _assertEquals(node.factoryKeyword != null, element.isFactory);
     _assertCompatibleParameters(node.parameters, element.parameters);
     // TODO(scheglov) debug null Location
     if (element != null) {
@@ -270,9 +270,8 @@ class DeclarationMatcher extends RecursiveAstVisitor {
     _assertFalse(element.isSynthetic);
     _assertSameType(node.returnType, element.returnType);
     _assertCompatibleParameters(
-        node.functionExpression.parameters,
-        element.parameters);
-    _assertBodyModifiers(node.functionExpression.body, element);
+        node.functionExpression.parameters, element.parameters);
+    _assertBody(node.functionExpression.body, element);
     // matches, update the existing element
     ExecutableElement newElement = node.element;
     node.name.staticElement = element;
@@ -346,12 +345,12 @@ class DeclarationMatcher extends RecursiveAstVisitor {
       _assertEquals(node.isStatic, element.isStatic);
       _assertSameType(node.returnType, element.returnType);
       _assertCompatibleParameters(node.parameters, element.parameters);
-      _assertBodyModifiers(node.body, element);
+      _assertBody(node.body, element);
       _removedElements.remove(element);
       // matches, update the existing element
       node.name.staticElement = element;
       _setLocalElements(element, newElement);
-    } on _DeclarationMismatchException catch (e) {
+    } on _DeclarationMismatchException {
       _addedElements.add(newElement);
       _removeElement(element);
       // add new element
@@ -408,8 +407,7 @@ class DeclarationMatcher extends RecursiveAstVisitor {
       _assertEquals(_enclosingFieldNode.isStatic, element.isStatic);
     }
     _assertSameType(
-        (node.parent as VariableDeclarationList).type,
-        element.type);
+        (node.parent as VariableDeclarationList).type, element.type);
     // matches, restore the existing element
     node.name.staticElement = element;
     if (element is VariableElementImpl) {
@@ -425,12 +423,18 @@ class DeclarationMatcher extends RecursiveAstVisitor {
   }
 
   /**
-   * Asserts that [body] has async / generator modifiers compatible with the
-   * given [element].
+   * Assert that the given [body] is compatible with the given [element].
+   * It should not be empty if the [element] is not an abstract class member.
+   * If it is present, it should have the same async / generator modifiers.
    */
-  void _assertBodyModifiers(FunctionBody body, ExecutableElementImpl element) {
-    _assertEquals(body.isSynchronous, element.isSynchronous);
-    _assertEquals(body.isGenerator, element.isGenerator);
+  void _assertBody(FunctionBody body, ExecutableElementImpl element) {
+    if (body is EmptyFunctionBody) {
+      _assertTrue(element.isAbstract);
+    } else {
+      _assertFalse(element.isAbstract);
+      _assertEquals(body.isSynchronous, element.isSynchronous);
+      _assertEquals(body.isGenerator, element.isGenerator);
+    }
   }
 
   void _assertCombinators(List<Combinator> nodeCombinators,
@@ -463,8 +467,8 @@ class DeclarationMatcher extends RecursiveAstVisitor {
     _assertTrue(hideNames.isEmpty);
   }
 
-  void _assertCompatibleParameter(FormalParameter node,
-      ParameterElement element) {
+  void _assertCompatibleParameter(
+      FormalParameter node, ParameterElement element) {
     _assertEquals(node.kind, element.parameterKind);
     if (node.kind == ParameterKind.NAMED) {
       _assertEquals(node.identifier.name, element.name);
@@ -477,20 +481,24 @@ class DeclarationMatcher extends RecursiveAstVisitor {
       } else {
         _assertEquals(nodeDefault.toSource(), element.defaultValueCode);
       }
+      _assertCompatibleParameter(node.parameter, element);
     } else if (node is FieldFormalParameter) {
       _assertTrue(element.isInitializingFormal);
+      _assertCompatibleParameters(node.parameters, element.parameters);
     } else if (node is FunctionTypedFormalParameter) {
+      _assertFalse(element.isInitializingFormal);
       _assertTrue(element.type is FunctionType);
       FunctionType elementType = element.type;
       _assertCompatibleParameters(node.parameters, element.parameters);
       _assertSameType(node.returnType, elementType.returnType);
     } else if (node is SimpleFormalParameter) {
+      _assertFalse(element.isInitializingFormal);
       _assertSameType(node.type, element.type);
     }
   }
 
-  void _assertCompatibleParameters(FormalParameterList nodes,
-      List<ParameterElement> elements) {
+  void _assertCompatibleParameters(
+      FormalParameterList nodes, List<ParameterElement> elements) {
     if (nodes == null) {
       return _assertEquals(elements.length, 0);
     }
@@ -597,13 +605,13 @@ class DeclarationMatcher extends RecursiveAstVisitor {
     }
   }
 
-  void _assertSameTypeParameter(TypeParameter node,
-      TypeParameterElement element) {
+  void _assertSameTypeParameter(
+      TypeParameter node, TypeParameterElement element) {
     _assertSameType(node.bound, element.bound);
   }
 
-  void _assertSameTypeParameters(TypeParameterList nodesList,
-      List<TypeParameterElement> elements) {
+  void _assertSameTypeParameters(
+      TypeParameterList nodesList, List<TypeParameterElement> elements) {
     if (nodesList == null) {
       return _assertEquals(elements.length, 0);
     }
@@ -638,19 +646,19 @@ class DeclarationMatcher extends RecursiveAstVisitor {
         element is CompilationUnitElement ? element : element.enclosingElement;
     while (parent != null) {
       if (parent is CompilationUnitElement) {
-        _enclosingUnit = parent as CompilationUnitElement;
+        _enclosingUnit = parent;
         _enclosingLibrary = element.library;
       } else if (parent is ClassElement) {
         if (_enclosingClass == null) {
-          _enclosingClass = parent as ClassElement;
+          _enclosingClass = parent;
         }
       } else if (parent is FunctionTypeAliasElement) {
         if (_enclosingAlias == null) {
-          _enclosingAlias = parent as FunctionTypeAliasElement;
+          _enclosingAlias = parent;
         }
       } else if (parent is ParameterElement) {
         if (_enclosingParameter == null) {
-          _enclosingParameter = parent as ParameterElement;
+          _enclosingParameter = parent;
         }
       }
       parent = parent.enclosingElement;
@@ -709,8 +717,8 @@ class DeclarationMatcher extends RecursiveAstVisitor {
    * Return the [UriReferencedElement] from [elements] with the given [uri], or
    * `null` if there is no such element.
    */
-  static UriReferencedElement
-      _findUriReferencedElement(List<UriReferencedElement> elements, String uri) {
+  static UriReferencedElement _findUriReferencedElement(
+      List<UriReferencedElement> elements, String uri) {
     for (UriReferencedElement element in elements) {
       if (element.uri == uri) {
         return element;
@@ -743,15 +751,14 @@ class DeclarationMatcher extends RecursiveAstVisitor {
     }
   }
 
-  static void _setLocalElements(ExecutableElementImpl to,
-      ExecutableElement from) {
+  static void _setLocalElements(
+      ExecutableElementImpl to, ExecutableElement from) {
     to.functions = from.functions;
     to.labels = from.labels;
     to.localVariables = from.localVariables;
     to.parameters = from.parameters;
   }
 }
-
 
 /**
  * Describes how declarations match an existing elements model.
@@ -779,7 +786,6 @@ class DeclarationMatchKind {
   @override
   String toString() => name;
 }
-
 
 /**
  * Instances of the class [IncrementalResolver] resolve the smallest portion of
@@ -880,6 +886,8 @@ class IncrementalResolver {
       }
       // resolve
       _resolveReferences(rootNode);
+      _computeConstants(rootNode);
+      _resolveErrors = errorListener.getErrorsForSource(_source);
       // verify
       _verify(rootNode);
       _context.invalidateLibraryHints(_librarySource);
@@ -945,15 +953,35 @@ class IncrementalResolver {
    *
    * [node] - the node being tested.
    */
-  bool _canBeResolved(AstNode node) =>
-      node is ClassDeclaration ||
-          node is ClassTypeAlias ||
-          node is CompilationUnit ||
-          node is ConstructorDeclaration ||
-          node is FunctionDeclaration ||
-          node is FunctionTypeAlias ||
-          node is MethodDeclaration ||
-          node is TopLevelVariableDeclaration;
+  bool _canBeResolved(AstNode node) => node is ClassDeclaration ||
+      node is ClassTypeAlias ||
+      node is CompilationUnit ||
+      node is ConstructorDeclaration ||
+      node is FunctionDeclaration ||
+      node is FunctionTypeAlias ||
+      node is MethodDeclaration ||
+      node is TopLevelVariableDeclaration;
+
+  /**
+   * Compute a value for all of the constants in the given [node].
+   */
+  void _computeConstants(AstNode node) {
+    // compute values
+    {
+      CompilationUnit unit = node.getAncestor((n) => n is CompilationUnit);
+      ConstantValueComputer computer =
+          new ConstantValueComputer(_typeProvider, _context.declaredVariables);
+      computer.add(unit);
+      computer.computeValues();
+    }
+    // validate
+    {
+      ErrorReporter errorReporter = new ErrorReporter(errorListener, _source);
+      ConstantVerifier constantVerifier =
+          new ConstantVerifier(errorReporter, _definingLibrary, _typeProvider);
+      node.accept(constantVerifier);
+    }
+  }
 
   /**
    * Starting at [node], find the smallest AST node that can be resolved
@@ -1015,31 +1043,19 @@ class IncrementalResolver {
       // resolve types
       {
         TypeResolverVisitor visitor = new TypeResolverVisitor.con3(
-            _definingLibrary,
-            _source,
-            _typeProvider,
-            scope,
-            errorListener);
+            _definingLibrary, _source, _typeProvider, scope, errorListener);
         node.accept(visitor);
       }
       // resolve variables
       {
         VariableResolverVisitor visitor = new VariableResolverVisitor.con2(
-            _definingLibrary,
-            _source,
-            _typeProvider,
-            scope,
-            errorListener);
+            _definingLibrary, _source, _typeProvider, scope, errorListener);
         node.accept(visitor);
       }
       // resolve references
       {
         ResolverVisitor visitor = new ResolverVisitor.con3(
-            _definingLibrary,
-            _source,
-            _typeProvider,
-            scope,
-            errorListener);
+            _definingLibrary, _source, _typeProvider, scope, errorListener);
         if (_resolutionContext.enclosingClassDeclaration != null) {
           visitor.visitClassDeclarationIncrementally(
               _resolutionContext.enclosingClassDeclaration);
@@ -1051,8 +1067,6 @@ class IncrementalResolver {
         visitor.initForIncrementalResolution();
         node.accept(visitor);
       }
-      // remember errors
-      _resolveErrors = errorListener.getErrorsForSource(_source);
     } finally {
       timer.stop('resolve references');
     }
@@ -1079,8 +1093,8 @@ class IncrementalResolver {
   void _updateElementNameOffsets() {
     LoggingTimer timer = logger.startTimer();
     try {
-      _definingUnit.accept(
-          new _ElementNameOffsetUpdater(_updateOffset, _updateDelta));
+      _definingUnit
+          .accept(new _ElementNameOffsetUpdater(_updateOffset, _updateDelta));
     } finally {
       timer.stop('update element offsets');
     }
@@ -1092,24 +1106,20 @@ class IncrementalResolver {
           entry.getValueInLibrary(DartEntry.RESOLUTION_ERRORS, _librarySource);
       List<AnalysisError> errors = _updateErrors(oldErrors, _resolveErrors);
       entry.setValueInLibrary(
-          DartEntry.RESOLUTION_ERRORS,
-          _librarySource,
-          errors);
+          DartEntry.RESOLUTION_ERRORS, _librarySource, errors);
     }
     {
-      List<AnalysisError> oldErrors =
-          entry.getValueInLibrary(DartEntry.VERIFICATION_ERRORS, _librarySource);
+      List<AnalysisError> oldErrors = entry.getValueInLibrary(
+          DartEntry.VERIFICATION_ERRORS, _librarySource);
       List<AnalysisError> errors = _updateErrors(oldErrors, _verifyErrors);
       entry.setValueInLibrary(
-          DartEntry.VERIFICATION_ERRORS,
-          _librarySource,
-          errors);
+          DartEntry.VERIFICATION_ERRORS, _librarySource, errors);
     }
     entry.setValueInLibrary(DartEntry.LINTS, _librarySource, _lints);
   }
 
-  List<AnalysisError> _updateErrors(List<AnalysisError> oldErrors,
-      List<AnalysisError> newErrors) {
+  List<AnalysisError> _updateErrors(
+      List<AnalysisError> oldErrors, List<AnalysisError> newErrors) {
     List<AnalysisError> errors = new List<AnalysisError>();
     // add updated old errors
     for (AnalysisError error in oldErrors) {
@@ -1137,10 +1147,8 @@ class IncrementalResolver {
     try {
       RecordingErrorListener errorListener = new RecordingErrorListener();
       ErrorReporter errorReporter = new ErrorReporter(errorListener, _source);
-      ErrorVerifier errorVerifier = new ErrorVerifier(
-          errorReporter,
-          _definingLibrary,
-          _typeProvider,
+      ErrorVerifier errorVerifier = new ErrorVerifier(errorReporter,
+          _definingLibrary, _typeProvider,
           new InheritanceManager(_definingLibrary));
       if (_resolutionContext.enclosingClassDeclaration != null) {
         errorVerifier.visitClassDeclarationIncrementally(
@@ -1154,12 +1162,12 @@ class IncrementalResolver {
   }
 }
 
-
 class PoorMansIncrementalResolver {
   final TypeProvider _typeProvider;
   final Source _unitSource;
   final DartEntry _entry;
   final CompilationUnit _oldUnit;
+  final AnalysisOptions _options;
   CompilationUnitElement _unitElement;
 
   int _updateOffset;
@@ -1171,7 +1179,7 @@ class PoorMansIncrementalResolver {
   List<AnalysisError> _newParseErrors = <AnalysisError>[];
 
   PoorMansIncrementalResolver(this._typeProvider, this._unitSource, this._entry,
-      this._oldUnit, bool resolveApiChanges) {
+      this._oldUnit, bool resolveApiChanges, this._options) {
     _resolveApiChanges = resolveApiChanges;
   }
 
@@ -1218,7 +1226,7 @@ class PoorMansIncrementalResolver {
           _updateDelta = newUnit.length - _oldUnit.length;
           // A Dart documentation comment change.
           if (firstPair.kind == _TokenDifferenceKind.COMMENT_DOC) {
-            bool success = _resolveComment(_oldUnit, newUnit, firstPair);
+            bool success = _resolveCommentDoc(newUnit, firstPair);
             logger.log('Documentation comment resolved: $success');
             return success;
           }
@@ -1228,10 +1236,7 @@ class PoorMansIncrementalResolver {
             _shiftTokens(firstPair.oldToken);
             {
               IncrementalResolver incrementalResolver = new IncrementalResolver(
-                  _unitElement,
-                  _updateOffset,
-                  _updateEndOld,
-                  _updateEndNew);
+                  _unitElement, _updateOffset, _updateEndOld, _updateEndNew);
               incrementalResolver._updateElementNameOffsets();
               incrementalResolver._shiftEntryErrors();
             }
@@ -1258,9 +1263,11 @@ class PoorMansIncrementalResolver {
             AstNode oldParent = oldParents[i];
             AstNode newParent = newParents[i];
             if (oldParent is FunctionDeclaration &&
-                newParent is FunctionDeclaration ||
-                oldParent is MethodDeclaration && newParent is MethodDeclaration ||
-                oldParent is ConstructorDeclaration && newParent is ConstructorDeclaration) {
+                    newParent is FunctionDeclaration ||
+                oldParent is MethodDeclaration &&
+                    newParent is MethodDeclaration ||
+                oldParent is ConstructorDeclaration &&
+                    newParent is ConstructorDeclaration) {
               oldNode = oldParent;
               newNode = newParent;
               found = true;
@@ -1275,6 +1282,14 @@ class PoorMansIncrementalResolver {
           if (!found) {
             logger.log('Failure: no enclosing function body or executable.');
             return false;
+          }
+          // fail if a comment change outside the bodies
+          if (firstPair.kind == _TokenDifferenceKind.COMMENT) {
+            if (beginOffsetOld <= oldNode.offset ||
+                beginOffsetNew <= newNode.offset) {
+              logger.log('Failure: comment outside a function body.');
+              return false;
+            }
           }
         }
         logger.log(() => 'oldNode: $oldNode');
@@ -1300,10 +1315,7 @@ class PoorMansIncrementalResolver {
         }
         // perform incremental resolution
         IncrementalResolver incrementalResolver = new IncrementalResolver(
-            _unitElement,
-            _updateOffset,
-            _updateEndOld,
-            _updateEndNew);
+            _unitElement, _updateOffset, _updateEndOld, _updateEndNew);
         bool success = incrementalResolver.resolve(newNode);
         // check if success
         if (!success) {
@@ -1343,8 +1355,7 @@ class PoorMansIncrementalResolver {
    * Attempts to resolve a documentation comment change.
    * Returns `true` if success.
    */
-  bool _resolveComment(CompilationUnit oldUnit, CompilationUnit newUnit,
-      _TokenPair firstPair) {
+  bool _resolveCommentDoc(CompilationUnit newUnit, _TokenPair firstPair) {
     Token oldToken = firstPair.oldToken;
     Token newToken = firstPair.newToken;
     CommentToken oldComments = oldToken.precedingComments;
@@ -1355,7 +1366,7 @@ class PoorMansIncrementalResolver {
     // find nodes
     int offset = oldComments.offset;
     logger.log('offset: $offset');
-    Comment oldComment = _findNodeCovering(oldUnit, offset, offset);
+    Comment oldComment = _findNodeCovering(_oldUnit, offset, offset);
     Comment newComment = _findNodeCovering(newUnit, offset, offset);
     logger.log('oldComment.beginToken: ${oldComment.beginToken}');
     logger.log('newComment.beginToken: ${newComment.beginToken}');
@@ -1367,10 +1378,7 @@ class PoorMansIncrementalResolver {
     NodeReplacer.replace(oldComment, newComment);
     // update elements
     IncrementalResolver incrementalResolver = new IncrementalResolver(
-        _unitElement,
-        _updateOffset,
-        _updateEndOld,
-        _updateEndNew);
+        _unitElement, _updateOffset, _updateEndOld, _updateEndNew);
     incrementalResolver._updateElementNameOffsets();
     incrementalResolver._shiftEntryErrors();
     _updateEntry();
@@ -1384,9 +1392,28 @@ class PoorMansIncrementalResolver {
     RecordingErrorListener errorListener = new RecordingErrorListener();
     CharSequenceReader reader = new CharSequenceReader(code);
     Scanner scanner = new Scanner(_unitSource, reader, errorListener);
+    scanner.enableNullAwareOperators = _options.enableNullAwareOperators;
     Token token = scanner.tokenize();
     _newScanErrors = errorListener.errors;
     return token;
+  }
+
+  /**
+   * Set the given [comment] as a "precedingComments" for [token].
+   */
+  void _setPrecedingComments(Token token, CommentToken comment) {
+    if (token is BeginTokenWithComment) {
+      token.precedingComments = comment;
+    } else if (token is KeywordTokenWithComment) {
+      token.precedingComments = comment;
+    } else if (token is StringTokenWithComment) {
+      token.precedingComments = comment;
+    } else if (token is TokenWithComment) {
+      token.precedingComments = comment;
+    } else {
+      Type parentType = token != null ? token.runtimeType : null;
+      throw new AnalysisException('Uknown parent token type: $parentType');
+    }
   }
 
   void _shiftTokens(Token token) {
@@ -1425,8 +1452,8 @@ class PoorMansIncrementalResolver {
     return numOpen + numOpen2 == numClosed;
   }
 
-  static _TokenDifferenceKind _compareToken(Token oldToken, Token newToken,
-      int delta, bool forComment) {
+  static _TokenDifferenceKind _compareToken(
+      Token oldToken, Token newToken, int delta, bool forComment) {
     while (true) {
       if (oldToken == null && newToken == null) {
         return null;
@@ -1539,7 +1566,6 @@ class PoorMansIncrementalResolver {
     return parents;
   }
 
-
   /**
    * Returns number of tokens with the given [type].
    */
@@ -1553,26 +1579,7 @@ class PoorMansIncrementalResolver {
     }
     return count;
   }
-
-  /**
-   * Set the given [comment] as a "precedingComments" for [parent].
-   */
-  static void _setPrecedingComments(Token parent, CommentToken comment) {
-    if (parent is BeginTokenWithComment) {
-      parent.precedingComments = comment;
-    } else if (parent is KeywordTokenWithComment) {
-      parent.precedingComments = comment;
-    } else if (parent is StringTokenWithComment) {
-      parent.precedingComments = comment;
-    } else if (parent is TokenWithComment) {
-      parent.precedingComments = comment;
-    } else {
-      Type parentType = parent != null ? parent.runtimeType : null;
-      throw new AnalysisException('Uknown parent token type: $parentType');
-    }
-  }
 }
-
 
 /**
  * The context to resolve an [AstNode] in.
@@ -1583,7 +1590,6 @@ class ResolutionContext {
   ClassElement enclosingClass;
   Scope scope;
 }
-
 
 /**
  * Instances of the class [ResolutionContextBuilder] build the context for a
@@ -1660,8 +1666,7 @@ class ResolutionContextBuilder {
             "Cannot build a scope for an unresolved class");
       }
       scope = new ClassScope(
-          new TypeParameterScope(scope, _enclosingClass),
-          _enclosingClass);
+          new TypeParameterScope(scope, _enclosingClass), _enclosingClass);
     } else if (node is ClassTypeAlias) {
       ClassElement element = node.element;
       if (element == null) {
@@ -1725,8 +1730,8 @@ class ResolutionContextBuilder {
    * Throws [AnalysisException] if the AST structure has not been resolved or
    * is not part of a [CompilationUnit]
    */
-  static ResolutionContext contextFor(AstNode node,
-      AnalysisErrorListener errorListener) {
+  static ResolutionContext contextFor(
+      AstNode node, AnalysisErrorListener errorListener) {
     if (node == null) {
       throw new AnalysisException("Cannot create context: node is null");
     }
@@ -1744,15 +1749,12 @@ class ResolutionContextBuilder {
   }
 }
 
-
 /**
  * Instances of the class [_DeclarationMismatchException] represent an exception
  * that is thrown when the element model defined by a given AST structure does
  * not match an existing element model.
  */
-class _DeclarationMismatchException {
-}
-
+class _DeclarationMismatchException {}
 
 class _ElementNameOffsetUpdater extends GeneralizingElementVisitor {
   final int updateOffset;
@@ -1769,7 +1771,6 @@ class _ElementNameOffsetUpdater extends GeneralizingElementVisitor {
     super.visitElement(element);
   }
 }
-
 
 class _ElementsGatherer extends GeneralizingElementVisitor {
   final DeclarationMatcher matcher;
@@ -1796,8 +1797,7 @@ class _ElementsGatherer extends GeneralizingElementVisitor {
   }
 
   @override
-  visitParameterElement(ParameterElement element) {
-  }
+  visitParameterElement(ParameterElement element) {}
 
   @override
   visitPropertyAccessorElement(PropertyAccessorElement element) {
@@ -1816,8 +1816,7 @@ class _ElementsGatherer extends GeneralizingElementVisitor {
   }
 
   @override
-  visitTypeParameterElement(TypeParameterElement element) {
-  }
+  visitTypeParameterElement(TypeParameterElement element) {}
 
   void _addElement(Element element) {
     if (element != null) {
@@ -1826,7 +1825,6 @@ class _ElementsGatherer extends GeneralizingElementVisitor {
     }
   }
 }
-
 
 /**
  * Describes how two [Token]s are different.
@@ -1844,7 +1842,6 @@ class _TokenDifferenceKind {
   @override
   String toString() => name;
 }
-
 
 class _TokenPair {
   final _TokenDifferenceKind kind;
