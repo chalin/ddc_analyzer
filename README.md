@@ -13,6 +13,10 @@ Having this code in it's own repo makes it much easier to track what
 changes we've made. We use the `master` branch for our latest changes, and use
 `upstream` to point to a fixed version of the analyzer package. See these [notes](https://github.com/dart-lang/ddc_analyzer/wiki) for details on how we roll changes when a new version of analyzer is released.
 
+Use this URL to see what changes we currently have in `master` that have not been added yet to the analyzer package:
+
+https://github.com/dart-lang/ddc_analyzer/compare/upstream...master
+
 
 ## original README from analyzer:
 This code is part of an experimental port of the Editor's analysis engine from
