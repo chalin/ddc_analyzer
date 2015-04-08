@@ -11,7 +11,7 @@ our options and better understand what changes are necessary.
 
 Having this code in it's own repo makes it much easier to track what
 changes we've made. We use the `master` branch for our latest changes, and use
-`upstream` to point to a fixed version of the analyzer package.
+`upstream` to point to a fixed version of the analyzer package. See these [notes](https://github.com/dart-lang/ddc_analyzer/wiki) for details on how we roll changes when a new version of analyzer is released.
 
 
 ## original README from analyzer:
