@@ -1941,6 +1941,70 @@ class Foo {
         "int x; ; int y;", [ParserErrorCode.UNEXPECTED_TOKEN]);
   }
 
+  void test_unterminatedString_at_eof() {
+    // Although the "unterminated string" error message is produced by the
+    // scanner, we need to verify that the parser can handle the tokens
+    // produced by the scanner when an unterminated string is encountered.
+    ParserTestCase.parseCompilationUnit(r'''
+void main() {
+  var x = "''', [
+      ScannerErrorCode.UNTERMINATED_STRING_LITERAL,
+      ParserErrorCode.EXPECTED_TOKEN,
+      ParserErrorCode.EXPECTED_TOKEN
+    ]);
+  }
+
+  void test_unterminatedString_at_eol() {
+    // Although the "unterminated string" error message is produced by the
+    // scanner, we need to verify that the parser can handle the tokens
+    // produced by the scanner when an unterminated string is encountered.
+    ParserTestCase.parseCompilationUnit(r'''
+void main() {
+  var x = "
+;
+}
+''', [ScannerErrorCode.UNTERMINATED_STRING_LITERAL]);
+  }
+
+  void test_unterminatedString_multiline_at_eof_3_quotes() {
+    // Although the "unterminated string" error message is produced by the
+    // scanner, we need to verify that the parser can handle the tokens
+    // produced by the scanner when an unterminated string is encountered.
+    ParserTestCase.parseCompilationUnit(r'''
+void main() {
+  var x = """''', [
+      ScannerErrorCode.UNTERMINATED_STRING_LITERAL,
+      ParserErrorCode.EXPECTED_TOKEN,
+      ParserErrorCode.EXPECTED_TOKEN
+    ]);
+  }
+
+  void test_unterminatedString_multiline_at_eof_4_quotes() {
+    // Although the "unterminated string" error message is produced by the
+    // scanner, we need to verify that the parser can handle the tokens
+    // produced by the scanner when an unterminated string is encountered.
+    ParserTestCase.parseCompilationUnit(r'''
+void main() {
+  var x = """"''', [
+      ScannerErrorCode.UNTERMINATED_STRING_LITERAL,
+      ParserErrorCode.EXPECTED_TOKEN,
+      ParserErrorCode.EXPECTED_TOKEN
+    ]);
+  }
+
+  void test_unterminatedString_multiline_at_eof_5_quotes() {
+    // Although the "unterminated string" error message is produced by the
+    // scanner, we need to verify that the parser can handle the tokens
+    // produced by the scanner when an unterminated string is encountered.
+    ParserTestCase.parseCompilationUnit(r'''
+void main() {
+  var x = """""''', [
+      ScannerErrorCode.UNTERMINATED_STRING_LITERAL,
+      ParserErrorCode.EXPECTED_TOKEN,
+      ParserErrorCode.EXPECTED_TOKEN
+    ]);
+  }
+
   void test_useOfUnaryPlusOperator() {
     SimpleIdentifier expression = parse4(
         "parseUnaryExpression", "+x", [ParserErrorCode.MISSING_IDENTIFIER]);
@@ -3203,6 +3267,16 @@ class B = Object with A {}''', [ParserErrorCode.EXPECTED_TOKEN]);
 
   void test_functionExpression_named() {
     parseExpression("m(f() => 0);", [ParserErrorCode.EXPECTED_TOKEN]);
+  }
+
+  void test_importDirectivePartial() {
+    CompilationUnit unit = ParserTestCase.parseCompilationUnit(
+        "import 'b.dart' d as b;",
+        [ParserErrorCode.UNEXPECTED_TOKEN]);
+    ImportDirective importDirective = unit.childEntities.first;
+    expect(importDirective.asKeyword, isNotNull);
+    expect(unit.directives, hasLength(1));
+    expect(unit.declarations, hasLength(0));
   }
 
   void test_incomplete_conditionalExpression() {

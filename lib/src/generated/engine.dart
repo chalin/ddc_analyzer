@@ -1017,7 +1017,9 @@ class AnalysisContextImpl implements InternalAnalysisContext {
    */
   TypeResolverVisitorFactory typeResolverVisitorFactory;
 
-  /** A factory to override how [LibraryResolver] is created. */
+  /**
+   * A factory to override how [LibraryResolver] is created.
+   */
   LibraryResolverFactory libraryResolverFactory;
 
   /**
@@ -5737,17 +5739,6 @@ class AnalysisEngine {
    */
   final PartitionManager partitionManager = new PartitionManager();
 
-  /**
-   * A flag indicating whether union types should be used.
-   */
-  bool enableUnionTypes = false;
-
-  /**
-   * A flag indicating whether union types should have strict semantics. This
-   * option has no effect when `enabledUnionTypes` is `false`.
-   */
-  bool strictUnionTypes = false;
-
   AnalysisEngine._();
 
   /**
@@ -9044,7 +9035,9 @@ abstract class InternalAnalysisContext implements AnalysisContext {
    */
   TypeResolverVisitorFactory get typeResolverVisitorFactory;
 
-  /** A factory to override how [LibraryResolver] is created. */
+  /**
+   * A factory to override how [LibraryResolver] is created.
+   */
   LibraryResolverFactory get libraryResolverFactory;
 
   /**

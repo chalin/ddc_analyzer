@@ -4352,16 +4352,111 @@ class FunctionTypeScope extends EnclosedScope {
 }
 
 /**
- * An [AstVisitor] that fills [UsedElements].
+ * A visitor that visits ASTs and fills [UsedImportedElements].
  */
-class GatherUsedElementsVisitor extends RecursiveAstVisitor {
-  final UsedElements usedElements = new UsedElements();
+class GatherUsedImportedElementsVisitor extends RecursiveAstVisitor {
+  final LibraryElement library;
+  final UsedImportedElements usedElements = new UsedImportedElements();
+
+  GatherUsedImportedElementsVisitor(this.library);
+
+  @override
+  void visitExportDirective(ExportDirective node) {
+    _visitMetadata(node.metadata);
+  }
+
+  @override
+  void visitImportDirective(ImportDirective node) {
+    _visitMetadata(node.metadata);
+  }
+
+  @override
+  void visitLibraryDirective(LibraryDirective node) {
+    _visitMetadata(node.metadata);
+  }
+
+  @override
+  void visitPrefixedIdentifier(PrefixedIdentifier node) {
+    // If the prefixed identifier references some A.B, where A is a library
+    // prefix, then we can lookup the associated ImportDirective in
+    // prefixElementMap and remove it from the unusedImports list.
+    SimpleIdentifier prefixIdentifier = node.prefix;
+    Element element = prefixIdentifier.staticElement;
+    if (element is PrefixElement) {
+      usedElements.prefixes.add(element);
+      return;
+    }
+    // Otherwise, pass the prefixed identifier element and name onto
+    // visitIdentifier.
+    _visitIdentifier(element, prefixIdentifier.name);
+  }
+
+  @override
+  void visitSimpleIdentifier(SimpleIdentifier node) {
+    _visitIdentifier(node.staticElement, node.name);
+  }
+
+  void _visitIdentifier(Element element, String name) {
+    if (element == null) {
+      return;
+    }
+    // If the element is multiply defined then call this method recursively for
+    // each of the conflicting elements.
+    if (element is MultiplyDefinedElement) {
+      MultiplyDefinedElement multiplyDefinedElement = element;
+      for (Element elt in multiplyDefinedElement.conflictingElements) {
+        _visitIdentifier(elt, name);
+      }
+      return;
+    } else if (element is PrefixElement) {
+      usedElements.prefixes.add(element);
+      return;
+    } else if (element.enclosingElement is! CompilationUnitElement) {
+      // Identifiers that aren't a prefix element and whose enclosing element
+      // isn't a CompilationUnit are ignored- this covers the case the
+      // identifier is a relative-reference, a reference to an identifier not
+      // imported by this library.
+      return;
+    }
+    // Ignore if an unknown library.
+    LibraryElement containingLibrary = element.library;
+    if (containingLibrary == null) {
+      return;
+    }
+    // Ignore if a local element.
+    if (library == containingLibrary) {
+      return;
+    }
+    // Remember the element.
+    usedElements.elements.add(element);
+  }
+
+  /**
+   * Given some [NodeList] of [Annotation]s, ensure that the identifiers are visited by
+   * this visitor. Specifically, this covers the cases where AST nodes don't have their identifiers
+   * visited by this visitor, but still need their annotations visited.
+   *
+   * @param annotations the list of annotations to visit
+   */
+  void _visitMetadata(NodeList<Annotation> annotations) {
+    int count = annotations.length;
+    for (int i = 0; i < count; i++) {
+      annotations[i].accept(this);
+    }
+  }
+}
+
+/**
+ * An [AstVisitor] that fills [UsedLocalElements].
+ */
+class GatherUsedLocalElementsVisitor extends RecursiveAstVisitor {
+  final UsedLocalElements usedElements = new UsedLocalElements();
 
   final LibraryElement _enclosingLibrary;
   ClassElement _enclosingClass;
   ExecutableElement _enclosingExec;
 
-  GatherUsedElementsVisitor(this._enclosingLibrary);
+  GatherUsedLocalElementsVisitor(this._enclosingLibrary);
 
   @override
   visitCatchClause(CatchClause node) {
@@ -4475,7 +4570,9 @@ class GatherUsedElementsVisitor extends RecursiveAstVisitor {
       if (parent2 is IsExpression) {
         return;
       }
-      if (parent2 is VariableDeclarationList) {
+      // We need to instantiate/extend/implement a class to actually use it.
+      // OTOH, function type aliases are used to define closure structures.
+      if (parent2 is VariableDeclarationList && element is ClassElement) {
         return;
       }
     }
@@ -4519,7 +4616,7 @@ class HintGenerator {
 
   LibraryElement _library;
 
-  ImportsVerifier _importsVerifier;
+  GatherUsedImportedElementsVisitor _usedImportedElementsVisitor;
 
   bool _enableDart2JSHints = false;
 
@@ -4528,47 +4625,47 @@ class HintGenerator {
    */
   InheritanceManager _manager;
 
-  GatherUsedElementsVisitor _usedElementsVisitor;
+  GatherUsedLocalElementsVisitor _usedLocalElementsVisitor;
 
   HintGenerator(this._compilationUnits, this._context, this._errorListener) {
     _library = _compilationUnits[0].element.library;
-    _importsVerifier = new ImportsVerifier(_library);
+    _usedImportedElementsVisitor =
+        new GatherUsedImportedElementsVisitor(_library);
     _enableDart2JSHints = _context.analysisOptions.dart2jsHint;
     _manager = new InheritanceManager(_compilationUnits[0].element.library);
-    _usedElementsVisitor = new GatherUsedElementsVisitor(_library);
+    _usedLocalElementsVisitor = new GatherUsedLocalElementsVisitor(_library);
   }
 
   void generateForLibrary() {
     PerformanceStatistics.hints.makeCurrentWhile(() {
-      for (int i = 0; i < _compilationUnits.length; i++) {
-        CompilationUnitElement element = _compilationUnits[i].element;
+      for (CompilationUnit unit in _compilationUnits) {
+        CompilationUnitElement element = unit.element;
         if (element != null) {
-          if (i == 0) {
-            _importsVerifier.inDefiningCompilationUnit = true;
-            _generateForCompilationUnit(_compilationUnits[i], element.source);
-            _importsVerifier.inDefiningCompilationUnit = false;
-          } else {
-            _generateForCompilationUnit(_compilationUnits[i], element.source);
-          }
+          _generateForCompilationUnit(unit, element.source);
         }
       }
-      ErrorReporter definingCompilationUnitErrorReporter = new ErrorReporter(
-          _errorListener, _compilationUnits[0].element.source);
-      _importsVerifier
-          .generateDuplicateImportHints(definingCompilationUnitErrorReporter);
-      _importsVerifier
-          .generateUnusedImportHints(definingCompilationUnitErrorReporter);
-      _library.accept(new UnusedElementsVerifier(
-          _errorListener, _usedElementsVisitor.usedElements));
+      CompilationUnit definingUnit = _compilationUnits[0];
+      ErrorReporter definingUnitErrorReporter =
+          new ErrorReporter(_errorListener, definingUnit.element.source);
+      {
+        ImportsVerifier importsVerifier = new ImportsVerifier();
+        importsVerifier.addImports(definingUnit);
+        importsVerifier
+            .removeUsedElements(_usedImportedElementsVisitor.usedElements);
+        importsVerifier.generateDuplicateImportHints(definingUnitErrorReporter);
+        importsVerifier.generateUnusedImportHints(definingUnitErrorReporter);
+      }
+      _library.accept(new UnusedLocalElementsVerifier(
+          _errorListener, _usedLocalElementsVisitor.usedElements));
     });
   }
 
   void _generateForCompilationUnit(CompilationUnit unit, Source source) {
     ErrorReporter errorReporter = new ErrorReporter(_errorListener, source);
-    unit.accept(_importsVerifier);
+    unit.accept(_usedImportedElementsVisitor);
     // dead code analysis
     unit.accept(new DeadCodeVerifier(errorReporter));
-    unit.accept(_usedElementsVisitor);
+    unit.accept(_usedLocalElementsVisitor);
     // dart2js analysis
     if (_enableDart2JSHints) {
       unit.accept(new Dart2JSVerifier(errorReporter));
@@ -5352,19 +5449,7 @@ class ImplicitLabelScope {
  * While this class does not yet have support for an "Organize Imports" action, this logic built up
  * in this class could be used for such an action in the future.
  */
-class ImportsVerifier extends RecursiveAstVisitor<Object> {
-  /**
-   * This is set to `true` if the current compilation unit which is being visited is the
-   * defining compilation unit for the library, its value can be set with
-   * [setInDefiningCompilationUnit].
-   */
-  bool _inDefiningCompilationUnit = false;
-
-  /**
-   * The current library.
-   */
-  LibraryElement _currentLibrary;
-
+class ImportsVerifier /*extends RecursiveAstVisitor<Object>*/ {
   /**
    * A list of [ImportDirective]s that the current library imports, as identifiers are visited
    * by this visitor and an import has been identified as being used by the library, the
@@ -5373,13 +5458,13 @@ class ImportsVerifier extends RecursiveAstVisitor<Object> {
    *
    * See [ImportsVerifier.generateUnusedImportErrors].
    */
-  List<ImportDirective> _unusedImports;
+  final List<ImportDirective> _unusedImports = <ImportDirective>[];
 
   /**
    * After the list of [unusedImports] has been computed, this list is a proper subset of the
    * unused imports that are listed more than once.
    */
-  List<ImportDirective> _duplicateImports;
+  final List<ImportDirective> _duplicateImports = <ImportDirective>[];
 
   /**
    * This is a map between the set of [LibraryElement]s that the current library imports, and
@@ -5392,7 +5477,8 @@ class ImportsVerifier extends RecursiveAstVisitor<Object> {
    * will need to be used to compute the correct [ImportDirective] being used, see
    * [namespaceMap].
    */
-  HashMap<LibraryElement, List<ImportDirective>> _libraryMap;
+  final HashMap<LibraryElement, List<ImportDirective>> _libraryMap =
+      new HashMap<LibraryElement, List<ImportDirective>>();
 
   /**
    * In cases where there is more than one import directive per library element, this mapping is
@@ -5400,7 +5486,8 @@ class ImportsVerifier extends RecursiveAstVisitor<Object> {
    * [Namespace] for each of the imports to do lookups in the same way that they are done from
    * the [ElementResolver].
    */
-  HashMap<ImportDirective, Namespace> _namespaceMap;
+  final HashMap<ImportDirective, Namespace> _namespaceMap =
+      new HashMap<ImportDirective, Namespace>();
 
   /**
    * This is a map between prefix elements and the import directives from which they are derived. In
@@ -5412,25 +5499,71 @@ class ImportsVerifier extends RecursiveAstVisitor<Object> {
    * it is possible to have an unreported unused import in situations where two imports use the same
    * prefix and at least one import directive is used.
    */
-  HashMap<PrefixElement, List<ImportDirective>> _prefixElementMap;
+  final HashMap<PrefixElement, List<ImportDirective>> _prefixElementMap =
+      new HashMap<PrefixElement, List<ImportDirective>>();
 
-  /**
-   * Create a new instance of the [ImportsVerifier].
-   *
-   * @param errorReporter the error reporter
-   */
-  ImportsVerifier(LibraryElement library) {
-    this._currentLibrary = library;
-    this._unusedImports = new List<ImportDirective>();
-    this._duplicateImports = new List<ImportDirective>();
-    this._libraryMap = new HashMap<LibraryElement, List<ImportDirective>>();
-    this._namespaceMap = new HashMap<ImportDirective, Namespace>();
-    this._prefixElementMap =
-        new HashMap<PrefixElement, List<ImportDirective>>();
-  }
-
-  void set inDefiningCompilationUnit(bool inDefiningCompilationUnit) {
-    this._inDefiningCompilationUnit = inDefiningCompilationUnit;
+  void addImports(CompilationUnit node) {
+    for (Directive directive in node.directives) {
+      if (directive is ImportDirective) {
+        ImportDirective importDirective = directive;
+        LibraryElement libraryElement = importDirective.uriElement;
+        if (libraryElement != null) {
+          _unusedImports.add(importDirective);
+          //
+          // Initialize prefixElementMap
+          //
+          if (importDirective.asKeyword != null) {
+            SimpleIdentifier prefixIdentifier = importDirective.prefix;
+            if (prefixIdentifier != null) {
+              Element element = prefixIdentifier.staticElement;
+              if (element is PrefixElement) {
+                PrefixElement prefixElementKey = element;
+                List<ImportDirective> list =
+                    _prefixElementMap[prefixElementKey];
+                if (list == null) {
+                  list = new List<ImportDirective>();
+                  _prefixElementMap[prefixElementKey] = list;
+                }
+                list.add(importDirective);
+              }
+              // TODO (jwren) Can the element ever not be a PrefixElement?
+            }
+          }
+          //
+          // Initialize libraryMap: libraryElement -> importDirective
+          //
+          _putIntoLibraryMap(libraryElement, importDirective);
+          //
+          // For this new addition to the libraryMap, also recursively add any
+          // exports from the libraryElement.
+          //
+          _addAdditionalLibrariesForExports(
+              libraryElement, importDirective, new List<LibraryElement>());
+        }
+      }
+    }
+    if (_unusedImports.length > 1) {
+      // order the list of unusedImports to find duplicates in faster than
+      // O(n^2) time
+      List<ImportDirective> importDirectiveArray =
+          new List<ImportDirective>.from(_unusedImports);
+      importDirectiveArray.sort(ImportDirective.COMPARATOR);
+      ImportDirective currentDirective = importDirectiveArray[0];
+      for (int i = 1; i < importDirectiveArray.length; i++) {
+        ImportDirective nextDirective = importDirectiveArray[i];
+        if (ImportDirective.COMPARATOR(currentDirective, nextDirective) == 0) {
+          // Add either the currentDirective or nextDirective depending on which
+          // comes second, this guarantees that the first of the duplicates
+          // won't be highlighted.
+          if (currentDirective.offset < nextDirective.offset) {
+            _duplicateImports.add(nextDirective);
+          } else {
+            _duplicateImports.add(currentDirective);
+          }
+        }
+        currentDirective = nextDirective;
+      }
+    }
   }
 
   /**
@@ -5471,128 +5604,52 @@ class ImportsVerifier extends RecursiveAstVisitor<Object> {
     }
   }
 
-  @override
-  Object visitCompilationUnit(CompilationUnit node) {
-    if (_inDefiningCompilationUnit) {
-      NodeList<Directive> directives = node.directives;
-      for (Directive directive in directives) {
-        if (directive is ImportDirective) {
-          ImportDirective importDirective = directive;
-          LibraryElement libraryElement = importDirective.uriElement;
-          if (libraryElement != null) {
-            _unusedImports.add(importDirective);
-            //
-            // Initialize prefixElementMap
-            //
-            if (importDirective.asKeyword != null) {
-              SimpleIdentifier prefixIdentifier = importDirective.prefix;
-              if (prefixIdentifier != null) {
-                Element element = prefixIdentifier.staticElement;
-                if (element is PrefixElement) {
-                  PrefixElement prefixElementKey = element;
-                  List<ImportDirective> list =
-                      _prefixElementMap[prefixElementKey];
-                  if (list == null) {
-                    list = new List<ImportDirective>();
-                    _prefixElementMap[prefixElementKey] = list;
-                  }
-                  list.add(importDirective);
-                }
-                // TODO (jwren) Can the element ever not be a PrefixElement?
-              }
-            }
-            //
-            // Initialize libraryMap: libraryElement -> importDirective
-            //
-            _putIntoLibraryMap(libraryElement, importDirective);
-            //
-            // For this new addition to the libraryMap, also recursively add any
-            // exports from the libraryElement.
-            //
-            _addAdditionalLibrariesForExports(
-                libraryElement, importDirective, new List<LibraryElement>());
-          }
-        }
-      }
-    }
-    // If there are no imports in this library, don't visit the identifiers in
-    // the library- there can be no unused imports.
+  /**
+   * Remove elements from [_unusedImports] using the given [usedElements].
+   */
+  void removeUsedElements(UsedImportedElements usedElements) {
+    // Stop if all the imports are known to be used.
     if (_unusedImports.isEmpty) {
-      return null;
+      return;
     }
-    if (_unusedImports.length > 1) {
-      // order the list of unusedImports to find duplicates in faster than
-      // O(n^2) time
-      List<ImportDirective> importDirectiveArray =
-          new List.from(_unusedImports);
-      importDirectiveArray.sort(ImportDirective.COMPARATOR);
-      ImportDirective currentDirective = importDirectiveArray[0];
-      for (int i = 1; i < importDirectiveArray.length; i++) {
-        ImportDirective nextDirective = importDirectiveArray[i];
-        if (ImportDirective.COMPARATOR(currentDirective, nextDirective) == 0) {
-          // Add either the currentDirective or nextDirective depending on which
-          // comes second, this guarantees that the first of the duplicates
-          // won't be highlighted.
-          if (currentDirective.offset < nextDirective.offset) {
-            _duplicateImports.add(nextDirective);
-          } else {
-            _duplicateImports.add(currentDirective);
-          }
-        }
-        currentDirective = nextDirective;
-      }
-    }
-    return super.visitCompilationUnit(node);
-  }
-
-  @override
-  Object visitExportDirective(ExportDirective node) {
-    _visitMetadata(node.metadata);
-    return null;
-  }
-
-  @override
-  Object visitImportDirective(ImportDirective node) {
-    _visitMetadata(node.metadata);
-    return null;
-  }
-
-  @override
-  Object visitLibraryDirective(LibraryDirective node) {
-    _visitMetadata(node.metadata);
-    return null;
-  }
-
-  @override
-  Object visitPrefixedIdentifier(PrefixedIdentifier node) {
-    if (_unusedImports.isEmpty) {
-      return null;
-    }
-    // If the prefixed identifier references some A.B, where A is a library
-    // prefix, then we can lookup the associated ImportDirective in
-    // prefixElementMap and remove it from the unusedImports list.
-    SimpleIdentifier prefixIdentifier = node.prefix;
-    Element element = prefixIdentifier.staticElement;
-    if (element is PrefixElement) {
-      List<ImportDirective> importDirectives = _prefixElementMap[element];
+    // Process import prefixes.
+    for (PrefixElement prefix in usedElements.prefixes) {
+      List<ImportDirective> importDirectives = _prefixElementMap[prefix];
       if (importDirectives != null) {
         for (ImportDirective importDirective in importDirectives) {
           _unusedImports.remove(importDirective);
         }
       }
-      return null;
     }
-    // Otherwise, pass the prefixed identifier element and name onto
-    // visitIdentifier.
-    return _visitIdentifier(element, prefixIdentifier.name);
-  }
-
-  @override
-  Object visitSimpleIdentifier(SimpleIdentifier node) {
-    if (_unusedImports.isEmpty) {
-      return null;
+    // Process top-level elements.
+    for (Element element in usedElements.elements) {
+      // Stop if all the imports are known to be used.
+      if (_unusedImports.isEmpty) {
+        return;
+      }
+      // Prepare import directives for this library.
+      LibraryElement library = element.library;
+      List<ImportDirective> importsLibrary = _libraryMap[library];
+      if (importsLibrary == null) {
+        continue;
+      }
+      // If there is only one import directive for this library, then it must be
+      // the directive that this element is imported with, remove it from the
+      // unusedImports list.
+      if (importsLibrary.length == 1) {
+        ImportDirective usedImportDirective = importsLibrary[0];
+        _unusedImports.remove(usedImportDirective);
+        continue;
+      }
+      // Otherwise, find import directives using namespaces.
+      String name = element.displayName;
+      for (ImportDirective importDirective in importsLibrary) {
+        Namespace namespace = _computeNamespace(importDirective);
+        if (namespace != null && namespace.get(name) != null) {
+          _unusedImports.remove(importDirective);
+        }
+      }
     }
-    return _visitIdentifier(node.staticElement, node.name);
   }
 
   /**
@@ -5648,79 +5705,6 @@ class ImportsVerifier extends RecursiveAstVisitor<Object> {
       _libraryMap[libraryElement] = importList;
     }
     importList.add(importDirective);
-  }
-
-  Object _visitIdentifier(Element element, String name) {
-    if (element == null) {
-      return null;
-    }
-    // If the element is multiply defined then call this method recursively for
-    // each of the conflicting elements.
-    if (element is MultiplyDefinedElement) {
-      MultiplyDefinedElement multiplyDefinedElement = element;
-      for (Element elt in multiplyDefinedElement.conflictingElements) {
-        _visitIdentifier(elt, name);
-      }
-      return null;
-    } else if (element is PrefixElement) {
-      List<ImportDirective> importDirectives = _prefixElementMap[element];
-      if (importDirectives != null) {
-        for (ImportDirective importDirective in importDirectives) {
-          _unusedImports.remove(importDirective);
-        }
-      }
-      return null;
-    } else if (element.enclosingElement is! CompilationUnitElement) {
-      // Identifiers that aren't a prefix element and whose enclosing element
-      // isn't a CompilationUnit are ignored- this covers the case the
-      // identifier is a relative-reference, a reference to an identifier not
-      // imported by this library.
-      return null;
-    }
-    LibraryElement containingLibrary = element.library;
-    if (containingLibrary == null) {
-      return null;
-    }
-    // If the element is declared in the current library, return.
-    if (_currentLibrary == containingLibrary) {
-      return null;
-    }
-    List<ImportDirective> importsFromSameLibrary =
-        _libraryMap[containingLibrary];
-    if (importsFromSameLibrary == null) {
-      return null;
-    }
-    if (importsFromSameLibrary.length == 1) {
-      // If there is only one import directive for this library, then it must be
-      // the directive that this element is imported with, remove it from the
-      // unusedImports list.
-      ImportDirective usedImportDirective = importsFromSameLibrary[0];
-      _unusedImports.remove(usedImportDirective);
-    } else {
-      // Otherwise, for each of the imported directives, use the namespaceMap to
-      for (ImportDirective importDirective in importsFromSameLibrary) {
-        // Get the namespace for this import
-        Namespace namespace = _computeNamespace(importDirective);
-        if (namespace != null && namespace.get(name) != null) {
-          _unusedImports.remove(importDirective);
-        }
-      }
-    }
-    return null;
-  }
-
-  /**
-   * Given some [NodeList] of [Annotation]s, ensure that the identifiers are visited by
-   * this visitor. Specifically, this covers the cases where AST nodes don't have their identifiers
-   * visited by this visitor, but still need their annotations visited.
-   *
-   * @param annotations the list of annotations to visit
-   */
-  void _visitMetadata(NodeList<Annotation> annotations) {
-    int count = annotations.length;
-    for (int i = 0; i < count; i++) {
-      annotations[i].accept(this);
-    }
   }
 }
 
@@ -11184,11 +11168,7 @@ class ResolverVisitor extends ScopedVisitor {
           new List<Map<VariableElement, DartType>>();
       perBranchOverrides.add(thenOverrides);
       perBranchOverrides.add(elseOverrides);
-      if (AnalysisEngine.instance.enableUnionTypes) {
-        _overrideManager.joinOverrides(perBranchOverrides);
-      } else {
-        _overrideManager.mergeOverrides(perBranchOverrides);
-      }
+      _overrideManager.mergeOverrides(perBranchOverrides);
     }
     return null;
   }
@@ -12926,79 +12906,6 @@ class TypeOverrideManager {
   }
 
   /**
-   * Update overrides assuming `perBranchOverrides` is the collection of per-branch overrides
-   * for *all* branches flowing into a join point. If a variable is updated in each per-branch
-   * override, then its type before the branching is ignored. Otherwise, its type before the
-   * branching is merged with all updates in the branches.
-   *
-   * Although this method would do the right thing for a single set of overrides, we require there
-   * to be at least two override sets. Instead use `applyOverrides` for to apply a single set.
-   *
-   * For example, for the code
-   *
-   * <pre>
-   *   if (c) {
-   *     ...
-   *   } else {
-   *     ...
-   *   }
-   * </pre>
-   * the `perBranchOverrides` would include overrides for the then and else branches, and for
-   * the code
-   *
-   * <pre>
-   *   ...
-   *   while(c) {
-   *     ...
-   *   }
-   * </pre>
-   * the `perBranchOverrides` would include overrides for before the loop and for the loop
-   * body.
-   *
-   * @param perBranchOverrides one set of overrides for each (at least two) branch flowing into the
-   *          join point
-   */
-  void joinOverrides(List<Map<VariableElement, DartType>> perBranchOverrides) {
-    if (perBranchOverrides.length < 2) {
-      throw new IllegalArgumentException(
-          "There is no point in joining zero or one override sets.");
-    }
-    Set<VariableElement> allElements = new HashSet<VariableElement>();
-    Set<VariableElement> commonElements =
-        new HashSet<VariableElement>.from(perBranchOverrides[0].keys.toSet());
-    for (Map<VariableElement, DartType> os in perBranchOverrides) {
-      // Union: elements updated in some branch.
-      allElements.addAll(os.keys.toSet());
-      // Intersection: elements updated in all branches.
-      commonElements.retainAll(os.keys.toSet());
-    }
-    Set<VariableElement> uncommonElements = allElements;
-    // Difference: elements updated in some but not all branches.
-    uncommonElements.removeAll(commonElements);
-    Map<VariableElement, DartType> joinOverrides =
-        new HashMap<VariableElement, DartType>();
-    // The common elements were updated in all branches, so their type
-    // before branching can be ignored.
-    for (VariableElement e in commonElements) {
-      joinOverrides[e] = perBranchOverrides[0][e];
-      for (Map<VariableElement, DartType> os in perBranchOverrides) {
-        joinOverrides[e] = UnionTypeImpl.union([joinOverrides[e], os[e]]);
-      }
-    }
-    // The uncommon elements were updated in some but not all branches,
-    // so they may still have the type they had before branching.
-    for (VariableElement e in uncommonElements) {
-      joinOverrides[e] = getBestType(e);
-      for (Map<VariableElement, DartType> os in perBranchOverrides) {
-        if (os.containsKey(e)) {
-          joinOverrides[e] = UnionTypeImpl.union([joinOverrides[e], os[e]]);
-        }
-      }
-    }
-    applyOverrides(joinOverrides);
-  }
-
-  /**
    * Update overrides assuming [perBranchOverrides] is the collection of
    * per-branch overrides for *all* branches flowing into a join point.
    *
@@ -13305,43 +13212,31 @@ class TypePromotionManager_TypePromoteScope {
 abstract class TypeProvider {
   /**
    * Return the type representing the built-in type 'bool'.
-   *
-   * @return the type representing the built-in type 'bool'
    */
   InterfaceType get boolType;
 
   /**
    * Return the type representing the type 'bottom'.
-   *
-   * @return the type representing the type 'bottom'
    */
   DartType get bottomType;
 
   /**
    * Return the type representing the built-in type 'Deprecated'.
-   *
-   * @return the type representing the built-in type 'Deprecated'
    */
   InterfaceType get deprecatedType;
 
   /**
    * Return the type representing the built-in type 'double'.
-   *
-   * @return the type representing the built-in type 'double'
    */
   InterfaceType get doubleType;
 
   /**
    * Return the type representing the built-in type 'dynamic'.
-   *
-   * @return the type representing the built-in type 'dynamic'
    */
   DartType get dynamicType;
 
   /**
    * Return the type representing the built-in type 'Function'.
-   *
-   * @return the type representing the built-in type 'Function'
    */
   InterfaceType get functionType;
 
@@ -13362,8 +13257,6 @@ abstract class TypeProvider {
 
   /**
    * Return the type representing the built-in type 'int'.
-   *
-   * @return the type representing the built-in type 'int'
    */
   InterfaceType get intType;
 
@@ -13379,15 +13272,17 @@ abstract class TypeProvider {
 
   /**
    * Return the type representing the built-in type 'List'.
-   *
-   * @return the type representing the built-in type 'List'
    */
   InterfaceType get listType;
 
   /**
+   * Return a list containing all of the types that cannot be either extended or
+   * implemented.
+   */
+  List<InterfaceType> get nonSubtypableTypes;
+
+  /**
    * Return the type representing the built-in type 'Map'.
-   *
-   * @return the type representing the built-in type 'Map'
    */
   InterfaceType get mapType;
 
@@ -13398,29 +13293,21 @@ abstract class TypeProvider {
 
   /**
    * Return the type representing the built-in type 'Null'.
-   *
-   * @return the type representing the built-in type 'null'
    */
   InterfaceType get nullType;
 
   /**
    * Return the type representing the built-in type 'num'.
-   *
-   * @return the type representing the built-in type 'num'
    */
   InterfaceType get numType;
 
   /**
    * Return the type representing the built-in type 'Object'.
-   *
-   * @return the type representing the built-in type 'Object'
    */
   InterfaceType get objectType;
 
   /**
    * Return the type representing the built-in type 'StackTrace'.
-   *
-   * @return the type representing the built-in type 'StackTrace'
    */
   InterfaceType get stackTraceType;
 
@@ -13436,22 +13323,16 @@ abstract class TypeProvider {
 
   /**
    * Return the type representing the built-in type 'String'.
-   *
-   * @return the type representing the built-in type 'String'
    */
   InterfaceType get stringType;
 
   /**
    * Return the type representing the built-in type 'Symbol'.
-   *
-   * @return the type representing the built-in type 'Symbol'
    */
   InterfaceType get symbolType;
 
   /**
    * Return the type representing the built-in type 'Type'.
-   *
-   * @return the type representing the built-in type 'Type'
    */
   InterfaceType get typeType;
 
@@ -13653,6 +13534,16 @@ class TypeProviderImpl implements TypeProvider {
 
   @override
   InterfaceType get mapType => _mapType;
+
+  @override
+  List<InterfaceType> get nonSubtypableTypes => <InterfaceType>[
+    nullType,
+    numType,
+    intType,
+    doubleType,
+    boolType,
+    stringType
+  ];
 
   @override
   DartObjectImpl get nullObject {
@@ -14957,11 +14848,11 @@ class TypeResolverVisitor extends ScopedVisitor {
 }
 
 /**
- * Instances of the class [UnusedElementsVerifier] traverse an element
- * structure looking for cases of [HintCode.UNUSED_ELEMENT] and
- * [HintCode.UNUSED_LOCAL_VARIABLE].
+ * Instances of the class [UnusedLocalElementsVerifier] traverse an element
+ * structure looking for cases of [HintCode.UNUSED_ELEMENT],
+ * [HintCode.UNUSED_FIELD], [HintCode.UNUSED_LOCAL_VARIABLE], etc.
  */
-class UnusedElementsVerifier extends RecursiveElementVisitor {
+class UnusedLocalElementsVerifier extends RecursiveElementVisitor {
   /**
    * The error listener to which errors will be reported.
    */
@@ -14970,12 +14861,12 @@ class UnusedElementsVerifier extends RecursiveElementVisitor {
   /**
    * The elements know to be used.
    */
-  final UsedElements _usedElements;
+  final UsedLocalElements _usedElements;
 
   /**
-   * Create a new instance of the [UnusedElementsVerifier].
+   * Create a new instance of the [UnusedLocalElementsVerifier].
    */
-  UnusedElementsVerifier(this._errorListener, this._usedElements);
+  UnusedLocalElementsVerifier(this._errorListener, this._usedElements);
 
   @override
   visitClassElement(ClassElement element) {
@@ -15006,6 +14897,17 @@ class UnusedElementsVerifier extends RecursiveElementVisitor {
       ]);
     }
     super.visitFunctionElement(element);
+  }
+
+  @override
+  visitFunctionTypeAliasElement(FunctionTypeAliasElement element) {
+    if (!_isUsedElement(element)) {
+      _reportErrorForElement(HintCode.UNUSED_ELEMENT, element, [
+        element.kind.displayName,
+        element.displayName
+      ]);
+    }
+    super.visitFunctionTypeAliasElement(element);
   }
 
   @override
@@ -15108,9 +15010,26 @@ class UnusedElementsVerifier extends RecursiveElementVisitor {
 }
 
 /**
- * A container with sets of used [Element]s.
+ * A container with information about used imports prefixes and used imported
+ * elements.
  */
-class UsedElements {
+class UsedImportedElements {
+  /**
+   * The set of referenced [PrefixElement]s.
+   */
+  final Set<PrefixElement> prefixes = new HashSet<PrefixElement>();
+
+  /**
+   * The set of referenced top-level [Element]s.
+   */
+  final Set<Element> elements = new HashSet<Element>();
+}
+
+/**
+ * A container with sets of used [Element]s.
+ * All these elements are defined in a single compilation unit or a library.
+ */
+class UsedLocalElements {
   /**
    * Resolved, locally defined elements that are used or potentially can be
    * used.
@@ -15141,11 +15060,11 @@ class UsedElements {
    */
   final HashSet<String> readMembers = new HashSet<String>();
 
-  UsedElements();
+  UsedLocalElements();
 
-  factory UsedElements.merge(List<UsedElements> parts) {
-    UsedElements result = new UsedElements();
-    for (UsedElements part in parts) {
+  factory UsedLocalElements.merge(List<UsedLocalElements> parts) {
+    UsedLocalElements result = new UsedLocalElements();
+    for (UsedLocalElements part in parts) {
       result.elements.addAll(part.elements);
       result.catchExceptionElements.addAll(part.catchExceptionElements);
       result.catchStackTraceElements.addAll(part.catchStackTraceElements);
