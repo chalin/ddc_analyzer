@@ -2,7 +2,7 @@
 
 This code is an experimental version of the Dart analyzer package, with
 changes needed for the
-[dart-dev-compiler](https://github.com/dart-lang/dart-dev-compiler).
+[dev_compiler](https://github.com/dart-lang/dev_compiler).
 
 The code in this repo is not meant to be published as a package in
 pub.dartlang.org, and it's only meant to be temporary. Our intention is to port
